@@ -1,0 +1,38 @@
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+.venv/
+.tools/
+.cache/
+.artifacts/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+pytest-cache-files-*/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+coverage.xml
+htmlcov/
+
+# Frontend and builds
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Local data and editor files
+*.db
+*.sqlite3
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

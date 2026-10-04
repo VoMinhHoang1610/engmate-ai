@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: backend-quality
+        name: Backend lint and types
+        entry: python scripts/manage.py lint-backend
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: frontend-quality
+        name: Frontend lint, types and format
+        entry: python scripts/manage.py lint-frontend
+        language: system
+        pass_filenames: false
+        always_run: true
