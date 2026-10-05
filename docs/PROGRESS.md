@@ -1,5 +1,61 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-06 — Cài đặt, đăng nhập bên trong và menu avatar
+
+- **Yêu cầu:** thay Tài khoản ở sidebar bằng Cài đặt với tùy chọn cơ bản; đưa đăng nhập vào trong; avatar trên cùng mở menu theo trạng thái phiên.
+- **Kết quả:** route `#cai-dat` có mục Chung/Tài khoản, phần đăng nhập nằm ở `#cai-dat?muc=tai-khoan`; alias `#tai-khoan` vẫn hoạt động. Thêm giao diện sáng/tối/theo hệ thống, giảm chuyển động và tốc độ đọc tiếng Anh, áp dụng ngay và lưu với dữ liệu hiện có. Dữ liệu cũ thiếu hoặc sai cài đặt được bổ sung mặc định, giữ hồ sơ/lịch ôn.
+- **Avatar:** hover hoặc bấm để mở; khách chỉ có Đăng nhập, đã đăng nhập có Hồ sơ học tập và Đăng xuất. Đóng khi rời chuột không giữ focus, bấm ngoài, chuyển route, mất focus hoặc Escape; Escape từ trong nhóm trả focus về avatar. Logout cập nhật trạng thái lưu và menu trở về lựa chọn Đăng nhập.
+- **File thay đổi:** `App.tsx`, `App.test.tsx`, `index.css`, `components/MenuNguoiDung.tsx` và test, `pages/CaiDat.tsx` và test, `pages/TaiKhoan.tsx`, `demo/duLieu.ts`, `demo/LuuTru.tsx`, `demo/amThanh.ts`; README và tài liệu kiến trúc/yêu cầu/kiểm thử/quyết định/changelog.
+- **Kiểm chứng:** 11/11 test chọn lọc cho cài đặt/avatar/shell/route/nhãn AI/tài khoản qua; sau hoàn thiện xử lý Escape, 6/6 test cài đặt/avatar qua. ESLint/TypeScript frontend và build cuối cùng qua. Chrome QA riêng kiểm tra hover thực, đăng nhập, mở hồ sơ, logout, chọn theme và reload; 10 route và mục tài khoản không tràn ngang ở 1440/360/390 px, popup avatar nằm trong màn hình. Đã xem ảnh cài đặt sáng/tối/mobile và trang học ở theme tối.
+- **Kiểm tra toàn dự án:** đã chạy task lint/test/coverage/build; backend 16/16 tests, coverage 100%; frontend 25/32 tests qua, còn 7 lỗi văn bản Việt hóa đã có. Task lint dừng ở format của 4 file ngoài phạm vi; các file thay đổi đã format. Chưa có coverage frontend hợp lệ do test cũ lỗi.
+- **Giới hạn:** đăng nhập vẫn là trạng thái localStorage; chưa có backend auth hoặc gửi email. Chưa commit/push. Các lỗi kiểm thử cũ cần xử lý trong tác vụ kiểm thử riêng.
+
+## 2026-10-06 — Thanh cuộn mờ dần và nhãn demo chỉ ở tính năng AI
+
+- **Yêu cầu:** làm thanh cuộn hiện/ẩn mượt; bỏ chú thích demo ngoài các tính năng AI.
+- **Kết quả:** đăng ký biến màu `--scrollbar-thumb` với `@property`, chuyển màu/độ trong suốt trong 280 ms khi hiện và ẩn; giữ thời gian chờ 1 giây, giữ nguyên kích thước thanh cuộn. Menu mobile cũng chuyển màu mượt; chế độ giảm chuyển động không chạy hiệu ứng. Điều chỉnh min-width body theo vùng hiển thị để không tràn ngang ở viewport 360 px có thanh cuộn.
+- **Nội dung:** bỏ badge demo toàn app, nhãn người học/tài khoản demo, ghi chú demo tổng quan và lịch demo flashcard. Nhãn `AI · Demo` nằm cạnh hội thoại, phân tích nói/viết và banner hội thoại AI. Tài khoản dùng nhãn Đăng nhập/Tạo tài khoản/Gửi yêu cầu; vẫn chỉ lưu trạng thái trên trình duyệt, không thêm xác thực backend hoặc gửi email.
+- **File thay đổi:** `frontend/src/index.css`, `frontend/src/App.tsx`, `frontend/src/App.test.tsx`, các trang `TaiKhoan`, `Flashcard`, `TongQuan`, `HoiThoaiAI`, `LuyenNoi`, `LuyenViet`; tài liệu tiến trình, yêu cầu, changelog và kiểm thử.
+- **Kiểm chứng:** 5/5 test chọn lọc cho thanh cuộn, nhãn AI, tài khoản, shell và route qua; ESLint/TypeScript và format các file thay đổi qua; build qua. Chrome 1440/390 px ghi nhận alpha trung gian khi hiện (~0.51) và ẩn (~0.29–0.38), trở về 0 sau hiệu ứng; độ rộng bố cục không đổi. Cả 10 route ở 1440/360/390 px không tràn ngang và không có demo ở sidebar/topbar/trang không dùng AI.
+- **Kiểm tra toàn dự án:** đã chạy `lint`, `test`, `coverage`, `build`. Backend 16/16 tests, coverage 100%; frontend 19/26 tests qua, còn 7 lỗi văn bản Việt hóa đã có. Task lint dừng ở format của 6 file ngoài phạm vi; chưa có coverage frontend hợp lệ. Chưa commit hoặc push.
+
+## 2026-10-06 — Ẩn thanh cuộn khi không sử dụng
+
+- **Yêu cầu:** thanh cuộn mặc định ẩn, chỉ hiện khi người dùng cuộn.
+- **Kết quả:** thanh cuộn mảnh, nền trong suốt; hiện riêng cho vùng đang cuộn và tự ẩn sau 1 giây không có sự kiện cuộn. Áp dụng cho trang, sidebar và vùng cuộn bên trong. Giữ nguyên độ rộng để tránh xê dịch bố cục; vẫn cuộn bằng chuột, touch và bàn phím như bình thường. Listener/timer được dọn khi unmount.
+- **File thay đổi:** `frontend/src/App.tsx`, `frontend/src/index.css`, `frontend/src/App.test.tsx` và tài liệu tiến trình/yêu cầu/changelog/kiểm thử.
+- **Kiểm chứng:** 3/3 test chọn lọc cho thanh cuộn, shell/menu và routing qua; ESLint/TypeScript, format các file thay đổi và build qua. Chrome kiểm tra màu thanh cuộn trang/sidebar ở ba thời điểm trước/trong/sau cuộn: trong suốt → xanh xám → trong suốt, độ rộng trang/sidebar không đổi.
+- **Kiểm tra toàn dự án:** đã chạy lại task `lint`, `test`, `coverage`, `build`: backend 16/16 tests, coverage 100%; frontend 17/25 tests qua, 8 lỗi văn bản Việt hóa giữ nguyên. Task lint dừng ở format của 11 file ngoài phạm vi; build qua. Chưa có coverage frontend hợp lệ. Chưa commit hoặc push.
+
+## 2026-10-06 — Bố trí logo và đồng bộ nhận diện EngMate AI
+
+- **Yêu cầu:** thêm logo theo ảnh người dùng cung cấp vào giao diện cho phù hợp.
+- **Kết quả:** tái dựng biểu tượng hội thoại/chữ E bằng SVG nền trong suốt; component `Logo` dùng chung cho sidebar, thanh trên cùng mobile và trang tài khoản. Thêm favicon, theme-color; dùng xanh navy/cyan cho banner, menu đang chọn, nút chính và focus. Giữ vàng ở chi tiết ba chấm của logo.
+- **File thay đổi:** `frontend/public/engmate-mark.svg`, `frontend/src/components/Logo.tsx`, `frontend/src/App.tsx`, `frontend/src/pages/TaiKhoan.tsx`, `frontend/src/index.css`, `frontend/index.html` và tài liệu tiến trình/yêu cầu/changelog.
+- **Kiểm chứng:** build qua; ESLint/TypeScript frontend qua; backend lint/type-check qua, 16/16 tests và coverage 100%. Hai test shell/menu và routing hiện có qua. Chrome desktop 1440 px và cả 10 route ở 360/390/760 px: logo tải thành công, không tràn ngang, logo đầy đủ nằm vừa sidebar. Đã xem ảnh desktop, mobile và trang tài khoản.
+- **Giới hạn kiểm thử:** lệnh test/coverage toàn dự án chưa qua: frontend 16/24 tests qua, 8 lỗi do assertion dùng câu tiếng Việt không dấu trong khi UI hiện có dấu (không thuộc thay đổi logo). Coverage frontend không có kết quả hợp lệ trong lượt này. Task lint toàn dự án dừng ở format-check của 12 file có sẵn; các file giao diện thay đổi cho logo đã được format. Không sửa assertion hoặc format các file ngoài phạm vi.
+- **Tồn đọng:** SVG là bản tái dựng theo ảnh, không phải file vector gốc. Bước tiếp theo: đồng bộ các test văn bản với bản Việt hóa khi xử lý tác vụ kiểm thử. Chưa commit hoặc push.
+
+## 2026-10-06 — Hoàn thiện bản demo frontend đa trang
+
+- **Yêu cầu:** tiếp tục hoàn thiện demo theo danh sách chức năng, giao diện hiện đại có thanh menu và tên file tiếng Việt không dấu.
+- **Kết quả:** thay trang khởi tạo bằng app responsive có sidebar desktop/menu mobile và 10 hash route: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và tài khoản. Các file/component mới đều đặt tên tiếng Việt không dấu.
+- **Tương tác:** chat gọi `/api/ai/reply`; ghi âm/phát âm dùng API trình duyệt; hồ sơ, từ vựng, thống kê ngày và lịch ôn lưu trong `localStorage`. UI báo rõ các phản hồi cố định, auth mô phỏng, AI mock và trường hợp trình duyệt không lưu được.
+- **Responsive và accessibility:** thêm skip link, trạng thái menu, focus, ARIA cho chat/flashcard và cleanup audio/request. Rà soát bằng viewport thật cho cả 10 route ở 360 px và 390 px cho kết quả `scrollWidth === clientWidth`; bản desktop 1440 px hiển thị đúng bố cục.
+- **Kiểm chứng:** `lint`, `build` và HTTP `smoke` qua; backend 16/16 tests, coverage 100%; frontend 24/24 tests, coverage statements 85%, branches 81.66%, functions 81.28%, lines 86.99%.
+- **Giới hạn:** chưa có tài khoản/DB thật, chat streaming, STT hoặc chấm phát âm thật, phân tích bài viết bằng model và E2E cho quyền micro trên trình duyệt thật. Pytest có cảnh báo không ghi được thư mục cache do quyền Windows, không ảnh hưởng kết quả.
+- **Nhánh làm việc:** `feat/demo-giao-dien`; chưa commit hoặc push.
+
+## 2026-10-05 — Khởi chạy local theo yêu cầu
+
+- **Yêu cầu:** chạy dự án trên máy hiện tại.
+- **Việc đã làm:** cài frontend bằng `npm ci`; máy chưa có Python khả dụng nên tải uv và Python 3.13 vào `.tools/`, tạo `.venv/`, cài backend từ `requirements-dev.txt` và editable package; tạo `.env` từ mẫu. Các thư viện và công cụ local được Git bỏ qua.
+- **Đang chạy:** Vite tại `http://127.0.0.1:5174`, FastAPI tại `http://127.0.0.1:8010`, Swagger tại `http://127.0.0.1:8010/docs`; AI dùng mock. Chạy bằng task `dev-frontend` tương đương và `dev-backend` của dự án.
+- **File thay đổi:** chỉ `docs/PROGRESS.md`, trên nhánh `chore/run-local-20261005`; không đổi mã ứng dụng.
+- **Kiểm chứng:** `scripts/manage.py smoke` qua backend health, frontend HTML, Vite API proxy và AI mock; `lint` và `build` qua; `coverage` qua 16 backend tests và 13 frontend tests, coverage hai phía 100%.
+- **Tồn đọng:** chưa chạy Docker hoặc GitHub Actions trong tác vụ này. Đây là server phát triển local; AI thật và các tính năng nghiệp vụ còn trong backlog.
+- **Bước tiếp theo:** mở địa chỉ web để sử dụng. Khi cần khởi chạy lại, dùng `.\make.cmd dev-backend` và `.\make.cmd dev-frontend` trong hai terminal riêng.
+
 ## 2026-10-05 — Bàn giao khung dự án vào main
 
 - **Yêu cầu:** người dùng cho phép merge khung vào `main` và cập nhật GitHub.

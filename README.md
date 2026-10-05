@@ -1,8 +1,8 @@
 # EngMate-AI
 
-Khung phát triển ứng dụng luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
+Ứng dụng demo luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Khung đã kiểm chứng local ngày 2026-10-04: 29 test qua, coverage khung 100% hai phía; lint/build/pre-commit và Docker smoke đều qua. Chi tiết và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+Frontend hiện có 10 trang responsive: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt. Đăng nhập nằm trong Cài đặt → Tài khoản; menu avatar có lựa chọn theo trạng thái đăng nhập. Dữ liệu và tùy chọn giao diện/âm thanh được lưu trong trình duyệt. Chi tiết kiểm chứng và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
 
 ## Cấu trúc
 
@@ -19,9 +19,10 @@ backend/
   tests/integration/ Test API, validation, CORS và timeout
 frontend/
   src/api/          HTTP client và test hợp đồng
-  src/components/   UI trạng thái kết nối
-  src/hooks/        Logic tải dữ liệu và test vòng đời
-  src/pages/        Trang khởi tạo
+  src/components/   Thành phần giao diện và icon dùng chung
+  src/demo/         Dữ liệu mẫu, lưu trữ và phát âm trình duyệt
+  src/hooks/        Logic health API và test vòng đời
+  src/pages/        10 trang demo và trang health cũ
   src/types/        Kiểu dữ liệu dùng chung
   tests/            Thiết lập Vitest/React Testing Library
   e2e/              Dành cho E2E khi triển khai luồng nghiệp vụ
@@ -57,7 +58,7 @@ Trên mọi hệ điều hành có thể dùng `python scripts/manage.py setup`.
 - API: http://127.0.0.1:8010/api/health
 - Swagger: http://127.0.0.1:8010/docs
 
-Frontend gọi `/api/health` qua Vite proxy. Proxy mặc định trỏ tới backend cổng 8010; không cần cấu hình URL API trong mã UI.
+Mở web tại `http://127.0.0.1:5174/#tong-quan`. Frontend gọi `/api/ai/reply` qua Vite proxy trên trang hội thoại; proxy mặc định trỏ tới backend cổng 8010 nên không cần cấu hình URL API trong mã UI.
 
 Đổi cổng bằng `dev-backend --port 8011` / `dev-frontend --port 5175`. Khi đổi cổng backend, đặt `$env:BACKEND_URL = 'http://127.0.0.1:8011'` trong terminal frontend. Nếu chạy web ngoài Vite proxy, cấu hình CORS theo origin thực tế.
 
@@ -112,4 +113,4 @@ Compose đọc `.env` ở root. Backend local đọc biến môi trường của
 - [Prompt](docs/PROMPTS.md)
 - [Kế hoạch code tiếp theo](docs/IMPLEMENTATION_PLAN.md)
 
-Khung hiện có health, AI mock và trang trạng thái kết nối. Auth, DB, chat streaming, phân tích lỗi học tập và provider thật nằm trong backlog. Kết quả local không thay thế kết quả GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.
+Bản demo có tương tác cục bộ và AI mock. Auth, DB, chat streaming, STT/chấm phát âm, phân tích bài viết và provider thật nằm trong backlog; giao diện ghi rõ nơi đang dùng dữ liệu cố định hoặc mô phỏng. Kết quả local không thay thế kết quả GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.
