@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 import { chuDeMau, tuVungMau, type TrinhDo } from '../demo/duLieu';
 import { docTiengAnh } from '../demo/amThanh';
@@ -90,11 +91,7 @@ export function HoiThoaiAI() {
   const word = topic.id === 'coffee' ? tuVungMau[5] : tuVungMau[0];
   return (
     <>
-      <TieuDeTrang
-        nhan="CỨ TRÒ CHUYỆN, CỨ TIẾN BỘ"
-        ten="Hội thoại AI"
-        moTa="Một không gian an toàn để thử, sai và nói tự nhiên hơn."
-      >
+      <TieuDeTrang ten="Hội thoại AI">
         <span className="pill purple">
           <span className="status-dot" /> AI · Demo
         </span>
@@ -128,18 +125,13 @@ export function HoiThoaiAI() {
             aria-live="polite"
             aria-relevant="additions text"
           >
-            <div className="chat-date">BẮT ĐẦU CUỘC TRÒ CHUYỆN</div>
             {tinNhan.map((message) => (
               <div className={`message-row ${message.vai}`} key={message.id}>
                 <span className={`avatar ${message.vai === 'ai' ? 'bot-avatar' : ''}`}>
-                  {message.vai === 'ai' ? (
-                    <BieuTuong ten="sparkles" size={18} />
-                  ) : (
-                    hoSo.ten.slice(0, 1)
-                  )}
+                  {message.vai === 'ai' ? <LinhThu size={52} /> : hoSo.ten.slice(0, 1)}
                 </span>
                 <div>
-                  <span className="message-author">{message.vai === 'ai' ? 'EngMate' : 'Ban'}</span>
+                  <span className="message-author">{message.vai === 'ai' ? 'EngMate' : 'Bạn'}</span>
                   <div className="message-bubble">{message.noiDung}</div>
                   {message.vai === 'ai' && (
                     <button
@@ -157,6 +149,7 @@ export function HoiThoaiAI() {
             ))}
             {busy && (
               <div className="typing-indicator" role="status">
+                <LinhThu size={46} camXuc="thinking" />
                 EngMate đang phản hồi <span>•••</span>
               </div>
             )}
@@ -195,20 +188,21 @@ export function HoiThoaiAI() {
                 {loi}
               </p>
             )}
-            <p className="chat-disclaimer">
-              AI · Demo: phản hồi minh họa, chưa phân tích câu hỏi hoặc nhập vai thực tế.
-            </p>
+            <p className="chat-disclaimer">AI · Demo — Phản hồi minh họa.</p>
           </div>
         </section>
         <aside className="chat-aside">
           <section className="panel">
+            <div className="mate-aside-heading">
+              <LinhThu size={100} camXuc={busy ? 'thinking' : 'encouraging'} />
+              <strong>Cứ thử nói nhé!</strong>
+            </div>
             <div className="section-title">
               <h2>
                 <BieuTuong ten="sparkles" size={19} /> Trợ lý học tập
               </h2>
-              <span className="pill purple">Mau</span>
+              <span className="pill purple">Mẫu</span>
             </div>
-            <p className="muted">Thử một cách diễn đạt tự nhiên hơn:</p>
             <div className="correction-example">
               <span>THAY VÌ</span>
               <p>I want a coffee.</p>
@@ -250,10 +244,6 @@ export function HoiThoaiAI() {
               Mở sổ từ vựng <BieuTuong ten="arrow" size={15} />
             </a>
           </section>
-          <div className="tip-box">
-            <BieuTuong ten="chat" />
-            <p>Không cần câu hoàn hảo. Chỉ cần bắt đầu, bạn đã tiến thêm một bước.</p>
-          </div>
         </aside>
       </div>
     </>

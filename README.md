@@ -2,7 +2,9 @@
 
 Ứng dụng demo luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Frontend hiện có 10 trang responsive: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt. Đăng nhập nằm trong Cài đặt → Tài khoản; menu avatar có lựa chọn theo trạng thái đăng nhập. Dữ liệu và tùy chọn giao diện/âm thanh được lưu trong trình duyệt. Chi tiết kiểm chứng và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+Frontend hiện có 10 trang học tập responsive: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt. Đăng nhập/đăng ký/khôi phục tài khoản có trang riêng tại `#dang-nhap`, tách khỏi sidebar và thanh trên cùng của không gian học tập. Menu avatar dẫn đến trang đăng nhập; đăng nhập xong có nút vào không gian học tập. Dữ liệu và tùy chọn giao diện/âm thanh được lưu trong trình duyệt. Chi tiết kiểm chứng và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+
+Giao diện có linh thú **Mate** đồng hành ở tổng quan, hội thoại và luyện tập: chào, đeo tai nghe, suy nghĩ, động viên và ăn mừng theo kết quả học. Banner gradient, thẻ màu/cạnh nổi và hiệu ứng tương tác hỗ trợ sáng/tối và điện thoại. Tiêu đề và tùy chọn chỉ giữ nhãn cần thiết; hướng dẫn luyện nói/flashcard có thể mở khi cần. Chế độ Giảm chuyển động trong Cài đặt hoặc tùy chọn hệ thống tắt animation. Nguồn thiết kế và bản SVG của Mate nằm trong [hướng dẫn linh thú](docs/LINH_THU.md).
 
 ## Cấu trúc
 
@@ -59,6 +61,8 @@ Trên mọi hệ điều hành có thể dùng `python scripts/manage.py setup`.
 - Swagger: http://127.0.0.1:8010/docs
 
 Mở web tại `http://127.0.0.1:5174/#tong-quan`. Frontend gọi `/api/ai/reply` qua Vite proxy trên trang hội thoại; proxy mặc định trỏ tới backend cổng 8010 nên không cần cấu hình URL API trong mã UI.
+
+Trang đăng nhập riêng: `http://127.0.0.1:5174/#dang-nhap`. Bố cục hai nửa với panel Mate navy/cyan cuộn sang khi đổi đăng nhập ↔ đăng ký; form “mở cuộn” theo hướng, sóng viền và tia sáng phụ. Có nút Google/Facebook/GitHub (mức giao diện, bấm sẽ báo chưa khả dụng). Các liên kết cũ `#tai-khoan` và `#cai-dat?muc=tai-khoan` cũng mở trang này. Cài đặt chỉ chứa tùy chọn học tập; khách có thể quay về học mà không đăng nhập. Phiên tài khoản hiện vẫn được mô phỏng trên trình duyệt, chưa có xác thực backend, OAuth hoặc gửi email.
 
 Đổi cổng bằng `dev-backend --port 8011` / `dev-frontend --port 5175`. Khi đổi cổng backend, đặt `$env:BACKEND_URL = 'http://127.0.0.1:8011'` trong terminal frontend. Nếu chạy web ngoài Vite proxy, cấu hình CORS theo origin thực tế.
 

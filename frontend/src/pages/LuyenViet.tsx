@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 
 const deBai: Record<string, string> = {
@@ -17,11 +18,7 @@ export function LuyenViet() {
   const [goiY, setGoiY] = useState(false);
   return (
     <>
-      <TieuDeTrang
-        nhan="DIỄN ĐẠT ĐIỀU BẠN MUỐN NÓI"
-        ten="Luyện viết"
-        moTa="Từ một câu ngắn đến một bài viết. Dùng tiếng Anh để kể câu chuyện của bạn."
-      />
+      <TieuDeTrang ten="Luyện viết" />
       <div className="writing-layout">
         <section className="panel writing-editor">
           <div className="tabs">
@@ -50,7 +47,7 @@ export function LuyenViet() {
               setText(e.target.value);
               setKetQua(false);
             }}
-            placeholder="Start writing here... Every sentence is a step forward."
+            placeholder="Viết bằng tiếng Anh..."
             maxLength={5000}
           />
           <div className="editor-meta">
@@ -89,19 +86,8 @@ export function LuyenViet() {
           </div>
           {!ketQua ? (
             <div className="empty-feedback">
-              <span className="icon-tile purple">
-                <BieuTuong ten="pen" size={30} />
-              </span>
-              <h3>Từ ngẫu hứng đến rõ ràng</h3>
-              <p className="muted">
-                Nhập bài viết để xem ví dụ phản hồi về ngữ pháp, từ vựng và cách diễn đạt.
-              </p>
-              <div className="feedback-tags">
-                <span>Ngữ pháp</span>
-                <span>Từ vựng</span>
-                <span>Chính tả</span>
-                <span>Cấu trúc</span>
-              </div>
+              <LinhThu size={150} camXuc="thinking" />
+              <p className="muted">Chưa có phản hồi</p>
             </div>
           ) : (
             <div role="status">

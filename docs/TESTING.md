@@ -1,9 +1,42 @@
 # Kiểm thử
 
+## Mạng xã hội và chuyển cảnh tài khoản (D-16)
+
+- `pages/TaiKhoan.test.tsx`: từng nút Google/Facebook/GitHub có phản hồi, không gọi mạng/thay dữ liệu phiên hoặc giả đăng nhập thành công. Chuyển hai hướng (group/pill hoặc CTA panel) giữ email/tên, tạo mới ô mật khẩu với autocomplete phù hợp, chỉ có một form; đăng ký/đăng nhập cục bộ vẫn dùng được và không lưu mật khẩu. Khôi phục bỏ nút xã hội, xóa thông báo nhà cung cấp và quay về đúng biểu mẫu.
+- Chrome QA: desktop panel trái↔phải khi đổi chế độ (đo `translate` mid/cuối), heading và field theo chế độ; mobile xếp dọc với pill; không lỗi JavaScript.
+- Chrome QA riêng kiểm tra 60 tổ hợp: ba chế độ × hai theme × 10 chiều rộng 320–1440 px. Đo chiều cao/độ mờ/transform của form và vị trí indicator ở giữa và cuối chuyển cảnh hai hướng. Kiểm tra bấm đổi liên tục, thông báo nhà cung cấp, giữ dữ liệu/ô mật khẩu mới, luồng tài khoản, alias và hai chế độ giảm chuyển động; cả khi hệ thống đổi tùy chọn giữa animation. Không dùng tài khoản Google/Facebook/GitHub thật.
+- Chạy lint/test/coverage/build/smoke toàn dự án; số liệu và các lỗi assertion tồn đọng ghi ở `PROGRESS.md`.
+
+## Linh thú Mate (D-15)
+
+- `frontend/src/LinhThu.test.tsx`: đáp án sai được động viên, đúng được ăn mừng, làm lại/đổi bài xóa trạng thái cũ; kết quả chép chính tả cũng chọn đúng biểu cảm. Again giữ phiên ôn hoạt động, hết phiên mới ăn mừng; không ăn mừng khi chưa có thẻ đến hạn. Mục tiêu dùng phút học hôm nay, giữ tiến độ khi chuyển trang và bỏ thành tích của ngày cũ.
+- Chrome QA riêng: kiểm tra 11 trang × sáng/tối × 10 chiều rộng 320–1440 px, chuyển động/hover và hai chế độ giảm chuyển động. Kiểm tra hình/ngôn ngữ kết quả đúng/sai/làm lại và hoàn thành flashcard ở 1440/390/320 px; giữ menu/avatar/đăng nhập/chat và các điều khiển học tập.
+- Chạy `make.cmd lint`, `test`, `coverage`, `build`, `smoke`. Kết quả thực tế và các assertion Việt hóa tồn đọng nằm trong `PROGRESS.md`.
+
+## Trang trí và animation (D-14)
+
+- Dùng Chrome QA riêng để đo chuyển động thực của nhân vật, animation đang chạy, dịch chuyển thẻ khi hover và việc tắt animation khi chọn Giảm chuyển động hoặc hệ thống bật `prefers-reduced-motion`.
+- Rà soát 11 trang sáng/tối từ 320–1440 px sau khi các hiệu ứng vào trang kết thúc; kiểm tra input/nút không bị tràn hoặc che, menu mobile/avatar, trang đăng nhập riêng, flashcard, trợ giúp và chat qua backend.
+- Bộ test giao diện hiện có tiếp tục kiểm tra nội dung ngắn, nhãn/điều khiển, chuyển route và giữ dữ liệu; kết quả thực tế nằm trong `PROGRESS.md`.
+
+## Giao diện tối giản (D-13)
+
+- `frontend/src/GiaoDien.test.tsx`: nhãn và điều khiển Cài đặt vẫn hoạt động khi bỏ mô tả; tiêu đề 9 trang không có slogan/subtitle; giữ đề bài viết và giải thích câu; liên kết kỹ năng đi đúng trang; mục tiêu có progressbar; mở/đóng hướng dẫn và đánh giá flashcard hoạt động.
+- `App.test.tsx`: cập nhật lời chào `Chào Anh` và nhãn `AI · Demo` theo thay đổi nội dung chủ động; không vô hiệu hóa hay nới lỏng kiểm thử.
+- Chrome QA riêng: 11 trang × sáng/tối × 10 chiều rộng (320/360/390/600/760/800/820/1024/1200/1440), kiểm tra tràn trang/main và vùng input/nút. Kiểm tra drawer sau khi hiệu ứng kết thúc, menu avatar, trang đăng nhập riêng, ôn flashcard, mở hướng dẫn, hội thoại qua API thật và lỗi JavaScript.
+- Đã xem ảnh tổng quan/cài đặt/hội thoại/đăng nhập desktop, tổng quan/cài đặt mobile và theme tối. Kết quả lint/test/coverage/build/smoke ghi trong `PROGRESS.md`.
+
+## Trang đăng nhập độc lập (D-12)
+
+- `pages/TaiKhoan.test.tsx`: trang `#dang-nhap` và hai alias cũ không chứa sidebar/topbar học tập; khách quay lại tổng quan; Cài đặt chỉ có tùy chọn; đăng nhập riêng rồi về học tập giữ hồ sơ và theme.
+- `components/MenuNguoiDung.test.tsx`: liên kết khách mở trang đăng nhập riêng; menu đã đăng nhập được kiểm tra sau khi bấm vào không gian học tập.
+- Test luồng tài khoản trong `App.test.tsx` kiểm tra đăng nhập/đăng ký/khôi phục/đăng xuất trên bố cục độc lập.
+- Chrome headless với hồ sơ QA riêng: đăng nhập, đăng ký, khôi phục vừa viewport 360/390/760/1440 px, không sidebar/topbar; kiểm tra vào học tập, logout, theme, reload và hai alias cũ. Đã xem ảnh desktop/mobile/theme tối.
+
 ## Cài đặt và menu avatar (D-10, D-11)
 
 - `pages/CaiDat.test.tsx`: áp dụng/lưu/khôi phục theme, motion và tốc độ đọc; giữ hồ sơ khi cài đặt cũ thiếu hoặc sai định dạng; đổi theo hệ thống và dọn matchMedia listener; kiểm tra tốc độ Web Speech thực sự dùng tùy chọn.
-- `components/MenuNguoiDung.test.tsx`: khách chỉ có Đăng nhập; liên kết mở tài khoản bên trong Cài đặt; đã đăng nhập có Hồ sơ học tập/Đăng xuất; đóng qua mouseleave, Escape, bấm ngoài; logout cập nhật phiên và menu.
+- `components/MenuNguoiDung.test.tsx`: khách chỉ có Đăng nhập; liên kết mở trang đăng nhập độc lập; đã đăng nhập có Hồ sơ học tập/Đăng xuất; đóng qua mouseleave, Escape, bấm ngoài; logout cập nhật phiên và menu.
 - Test shell/route/tài khoản cũ tiếp tục kiểm tra 10 route, mục Cài đặt và alias tài khoản.
 - Chrome profile QA riêng: hover avatar thật, nhập form đăng nhập, mở hồ sơ, đăng xuất, chọn theme và reload; rà soát 1440/360/390 px cho 10 route và mục tài khoản, menu nằm trong viewport.
 

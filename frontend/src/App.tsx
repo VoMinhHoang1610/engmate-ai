@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BieuTuong } from './components/BieuTuong';
 import { Logo } from './components/Logo';
+import { LinhThu } from './components/LinhThu';
 import { MenuNguoiDung } from './components/MenuNguoiDung';
 import { LuuTru, useDuLieu } from './demo/LuuTru';
 import { danhSachTrang, layTrang } from './demo/duLieu';
@@ -14,12 +15,14 @@ import { SoTuVung } from './pages/SoTuVung';
 import { Flashcard } from './pages/Flashcard';
 import { HoSo } from './pages/HoSo';
 import { CaiDat } from './pages/CaiDat';
+import { TaiKhoan } from './pages/TaiKhoan';
+import { HoTroNhanh } from './components/HoTroNhanh';
 
 function KhungTrang() {
   const [trang, setTrang] = useState(layTrang);
   const [hash, setHash] = useState(window.location.hash);
   const [menu, setMenu] = useState(false);
-  const { hoSo, daDangNhap, loiLuu } = useDuLieu();
+  const { hoSo, loiLuu, daDangNhap } = useDuLieu();
   useEffect(() => {
     const timers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
     const showScrollbar = (event: Event) => {
@@ -63,8 +66,9 @@ function KhungTrang() {
     return () => window.removeEventListener('keydown', escape);
   }, []);
   useEffect(() => {
-    document.title = `${danhSachTrang.find((item) => item.id === trang)?.ten} · EngMate-AI`;
+    document.title = `${trang === 'dang-nhap' ? 'Đăng nhập' : danhSachTrang.find((item) => item.id === trang)?.ten} · EngMate-AI`;
   }, [trang]);
+  if (!daDangNhap || trang === 'dang-nhap') return <TaiKhoan key={hash} />;
   const pages = {
     'tong-quan': <TongQuan />,
     'hoi-thoai-ai': <HoiThoaiAI key={hash} />,
@@ -111,35 +115,15 @@ function KhungTrang() {
                 <BieuTuong ten={item.icon} size={20} />
                 <span>{item.ten}</span>
                 {item.id === 'hoi-thoai-ai' && <span className="nav-badge">AI</span>}
-                {trang === item.id && <span className="nav-active-dot" />}
               </a>
             </div>
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-tip">
-            <span className="icon-tile purple">
-              <BieuTuong ten="sparkles" size={19} />
-            </span>
-            <strong>Mỗi ngày một tốt hơn</strong>
-            <p>
-              Chi {hoSo.phutMoiNgay} phút để tiến gần hơn
-              <br />
-              đến phiên bản tự tin của bạn.
-            </p>
-            <a href="#ho-so">
-              Đặt mục tiêu <BieuTuong ten="arrow" size={15} />
-            </a>
-          </div>
-          <a className="sidebar-profile" href="#ho-so">
-            <span className="avatar">{hoSo.ten.slice(0, 1).toUpperCase()}</span>
-            <div>
-              <strong>{hoSo.ten}</strong>
-              <span>
-                {hoSo.trinhDo} · {daDangNhap ? 'Tài khoản' : 'Người học'}
-              </span>
-            </div>
-            <BieuTuong ten="chevron" size={16} />
+          <a className="sidebar-mate" href="#tong-quan" onClick={() => setMenu(false)}>
+            <LinhThu size={60} />
+            <strong>Học cùng Mate</strong>
+            <BieuTuong ten="arrow" size={16} />
           </a>
         </div>
       </aside>
@@ -159,8 +143,6 @@ function KhungTrang() {
               <Logo compact />
             </a>
             <span>Không gian học tập</span>
-            <BieuTuong ten="chevron" size={14} />
-            <strong>{danhSachTrang.find((item) => item.id === trang)?.ten}</strong>
           </div>
           <div className="topbar-right">
             <a className="goal-pill" href="#ho-so">
@@ -176,13 +158,13 @@ function KhungTrang() {
               {loiLuu}
             </p>
           )}
-          {pages[trang]}
+          <div key={hash} className="page-view" data-page={trang}>
+            {pages[trang]}
+          </div>
+          <HoTroNhanh />
         </main>
         <footer className="site-footer">
           <span>© 2026 EngMate-AI</span>
-          <span>
-            Made for your next little breakthrough <span className="accent">✦</span>
-          </span>
         </footer>
       </div>
     </div>

@@ -89,6 +89,10 @@ function docDuLieu(): DuLieu {
     return {
       ...macDinh,
       ...data,
+      hoSo: {
+        ...macDinh.hoSo,
+        ...data.hoSo,
+      },
       caiDat: {
         giaoDien: ['sang', 'toi', 'he-thong'].includes(data.caiDat?.giaoDien ?? '')
           ? data.caiDat!.giaoDien

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { Select } from '../components/Select';
 import { useDuLieu } from '../demo/LuuTru';
 import type { TrinhDo } from '../demo/duLieu';
 
@@ -12,27 +13,52 @@ export function HoSo() {
   function luu(event: FormEvent) {
     event.preventDefault();
     const ten = form.ten.trim();
-    if (!ten) {
-      setLoi('Vui lòng nhập họ và tên.');
-      return;
-    }
     capNhat({ hoSo: { ...form, ten } });
     setLoi('');
     setDaLuu(true);
   }
   return (
     <>
-      <TieuDeTrang
-        nhan="HÀNH TRÌNH CỦA RIÊNG BẠN"
-        ten="Hồ sơ học tập"
-        moTa="Để EngMate đồng hành theo trình độ và mục tiêu của bạn."
-      />
+      <TieuDeTrang ten="Hồ sơ học tập" />
       <div className="profile-layout">
         <aside className="panel profile-summary">
-          <div className="avatar large">{hoSo.ten.slice(0, 1).toUpperCase()}</div>
+            <label className="avatar-upload" title="Nhấn để đổi ảnh">
+            <div className="avatar-wrapper">
+              {form.anhDaiDien ? (
+                <img src={form.anhDaiDien} alt="Avatar" className="avatar large avatar-img" />
+              ) : (
+                <div className="avatar large">{form.ten.slice(0, 1).toUpperCase()}</div>
+              )}
+              <div className="avatar-overlay">
+                <BieuTuong ten="pen" size={16} />
+                Sửa
+              </div>
+            </div>
+            <span className="avatar-upload-text">Sửa ảnh</span>
+            <input 
+              type="file" 
+              accept="image/*" 
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    if (ev.target?.result) {
+                      const newAvatar = ev.target.result as string;
+                      setForm({ ...form, anhDaiDien: newAvatar });
+                      capNhat({ hoSo: { ...hoSo, anhDaiDien: newAvatar } });
+                      setDaLuu(true);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }} 
+            />
+          </label>
           <h2>{hoSo.ten}</h2>
           <p className="muted">{hoSo.email}</p>
-          <span className="pill purple">{hoSo.trinhDo} · English learner</span>
+          <span className="pill purple">{hoSo.trinhDo}</span>
           <div className="profile-metrics">
             <div>
               <strong>{phutHoc}</strong>
@@ -46,10 +72,6 @@ export function HoSo() {
               <strong>{luotOn}</strong>
               <span>Lượt ôn</span>
             </div>
-          </div>
-          <div className="tip-box">
-            <BieuTuong ten="sparkles" />
-            <p>Học đều đặn quan trọng hơn học thật nhiều trong một ngày.</p>
           </div>
         </aside>
         <form
@@ -65,17 +87,51 @@ export function HoSo() {
             <label>
               Họ và tên
               <input
-                required
                 maxLength={60}
                 value={form.ten}
                 onChange={(e) => setForm({ ...form, ten: e.target.value })}
               />
             </label>
             <label>
+              Tài khoản
+              <input
+                disabled
+                value={form.taiKhoan}
+              />
+            </label>
+            <label>
+              Số điện thoại
+              <input
+                type="tel"
+                value={form.soDienThoai}
+                onChange={(e) => setForm({ ...form, soDienThoai: e.target.value })}
+              />
+            </label>
+            <label>
+              Ngày sinh
+              <input
+                type="date"
+                value={form.ngaySinh}
+                onChange={(e) => setForm({ ...form, ngaySinh: e.target.value })}
+              />
+            </label>
+            <label>
+              Giới tính
+              <Select
+                value={form.gioiTinh}
+                onChange={(val) => setForm({ ...form, gioiTinh: val as any })}
+                options={[
+                  { value: '', label: 'Chưa xác định' },
+                  { value: 'Nam', label: 'Nam' },
+                  { value: 'Nữ', label: 'Nữ' },
+                  { value: 'Khác', label: 'Khác' },
+                ]}
+              />
+            </label>
+            <label>
               Email
               <input
                 type="email"
-                required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
@@ -85,34 +141,32 @@ export function HoSo() {
           <h2>Cá nhân hóa việc học</h2>
           <label>
             Trình độ tiếng Anh
-            <select
+            <Select
               value={form.trinhDo}
-              onChange={(e) => setForm({ ...form, trinhDo: e.target.value as TrinhDo })}
-            >
-              <option value="A2">A2 — Cơ bản</option>
-              <option value="B1">B1 — Trung cấp</option>
-              <option value="B2">B2 — Trên trung cấp</option>
-            </select>
+              onChange={(val) => setForm({ ...form, trinhDo: val as TrinhDo })}
+              options={[
+                { value: 'A2', label: 'A2 — Cơ bản' },
+                { value: 'B1', label: 'B1 — Trung cấp' },
+                { value: 'B2', label: 'B2 — Trên trung cấp' },
+              ]}
+            />
           </label>
           <label>
             Mục tiêu của bạn
-            <select
+            <Select
               value={form.mucTieu}
-              onChange={(e) => setForm({ ...form, mucTieu: e.target.value })}
-            >
-              {[
+              onChange={(val) => setForm({ ...form, mucTieu: val })}
+              options={[
                 'Giao tiếp tự tin',
                 'Tiếng Anh công việc',
                 'Du lịch và khám phá',
                 'Chuẩn bị TOEIC',
                 'Chuẩn bị IELTS',
-              ].map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
+              ].map((item) => ({ value: item, label: item }))}
+            />
           </label>
           <label>
-            Thời gian học mỗi ngày <strong className="accent">{form.phutMoiNgay} phut</strong>
+            Thời gian học mỗi ngày <strong className="accent">{form.phutMoiNgay} phút</strong>
             <input
               type="range"
               min="10"
@@ -122,8 +176,8 @@ export function HoSo() {
               onChange={(e) => setForm({ ...form, phutMoiNgay: Number(e.target.value) })}
             />
             <span className="range-labels">
-              <span>10 phút · Nhẹ nhàng</span>
-              <span>60 phút · Tập trung</span>
+              <span>10 phút</span>
+              <span>60 phút</span>
             </span>
           </label>
           {loi && (
@@ -132,9 +186,7 @@ export function HoSo() {
             </p>
           )}
           <div className="form-footer">
-            <span role="status">
-              {daLuu ? 'Đã lưu hồ sơ của bạn.' : 'Thay đổi được lưu trên trình duyệt.'}
-            </span>
+            <span role="status">{daLuu ? 'Đã lưu hồ sơ của bạn.' : ''}</span>
             <button className="btn primary" type="submit">
               <BieuTuong ten="check" size={18} /> Lưu thay đổi
             </button>

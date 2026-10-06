@@ -42,11 +42,7 @@ export function SoTuVung() {
   }
   return (
     <>
-      <TieuDeTrang
-        nhan="NHỮNG TỪ MỚI, NHỮNG CƠ HỘI MỚI"
-        ten="Sổ từ vựng"
-        moTa="Giữ lại từ bạn gặp. Biến chúng thành vốn từ của riêng mình."
-      >
+      <TieuDeTrang ten="Sổ từ vựng">
         <button
           className="btn primary"
           onClick={() => {
@@ -71,7 +67,7 @@ export function SoTuVung() {
       </div>
       {them && (
         <form className="panel add-word" onSubmit={luu}>
-          <h2>Một từ mới cho hành trình của bạn</h2>
+          <h2>Thêm từ</h2>
           <div className="form-grid">
             <label>
               Từ tiếng Anh
@@ -168,11 +164,9 @@ export function SoTuVung() {
               </button>
             </div>
             <h2>{tu.tu}</h2>
-            <span className="phonetic">{tu.phienAm || 'Chưa thêm phiên âm'}</span>
+            {tu.phienAm && <span className="phonetic">{tu.phienAm}</span>}
             <p className="word-meaning">{tu.nghia}</p>
-            <p className="word-example">
-              “{tu.viDu || 'Thêm ví dụ khi lưu từ để dễ ghi nhớ hơn.'}”
-            </p>
+            {tu.viDu && <p className="word-example">“{tu.viDu}”</p>}
             <div className="vocab-footer">
               <button
                 className={`word-status ${tu.daThuoc ? 'learned' : ''}`}

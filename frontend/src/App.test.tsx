@@ -56,7 +56,7 @@ describe('EngMate demo', () => {
   it('renders the application shell, keyboard skip and mobile menu', () => {
     moTrang('#tong-quan');
 
-    expect(screen.getByRole('heading', { name: /Chao Anh/ })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /Chào Anh/ })).toBeVisible();
     const navigation = screen.getByRole('navigation', { name: 'Menu chính' });
     expect(within(navigation).getAllByRole('link')).toHaveLength(10);
     expect(within(navigation).getByRole('link', { name: 'Tổng quan' })).toHaveAttribute(
@@ -79,7 +79,7 @@ describe('EngMate demo', () => {
     moTrang('#tong-quan');
     expect(document.querySelector('.topbar')).not.toHaveTextContent(/demo/i);
     expect(document.querySelector('.sidebar')).not.toHaveTextContent(/demo/i);
-    expect(document.querySelector('.hero-tag')).toHaveTextContent(/AI · DEMO/);
+    expect(document.querySelector('.hero-tag')).toHaveTextContent(/AI · Demo/);
 
     for (const route of ['luyen-nghe', 'so-tu-vung', 'flashcard', 'ho-so', 'cai-dat']) {
       doiTrang(`#${route}`);
@@ -127,7 +127,7 @@ describe('EngMate demo', () => {
     }
 
     doiTrang('#khong-ton-tai');
-    expect(screen.getByRole('heading', { name: /Chao Anh/ })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /Chào Anh/ })).toBeVisible();
   });
 
   it('saves a validated learner profile and restores it from local storage', () => {
@@ -146,7 +146,7 @@ describe('EngMate demo', () => {
 
     view.unmount();
     moTrang('#tong-quan');
-    expect(screen.getByRole('heading', { name: /Chao Anh/ })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /Chào Anh/ })).toBeVisible();
     expect(screen.getByRole('link', { name: '30 phút / ngày' })).toBeVisible();
   });
 

@@ -49,7 +49,15 @@ export function MenuNguoiDung() {
         aria-controls="menu-nguoi-dung"
         onClick={() => setOpen((value) => !value)}
       >
-        {daDangNhap ? hoSo.ten.slice(0, 1).toUpperCase() : <BieuTuong ten="user" size={19} />}
+        {daDangNhap ? (
+          hoSo.anhDaiDien ? (
+            <img src={hoSo.anhDaiDien} alt="Avatar" className="avatar-img" />
+          ) : (
+            hoSo.ten.slice(0, 1).toUpperCase()
+          )
+        ) : (
+          <BieuTuong ten="user" size={19} />
+        )}
       </button>
       {open && (
         <div
@@ -76,7 +84,7 @@ export function MenuNguoiDung() {
                 </button>
               </>
             ) : (
-              <a href="#cai-dat?muc=tai-khoan" onClick={() => setOpen(false)}>
+              <a href="#dang-nhap" onClick={() => setOpen(false)}>
                 <BieuTuong ten="user" size={18} /> Đăng nhập
               </a>
             )}

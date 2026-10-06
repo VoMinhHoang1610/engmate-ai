@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 import { docTiengAnh } from '../demo/amThanh';
 
@@ -37,18 +38,14 @@ export function Flashcard() {
   }
   return (
     <>
-      <TieuDeTrang
-        nhan="GHI NHỚ HÔM NAY, SỬ DỤNG NGÀY MAI"
-        ten="Flashcard"
-        moTa="Lật thẻ, thử nhớ và chọn mức độ. EngMate sẽ hẹn lần ôn tiếp theo."
-      />
+      <TieuDeTrang ten="Flashcard" />
       <div className="flashcard-layout">
         <div>
           <div className="flash-session">
             <span className="pill purple">
               <BieuTuong ten="layers" size={16} /> ÔN CÁCH QUÃNG
             </span>
-            <span>{xong ? 'Đã hoàn thành' : `The ${index + 1} / ${boThe.length}`}</span>
+            <span>{xong ? 'Đã hoàn thành' : `Thẻ ${index + 1} / ${boThe.length}`}</span>
             <label>
               <input type="checkbox" checked={tatCa} onChange={(e) => batDau(e.target.checked)} />{' '}
               Ôn tất cả từ
@@ -66,9 +63,7 @@ export function Flashcard() {
           </div>
           {xong ? (
             <section className="panel flash-complete">
-              <span className="icon-tile green">
-                <BieuTuong ten="trophy" size={40} />
-              </span>
+              <LinhThu size={180} camXuc={index ? 'celebrating' : 'encouraging'} />
               <h2>{index ? 'Thêm một bước tiến thật đẹp!' : 'Bạn đã ôn hết các từ đến hạn.'}</h2>
               <p className="muted">
                 {index
@@ -101,7 +96,7 @@ export function Flashcard() {
                     : `Tu ${the.tu}. Nhan de lat the xem nghia.`
                 }
               >
-                <span className="eyebrow">{lat ? 'NGHĨA & CÁCH DÙNG' : 'BẠN CÓ NHỚ TỪ NÀY?'}</span>
+                <span className="eyebrow">{lat ? 'Nghĩa & cách dùng' : 'Từ vựng'}</span>
                 <span className="flash-word">{lat ? the.nghia : the.tu}</span>
                 <span className="phonetic">{lat ? the.loai : the.phienAm}</span>
                 {lat && <span className="flash-example">“{the.viDu}”</span>}
@@ -120,9 +115,6 @@ export function Flashcard() {
                   <BieuTuong ten="volume" size={18} /> Nghe cách đọc
                 </button>
               </div>
-              <p className="center-text muted">
-                {lat ? 'Bạn nhớ từ này ở mức độ nào?' : 'Thử nhớ nghĩa trước khi lật thẻ nhé.'}
-              </p>
               <div className="rating-buttons">
                 {[
                   { key: 'again' as const, ten: 'Again', moTa: 'Ôn lại trong phiên', ngay: 0 },
@@ -149,9 +141,8 @@ export function Flashcard() {
             </p>
           )}
         </div>
-        <aside className="panel">
-          <h2>Ôn ít, nhớ lâu</h2>
-          <p className="muted">Từ khó cần gặp lại sớm hơn. Từ dễ có thể đợi lâu hơn.</p>
+        <details className="panel review-help">
+          <summary>Cách ôn tập</summary>
           <div className="review-step">
             <span>01</span>
             <div>
@@ -176,7 +167,7 @@ export function Flashcard() {
           <div className="tip-box">
             <p>Lịch ôn dùng mốc 1, 4 và 7 ngày. Again sẽ đưa thẻ về cuối phiên để ôn lại.</p>
           </div>
-        </aside>
+        </details>
       </div>
     </>
   );

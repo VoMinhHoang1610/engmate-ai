@@ -14,7 +14,6 @@ export function Logo({ compact = false }: { compact?: boolean }) {
           <span className="logo-wordmark">
             EngMate <span className="logo-ai">AI</span>
           </span>
-          <small>Your English companion</small>
         </span>
       )}
     </span>

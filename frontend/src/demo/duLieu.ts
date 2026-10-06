@@ -8,11 +8,17 @@ export type Trang =
   | 'so-tu-vung'
   | 'flashcard'
   | 'ho-so'
-  | 'cai-dat';
+  | 'cai-dat'
+  | 'dang-nhap';
 export type TrinhDo = 'A2' | 'B1' | 'B2';
 export interface HoSo {
   ten: string;
   email: string;
+  taiKhoan: string;
+  soDienThoai: string;
+  ngaySinh: string;
+  gioiTinh: 'Nam' | 'Nữ' | 'Khác' | '';
+  anhDaiDien: string;
   trinhDo: TrinhDo;
   mucTieu: string;
   phutMoiNgay: number;
@@ -196,13 +202,24 @@ export const tuVungMau: TuVung[] = [
 export const hoSoMau: HoSo = {
   ten: 'Minh Anh',
   email: 'minhanh@example.com',
+  taiKhoan: 'abc',
+  soDienThoai: '0901234567',
+  ngaySinh: '1998-10-16',
+  gioiTinh: 'Nữ',
+  anhDaiDien: '',
   trinhDo: 'B1',
   mucTieu: 'Giao tiếp tự tin',
   phutMoiNgay: 20,
 };
 export function layTrang(): Trang {
   const hash = window.location.hash.slice(1).split('?')[0];
-  if (hash === 'tai-khoan') return 'cai-dat';
+  const params = new URLSearchParams(window.location.hash.split('?')[1]);
+  if (
+    hash === 'dang-nhap' ||
+    hash === 'tai-khoan' ||
+    (hash === 'cai-dat' && params.get('muc') === 'tai-khoan')
+  )
+    return 'dang-nhap';
   return danhSachTrang.some((trang) => trang.id === hash) ? (hash as Trang) : 'tong-quan';
 }
 export function diChuyen(trang: Trang, chuDe?: string) {

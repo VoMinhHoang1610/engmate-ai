@@ -1,0 +1,141 @@
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import App from '../App';
+
+function doiTrang(hash: string) {
+  act(() => {
+    window.history.replaceState(null, '', hash);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
+}
+
+beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+  sessionStorage.setItem('engmate-auth-intro-done', '1');
+  window.history.replaceState(null, '', '#dang-nhap');
+  vi.stubGlobal('scrollTo', vi.fn());
+});
+
+describe('Trang đăng nhập độc lập', () => {
+  it.each(['#dang-nhap', '#tai-khoan', '#cai-dat?muc=tai-khoan'])(
+    'opens %s outside the learning shell, including old account links',
+    (hash) => {
+      window.history.replaceState(null, '', hash);
+      render(<App />);
+      expect(screen.getByRole('heading', { name: 'Đăng nhập', level: 1 })).toBeVisible();
+      expect(document.title).toBe('Đăng nhập · EngMate-AI');
+      expect(screen.getByLabelText('Email')).toBeVisible();
+      expect(screen.queryByRole('navigation', { name: 'Menu chính' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Mở menu tài khoản' })).not.toBeInTheDocument();
+      expect(document.querySelector('.topbar')).toBeNull();
+      expect(document.querySelector('.sidebar')).toBeNull();
+    },
+  );
+
+  it('keeps settings focused on preferences and allows returning to learning as a guest', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('link', { name: /Về không gian học tập/ }));
+    expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
+    expect(screen.queryByLabelText('Mật khẩu')).not.toBeInTheDocument();
+    doiTrang('#cai-dat');
+    expect(screen.getByLabelText('Chế độ giao diện')).toBeVisible();
+    expect(screen.queryByLabelText('Email')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Mục cài đặt' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Đăng nhập' })).not.toBeInTheDocument();
+  });
+
+  it('logs in separately then enters learning with the saved profile and preferences', async () => {
+    window.history.replaceState(null, '', '#cai-dat');
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('Chế độ giao diện'), { target: { value: 'toi' } });
+    doiTrang('#dang-nhap');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'lan@example.com' } });
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: '12345678' } });
+    fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+    expect(screen.getByRole('heading', { name: 'Chào mừng, Minh Anh!' })).toBeVisible();
+    expect(screen.queryByRole('navigation', { name: 'Menu chính' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Vào không gian học tập/ }));
+    expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
+    expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).hoSo.email).toBe('lan@example.com');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(screen.queryByLabelText('Mật khẩu')).not.toBeInTheDocument();
+  });
+
+  it.each(['Google', 'Facebook', 'GitHub'])(
+    'shows %s without creating a fake social session',
+    (provider) => {
+      const fetch = vi.fn();
+      vi.stubGlobal('fetch', fetch);
+      render(<App />);
+      const before = localStorage.getItem('engmate-demo-v1');
+      fireEvent.click(screen.getByRole('button', { name: `Tiếp tục với ${provider}` }));
+      expect(
+        screen.getByText(`Đăng nhập bằng ${provider} hiện chưa khả dụng. Bạn có thể dùng email.`),
+      ).toHaveAttribute('role', 'status');
+      expect(localStorage.getItem('engmate-demo-v1')).toBe(before);
+      expect(fetch).not.toHaveBeenCalled();
+      expect(window.location.hash).toBe('#dang-nhap');
+      expect(screen.getByRole('heading', { name: 'Đăng nhập' })).toBeVisible();
+    },
+  );
+
+  it('switches both ways with shared details, fresh password fields and one active form', () => {
+    render(<App />);
+    const tabs = screen.getByRole('group', { name: 'Chọn đăng nhập hoặc đăng ký' });
+    const emailForm = screen.getByLabelText('Email').closest('form')!;
+    const socialGroup = screen.getByRole('group', { name: 'Đăng nhập bằng tài khoản khác' });
+    expect(
+      emailForm.compareDocumentPosition(socialGroup) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'lan@example.com' } });
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'loginPassword' } });
+    fireEvent.click(within(tabs).getByRole('button', { name: 'Đăng ký' }));
+    expect(screen.getByRole('heading', { name: 'Tạo tài khoản' })).toBeVisible();
+    expect(screen.getByLabelText('Email')).toHaveValue('lan@example.com');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveValue('');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('autocomplete', 'new-password');
+    fireEvent.change(screen.getByLabelText('Họ và tên'), { target: { value: 'Lan Anh' } });
+    fireEvent.click(within(tabs).getByRole('button', { name: 'Đăng nhập' }));
+    expect(screen.queryByLabelText('Họ và tên')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveValue('lan@example.com');
+    expect(screen.getByLabelText('Mật khẩu')).toHaveAttribute('autocomplete', 'current-password');
+    expect(within(tabs).getByRole('button', { name: 'Đăng nhập' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    fireEvent.click(within(tabs).getByRole('button', { name: 'Đăng ký' }));
+    expect(screen.getByLabelText('Họ và tên')).toHaveValue('Lan Anh');
+    expect(document.querySelectorAll('form')).toHaveLength(1);
+    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'registerPassword' } });
+    fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+    expect(screen.getByRole('heading', { name: 'Chào mừng, Lan Anh!' })).toBeVisible();
+    expect(
+      screen.queryByRole('group', { name: 'Đăng nhập bằng tài khoản khác' }),
+    ).not.toBeInTheDocument();
+    expect(JSON.stringify(JSON.parse(localStorage.getItem('engmate-demo-v1')!))).not.toContain(
+      'registerPassword',
+    );
+  });
+
+  it('clears provider notices during recovery and returns to the login form', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục với Google' }));
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'lan@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Quên mật khẩu?' }));
+    expect(screen.queryByText(/hiện chưa khả dụng/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('group', { name: 'Đăng nhập bằng tài khoản khác' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Mật khẩu')).not.toBeInTheDocument();
+    fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Yêu cầu đã được ghi nhận trên trình duyệt này.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Quay lại đăng nhập' }));
+    expect(screen.getByLabelText('Email')).toHaveValue('lan@example.com');
+    expect(screen.getByRole('button', { name: 'Tiếp tục với Google' })).toBeVisible();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+});

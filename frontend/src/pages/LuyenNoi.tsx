@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { LinhThu } from '../components/LinhThu';
 import { docTiengAnh } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
 
@@ -94,11 +95,7 @@ export function LuyenNoi() {
   }
   return (
     <>
-      <TieuDeTrang
-        nhan="CẤT LỜI VÀ TỰ TIN HƠN"
-        ten="Luyện nói"
-        moTa="Nghe mẫu, ghi âm và lắng nghe chính mình. Mỗi lần nói là một lần tiến bộ."
-      />
+      <TieuDeTrang ten="Luyện nói" />
       <div className="practice-layout">
         <section className="panel speaking-panel">
           <div className="section-title">
@@ -120,16 +117,24 @@ export function LuyenNoi() {
             </button>
           </div>
           <div className={`record-zone ${dangGhi ? 'recording' : ''}`}>
-            <div className="sound-wave" aria-hidden="true">
-              {Array.from({ length: 27 }, (_, index) => (
-                <i
-                  key={index}
-                  style={{
-                    height: `${12 + ((index * 17) % 46)}px`,
-                    animationDelay: `${index * 40}ms`,
-                  }}
+            <div className="record-visual">
+              <div className="record-mate">
+                <LinhThu
+                  size={110}
+                  camXuc={dangGhi ? 'listening' : dangXin || dangDung ? 'thinking' : 'encouraging'}
                 />
-              ))}
+              </div>
+              <div className="sound-wave" aria-hidden="true">
+                {Array.from({ length: 27 }, (_, index) => (
+                  <i
+                    key={index}
+                    style={{
+                      height: `${12 + ((index * 17) % 46)}px`,
+                      animationDelay: `${index * 40}ms`,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
             <button
               className="record-button"
@@ -148,7 +153,7 @@ export function LuyenNoi() {
                     ? 'Đang ghi âm... Nhấn để dừng'
                     : 'Nhấn micro để bắt đầu'}
             </strong>
-            <span>Tối đa 60 giây. Bản ghi chỉ được giữ trong phiên hiện tại.</span>
+            <span>Tối đa 60 giây</span>
           </div>
           {audio && (
             <div className="audio-preview">
@@ -174,10 +179,7 @@ export function LuyenNoi() {
               maxLength={2000}
             />
           </label>
-          <p className="notice">
-            Phân tích AI · Demo: kết quả bên dưới là ví dụ mẫu. Chuyển giọng nói thành văn bản và
-            chấm phát âm chưa được kết nối.
-          </p>
+          <p className="notice">Phân tích AI · Demo — Kết quả mẫu, chưa chấm phát âm.</p>
           <div className="form-footer">
             <button
               className="btn secondary"
@@ -205,18 +207,15 @@ export function LuyenNoi() {
           </div>
         </section>
         <aside>
-          <section className="panel">
-            <span className="icon-tile peach">
-              <BieuTuong ten="mic" />
-            </span>
-            <h2>Nói chậm, nói rõ</h2>
+          <details className="panel practice-help">
+            <summary>Gợi ý luyện nói</summary>
             <ul className="tips-list">
               <li>Nghe câu mẫu một lần trước khi nói.</li>
               <li>Chú ý nhấn âm ở từ quan trọng.</li>
               <li>Ngắt nhịp tự nhiên, không cần vội.</li>
               <li>Nghe lại bản ghi để tự đối chiếu.</li>
             </ul>
-          </section>
+          </details>
           {ketQua && (
             <section className="panel result-panel" role="status">
               <span className="pill purple">PHÂN TÍCH AI · DEMO</span>

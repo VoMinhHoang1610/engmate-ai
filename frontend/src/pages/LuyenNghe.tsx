@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
+import { LinhThu } from '../components/LinhThu';
 import { docTiengAnh } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
 import { tuVungMau } from '../demo/duLieu';
@@ -56,11 +57,7 @@ export function LuyenNghe() {
   }
   return (
     <>
-      <TieuDeTrang
-        nhan="LẮNG NGHE THẾ GIỚI QUANH BẠN"
-        ten="Luyện nghe"
-        moTa="Nghe theo nhịp của bạn, hiểu từng câu và khám phá từ mới."
-      />
+      <TieuDeTrang ten="Luyện nghe" />
       <div className="practice-layout">
         <section className="panel listening-panel">
           <div className="section-title">
@@ -83,12 +80,9 @@ export function LuyenNghe() {
             </select>
           </div>
           <div className="listening-art">
-            <div className="headphone-orb">
-              <BieuTuong ten="headphones" size={58} />
-            </div>
-            <span className="eyebrow">LISTEN & DISCOVER</span>
+            <LinhThu size={140} camXuc="listening" />
             <h2>{bai.ten}</h2>
-            <p>Giọng đọc tổng hợp của trình duyệt · Không phải bản ghi người thật</p>
+            <span className="pill outline">Giọng đọc trình duyệt</span>
             <div className="player-controls">
               <button
                 className="play-button"
@@ -102,10 +96,10 @@ export function LuyenNghe() {
                 <BieuTuong ten="play" size={23} />
               </button>
               <button className="btn secondary" onClick={() => window.speechSynthesis?.cancel()}>
-                <BieuTuong ten="pause" size={18} /> Dung
+                <BieuTuong ten="pause" size={18} /> Dừng
               </button>
               <label>
-                Toc do
+                Tốc độ
                 <select value={tocDo} onChange={(e) => setTocDo(Number(e.target.value))}>
                   {[0.65, 0.85, 1, 1.2].map((value) => (
                     <option key={value} value={value}>
@@ -204,25 +198,28 @@ export function LuyenNghe() {
             </button>
           </div>
           {daNop && (
-            <div className={`quiz-result ${dung ? 'success' : ''}`} role="status">
-              <strong>
-                {dung ? 'Chính xác! Bạn nghe rất tốt.' : 'Thử nghe lại để nắm rõ hơn nhé.'}
-              </strong>
-              <p>
-                {tab === 'Trắc nghiệm'
-                  ? `Dap an: ${bai.dapAn[bai.dung]}`
-                  : `Câu mau: ${bai.chinhTa}`}
-              </p>
-              <button
-                className="text-button"
-                onClick={() => {
-                  setDaNop(false);
-                  setDapAn(null);
-                  setChinhTa('');
-                }}
-              >
-                Làm lại bài tập
-              </button>
+            <div className={`quiz-result mate-result ${dung ? 'success' : ''}`} role="status">
+              <LinhThu size={94} camXuc={dung ? 'celebrating' : 'encouraging'} />
+              <div>
+                <strong>
+                  {dung ? 'Chính xác! Bạn nghe rất tốt.' : 'Thử nghe lại để nắm rõ hơn nhé.'}
+                </strong>
+                <p>
+                  {tab === 'Trắc nghiệm'
+                    ? `Dap an: ${bai.dapAn[bai.dung]}`
+                    : `Câu mau: ${bai.chinhTa}`}
+                </p>
+                <button
+                  className="text-button"
+                  onClick={() => {
+                    setDaNop(false);
+                    setDapAn(null);
+                    setChinhTa('');
+                  }}
+                >
+                  Làm lại bài tập
+                </button>
+              </div>
             </div>
           )}
           {chepLoi && (
@@ -258,13 +255,6 @@ export function LuyenNghe() {
               Mở sổ từ vựng <BieuTuong ten="arrow" size={16} />
             </a>
           </section>
-          <div className="tip-box">
-            <BieuTuong ten="headphones" />
-            <p>
-              Lần đầu, hãy nghe ý chính. Lần tiếp theo, chú ý từ khóa. Cuối cùng mới xem bản chép
-              lời.
-            </p>
-          </div>
         </aside>
       </div>
     </>
