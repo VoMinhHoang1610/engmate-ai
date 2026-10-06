@@ -1,6 +1,6 @@
 # Yêu cầu và backlog
 
-Cập nhật: 2026-10-04. Phạm vi hiện tại: dựng lại khung để bắt đầu phát triển EngMate-AI.
+Cập nhật: 2026-10-07. Phạm vi hiện tại: dựng lại khung để bắt đầu phát triển EngMate-AI.
 
 | ID | Yêu cầu khung | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
@@ -10,7 +10,7 @@ Cập nhật: 2026-10-04. Phạm vi hiện tại: dựng lại khung để bắt
 | S-04 | Unit/integration test backend; test API client/component/hook frontend | pytest/Vitest và coverage ≥80% | Đã test |
 | S-05 | Web kết nối backend với trạng thái tải/lỗi | UI tests, HTTP proxy smoke | Đã test |
 | S-06 | Documentation để cập nhật tiến độ, quyết định và yêu cầu | Rà soát docs/PROGRESS | Đã rà soát |
-| S-07 | Setup nhất quán, lockfile, Docker, pre-commit và CI | Setup, Docker smoke, hook local | Đã test local; CI chờ chạy GitHub |
+| S-07 | Setup nhất quán, lockfile, Docker, pre-commit và CI | Setup, Docker smoke, hook local, [GitHub Actions](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37506823374) | Đã test local và GitHub Actions |
 
 ## Backlog sản phẩm
 

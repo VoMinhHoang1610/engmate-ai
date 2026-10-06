@@ -1,5 +1,14 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-07 — Xác nhận CI thành công trên GitHub
+
+- **Bàn giao:** cả ba sửa đổi cấu hình đã nằm trong một commit `59180cf` (`fix: correct ci/cd workflow and docker health checks`), push lên `fix/ci-cache-healthchecks`, sau đó đưa vào `main` bằng fast-forward và push thông thường theo phương án push main được cho phép trong tài liệu yêu cầu.
+- **Phương án kích hoạt CI:** dự kiến mở PR nháp nhưng API không có credential dùng được và công cụ trình duyệt không có phiên kết nối. Chuyển sang phương án push main trong phạm vi yêu cầu; không thay đổi cấu hình xác thực hoặc sửa lịch sử Git.
+- **Kết quả thực tế:** [run 37506823374](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37506823374), SHA `59180cf93fc9ba2953ea83cc02b0c805ee96f81b`, event `push`, branch `main`, kết luận `success`. Các bước install, lint/types, coverage, build, Docker validation, start stack, HTTP smoke, stop stack, upload coverage và các post step đều qua; bước logs-on-failure được bỏ qua đúng điều kiện.
+- **Lỗi đã xử lý:** `Post Run actions/setup-python@v5` thành công, không còn lỗi lưu pip cache làm thất bại job.
+- **File tài liệu cập nhật:** `docs/PROGRESS.md`, `docs/REQUIREMENTS.md`; đánh dấu S-07 đã được kiểm chứng local và GitHub Actions. Commit ghi kết quả này chỉ đổi tài liệu, không đổi cấu hình hoặc logic đã được CI kiểm chứng.
+- **Giới hạn:** Docker frontend vẫn là stack dev; production image là đề xuất tùy chọn chưa triển khai. AI vẫn dùng mock và các nghiệp vụ chưa triển khai giữ nguyên backlog.
+
 ## 2026-10-07 — Sửa CI cache và health check Docker
 
 - **Yêu cầu:** đọc và thực hiện tài liệu `CICD Workflow Fixes — EngMate-AI.md`; áp dụng ba sửa đổi bắt buộc trong một commit trên nhánh `fix/ci-cache-healthchecks`, push nhánh và kiểm chứng GitHub Actions.
