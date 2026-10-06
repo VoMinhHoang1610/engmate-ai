@@ -13,6 +13,8 @@
 
 ### Changed
 
+- Bỏ pip cache của GitHub Actions để tránh lỗi đường dẫn cache khi kết thúc job.
+- Backend Docker dùng curl cho health check, giới hạn request 2 giây và cho phép khởi động 15 giây; frontend Compose có start period 30 giây.
 - Health route chuyển thành `/api/health`; cổng local mặc định 8010/5174.
 - Loại bỏ phụ thuộc GNU Make trong wrapper Windows và các cấu hình thừa của khung cũ.
 

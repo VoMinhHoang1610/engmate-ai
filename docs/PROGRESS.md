@@ -1,5 +1,17 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-07 — Sửa CI cache và health check Docker
+
+- **Yêu cầu:** đọc và thực hiện tài liệu `CICD Workflow Fixes — EngMate-AI.md`; áp dụng ba sửa đổi bắt buộc trong một commit trên nhánh `fix/ci-cache-healthchecks`, push nhánh và kiểm chứng GitHub Actions.
+- **Đối chiếu GitHub:** run [37220779051](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37220779051) thất bại ở `Post Run actions/setup-python@v5`, sau khi install, lint, coverage, build, Docker và smoke đều qua. Lỗi xảy ra khi kết thúc job, không phải lúc setup như mô tả trong file tham chiếu. Task runner chuyển pip cache sang `.cache/pip`; bỏ cấu hình cache của action để tránh lưu vào thư mục mặc định chưa có. Không kết luận pip-tools không tương thích với cache.
+- **Thay đổi:** bỏ hai dòng pip cache trong `.github/workflows/ci.yml`; cài curl tối thiểu trong `backend/Dockerfile`, probe có HTTP failure và timeout 2 giây, start period 15 giây; thêm start period 30 giây cho frontend trong `docker-compose.yml`.
+- **Phạm vi:** giữ phiên bản Python/Node, cổng, CORS, biến môi trường, tests và logic ứng dụng. Docker frontend production là đề xuất tùy chọn trong tài liệu tham chiếu và chưa triển khai.
+- **File thay đổi:** ba file cấu hình trên và `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`.
+- **Kiểm chứng local:** `.\make.cmd lint` qua Ruff, Black, mypy (26 files), ESLint, TypeScript và Prettier; `.\make.cmd test` qua 16 backend + 13 frontend tests; `.\make.cmd coverage` đạt 100% hai phía với ngưỡng 80%; `.\make.cmd build` qua (33 modules); `.\make.cmd docker-check`, `docker-up` và `smoke` đều qua.
+- **Health check thực tế:** Docker inspect xác nhận backend và frontend đều `healthy`, start period lần lượt `15s` và `30s`; backend dùng curl đúng cấu hình. HTTP smoke qua backend health, frontend HTML, API proxy và AI mock qua proxy.
+- **Môi trường kiểm chứng:** lần chạy test/coverage trong sandbox bị chặn tiến trình esbuild (`spawn EPERM`) và cache pytest; chạy lại ngoài sandbox thành công. Docker được kiểm chứng qua Docker Desktop với quyền truy cập daemon.
+- **GitHub tiếp theo:** workflow chỉ chạy trên PR hoặc push main; mở PR nháp từ nhánh sửa lỗi để chạy CI, không merge tự động. Kết quả CI của commit mới chưa có tại thời điểm ghi nhật ký; sẽ báo kết quả run khi GitHub hoàn tất.
+
 ## 2026-10-05 — Bàn giao khung dự án vào main
 
 - **Yêu cầu:** người dùng cho phép merge khung vào `main` và cập nhật GitHub.
