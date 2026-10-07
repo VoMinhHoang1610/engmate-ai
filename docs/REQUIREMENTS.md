@@ -1,6 +1,6 @@
 # Yêu cầu và backlog
 
-Cập nhật: 2026-10-06. Phạm vi hiện tại: khung API và bản demo frontend đa trang cho EngMate-AI.
+Cập nhật: 2026-10-07. Phạm vi hiện tại: khung API và bản demo frontend đa trang cho EngMate-AI.
 
 | ID | Yêu cầu khung | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
@@ -17,7 +17,7 @@ Cập nhật: 2026-10-06. Phạm vi hiện tại: khung API và bản demo front
 | ID | Yêu cầu demo | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
 | D-01 | Giao diện hiện đại, sidebar desktop và menu drawer trên mobile | Responsive review, build | Đã hoàn thành |
-| D-02 | 10 trang học tập: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt; trang đăng nhập độc lập | Vitest route/menu/tài khoản | Đã test |
+| D-02 | 12 trang học tập: tổng quan, lộ trình, hội thoại AI, Speaking, chủ đề nhập vai, Listening, Reading, Writing, sổ từ vựng, flashcard, hồ sơ và cài đặt; trang đăng nhập độc lập | Vitest route/menu/tài khoản | Đã test các route kỹ năng; test tài khoản cũ còn lỗi |
 | D-03 | Tên file, component và hash route tiếng Việt không dấu | Rà soát `frontend/src` | Đã hoàn thành |
 | D-04 | Lưu hồ sơ, từ vựng, thống kê ngày và lịch ôn trong trình duyệt | Test lưu/khôi phục/lỗi storage | Đã test |
 | D-05 | Hội thoại gọi `/api/ai/reply`; các phản hồi mô phỏng phải có nhãn rõ ràng | Test success/error/abort | Đã test với mock |
@@ -36,6 +36,13 @@ Cập nhật: 2026-10-06. Phạm vi hiện tại: khung API và bản demo front
 Ứng dụng chưa tạo tài khoản backend hoặc gửi email, chưa có STT/chấm phát âm thật và chưa phân tích bài viết bằng mô hình AI. Chú thích demo chỉ hiển thị cạnh tính năng AI; trang tài khoản ghi thông tin học tập được lưu trên trình duyệt.
 
 ## Backlog sản phẩm
+
+| ID | Yêu cầu bổ sung | Kiểm chứng | Trạng thái |
+| --- | --- | --- | --- |
+| D-17 | Reading với 3 bài đọc A2/B1/B2, trắc nghiệm/điểm/giải thích, lưu từ vựng và ghi nhận phút học; tên kỹ năng Speaking/Listening/Reading/Writing trong menu, tổng quan, tiêu đề | 5 Vitest mới, coverage Reading; Chrome 30 tổ hợp bài/theme/viewport và luồng chấm/lưu từ | Đã test |
+| D-18 | Nút hỗ trợ Mate cầm điện thoại, kính mờ khi nghỉ/đậm khi hover và kéo; kéo chuột/cảm ứng có giới hạn màn hình, panel và bàn phím hoạt động | 4 Vitest mới; Chrome sáng/tối, hover/kéo và cảm ứng 320/390/768 px | Đã test |
+| D-19 | Lộ trình Pre-A1 → C2; người mới có chữ cái/số đếm/lời chào; lưu và khôi phục mức học, bốn kỹ năng/nhập vai/API hỗ trợ bảy mức | 15 Vitest mới; 21 backend tests; Chrome 232 tổ hợp và API cả bảy mức | Đã test nội dung thực hành; chưa phải khóa học/bài thi chứng nhận CEFR |
+| D-20 | Mate hỏi khả năng tiếng Anh ngay sau đăng nhập đầu tiên bằng mô tả dễ hiểu, không hiện mã CEFR trong lựa chọn; tự đặt mức học và nhớ đã làm quen; đăng ký mới được hỏi lại | 13 Vitest luồng đăng nhập/lưu/migration/bảy câu trả lời; Chrome 8 tổ hợp sáng/tối/viewport và đăng nhập lại | Đã test |
 
 1. SQLAlchemy async, PostgreSQL, Alembic và models User/LearnerProfile/Conversation/Message/ErrorRecord.
 2. Đăng ký/đăng nhập JWT, hồ sơ CEFR và kiểm tra quyền sở hữu; xóa dữ liệu tài khoản.

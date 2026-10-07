@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { hoSoMau, tuVungMau, type HoSo, type TuVung } from './duLieu';
+import { laTrinhDo } from './trinhDo';
 
 export interface CaiDatNguoiDung {
   giaoDien: 'sang' | 'toi' | 'he-thong';
@@ -16,6 +17,7 @@ interface DuLieu {
   hoSo: HoSo;
   tuVung: TuVung[];
   daDangNhap: boolean;
+  daLamQuen: boolean;
   phutHoc: number;
   luotOn: number;
   ngayHoatDong: string;
@@ -41,6 +43,7 @@ const macDinh: DuLieu = {
   hoSo: hoSoMau,
   tuVung: tuVungMau,
   daDangNhap: false,
+  daLamQuen: false,
   phutHoc: 0,
   luotOn: 0,
   ngayHoatDong: homNay(),
@@ -58,7 +61,7 @@ function docDuLieu(): DuLieu {
       typeof data.hoSo.ten !== 'string' ||
       !data.hoSo.ten.trim() ||
       typeof data.hoSo.email !== 'string' ||
-      !['A2', 'B1', 'B2'].includes(data.hoSo.trinhDo) ||
+      !laTrinhDo(data.hoSo.trinhDo) ||
       typeof data.hoSo.mucTieu !== 'string' ||
       !Number.isFinite(data.hoSo.phutMoiNgay) ||
       data.hoSo.phutMoiNgay < 10 ||
@@ -89,6 +92,7 @@ function docDuLieu(): DuLieu {
     return {
       ...macDinh,
       ...data,
+      daLamQuen: data.daLamQuen === true,
       hoSo: {
         ...macDinh.hoSo,
         ...data.hoSo,

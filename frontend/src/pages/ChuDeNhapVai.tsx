@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
-import { chuDeMau, diChuyen } from '../demo/duLieu';
+import { chuDeMau } from '../demo/duLieu';
+import { danhSachTrinhDo } from '../demo/trinhDo';
 
 export function ChuDeNhapVai() {
   const [loc, setLoc] = useState('Tất cả');
@@ -9,7 +10,7 @@ export function ChuDeNhapVai() {
     <>
       <TieuDeTrang ten="Chủ đề & nhập vai" />
       <div className="filter-bar">
-        {['Tất cả', 'A2', 'B1', 'B2'].map((item) => (
+        {['Tất cả', ...danhSachTrinhDo.map((muc) => muc.id)].map((item) => (
           <button
             key={item}
             className={`filter-chip ${loc === item ? 'active' : ''}`}
@@ -21,7 +22,7 @@ export function ChuDeNhapVai() {
       </div>
       <div className="topics-grid">
         {chuDeMau
-          .filter((item) => loc === 'Tất cả' || item.trinhDo.includes(loc))
+          .filter((item) => loc === 'Tất cả' || item.trinhDo.split(' – ').includes(loc))
           .map((topic) => (
             <article className="topic-card" key={topic.id}>
               <div className={`topic-illustration ${topic.mauSac}`}>
@@ -32,7 +33,9 @@ export function ChuDeNhapVai() {
                 <h2>{topic.ten}</h2>
                 <button
                   className="btn secondary full-width"
-                  onClick={() => diChuyen('hoi-thoai-ai', topic.id)}
+                  onClick={() => {
+                    window.location.hash = `hoi-thoai-ai?chu-de=${topic.id}&trinh-do=${loc === 'Tất cả' ? topic.trinhDo.split(' – ')[0] : loc}`;
+                  }}
                 >
                   Bắt đầu nhập vai <BieuTuong ten="arrow" size={17} />
                 </button>

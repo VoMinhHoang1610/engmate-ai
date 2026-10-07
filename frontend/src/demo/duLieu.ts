@@ -1,16 +1,20 @@
+import type { TrinhDo } from './trinhDo';
+export type { TrinhDo } from './trinhDo';
+
 export type Trang =
   | 'tong-quan'
+  | 'lo-trinh'
   | 'hoi-thoai-ai'
   | 'luyen-noi'
   | 'chu-de-nhap-vai'
   | 'luyen-nghe'
   | 'luyen-viet'
+  | 'luyen-doc'
   | 'so-tu-vung'
   | 'flashcard'
   | 'ho-so'
   | 'cai-dat'
   | 'dang-nhap';
-export type TrinhDo = 'A2' | 'B1' | 'B2';
 export interface HoSo {
   ten: string;
   email: string;
@@ -45,17 +49,39 @@ export interface ChuDe {
 }
 export const danhSachTrang: { id: Trang; ten: string; icon: string; nhom: string }[] = [
   { id: 'tong-quan', ten: 'Tổng quan', icon: 'grid', nhom: 'KHÔNG GIAN HỌC TẬP' },
+  { id: 'lo-trinh', ten: 'Lộ trình học', icon: 'compass', nhom: 'KHÔNG GIAN HỌC TẬP' },
   { id: 'hoi-thoai-ai', ten: 'Hội thoại AI', icon: 'chat', nhom: 'LUYỆN TẬP' },
-  { id: 'luyen-noi', ten: 'Luyện nói', icon: 'mic', nhom: 'LUYỆN TẬP' },
+  { id: 'luyen-noi', ten: 'Speaking', icon: 'mic', nhom: 'LUYỆN TẬP' },
   { id: 'chu-de-nhap-vai', ten: 'Chủ đề & nhập vai', icon: 'compass', nhom: 'LUYỆN TẬP' },
-  { id: 'luyen-nghe', ten: 'Luyện nghe', icon: 'headphones', nhom: 'LUYỆN TẬP' },
-  { id: 'luyen-viet', ten: 'Luyện viết', icon: 'pen', nhom: 'LUYỆN TẬP' },
+  { id: 'luyen-nghe', ten: 'Listening', icon: 'headphones', nhom: 'LUYỆN TẬP' },
+  { id: 'luyen-doc', ten: 'Reading', icon: 'book', nhom: 'LUYỆN TẬP' },
+  { id: 'luyen-viet', ten: 'Writing', icon: 'pen', nhom: 'LUYỆN TẬP' },
   { id: 'so-tu-vung', ten: 'Sổ từ vựng', icon: 'book', nhom: 'GHI NHỚ' },
   { id: 'flashcard', ten: 'Flashcard', icon: 'layers', nhom: 'GHI NHỚ' },
   { id: 'ho-so', ten: 'Hồ sơ học tập', icon: 'user', nhom: 'CÁ NHÂN' },
   { id: 'cai-dat', ten: 'Cài đặt', icon: 'settings', nhom: 'CÁ NHÂN' },
 ];
 export const chuDeMau: ChuDe[] = [
+  {
+    id: 'first-hello',
+    ten: 'Lời chào đầu tiên',
+    moTa: 'Làm quen với hello, goodbye và tên của bạn.',
+    vai: 'New friend',
+    mau: 'Hello! My name is Mate. What is your name?',
+    mauSac: 'green',
+    bieuTuong: 'chat',
+    trinhDo: 'Pre-A1',
+  },
+  {
+    id: 'my-family',
+    ten: 'Tôi và gia đình',
+    moTa: 'Giới thiệu bản thân và người thân bằng câu đơn giản.',
+    vai: 'Classmate',
+    mau: 'Hi! I am Mate. I like music. What do you like?',
+    mauSac: 'yellow',
+    bieuTuong: 'user',
+    trinhDo: 'A1',
+  },
   {
     id: 'coffee',
     ten: 'Một tách cà phê',
@@ -136,6 +162,26 @@ export const chuDeMau: ChuDe[] = [
     bieuTuong: 'briefcase',
     trinhDo: 'B1 – B2',
   },
+  {
+    id: 'policy',
+    ten: 'Một đề xuất mới',
+    moTa: 'Thảo luận giải pháp và phản biện một chính sách.',
+    vai: 'Policy adviser',
+    mau: 'The proposal promises substantial benefits, but what assumptions would you want to examine before endorsing it?',
+    mauSac: 'purple',
+    bieuTuong: 'briefcase',
+    trinhDo: 'C1',
+  },
+  {
+    id: 'nuance',
+    ten: 'Sắc thái trong tranh luận',
+    moTa: 'Đàm phán và diễn đạt ý tinh tế trong tình huống phức tạp.',
+    vai: 'Debate partner',
+    mau: 'To what extent can a compromise preserve the principles of both parties without merely postponing their disagreement?',
+    mauSac: 'blue',
+    bieuTuong: 'compass',
+    trinhDo: 'C2',
+  },
 ];
 export const tuVungMau: TuVung[] = [
   {
@@ -207,7 +253,7 @@ export const hoSoMau: HoSo = {
   ngaySinh: '1998-10-16',
   gioiTinh: 'Nữ',
   anhDaiDien: '',
-  trinhDo: 'B1',
+  trinhDo: 'Pre-A1',
   mucTieu: 'Giao tiếp tự tin',
   phutMoiNgay: 20,
 };

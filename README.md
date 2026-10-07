@@ -1,8 +1,14 @@
 # EngMate-AI
 
+Sau lần đăng nhập đầu tiên, **Mate** chào và hỏi trình độ bằng những câu dễ hiểu như “Mình bắt đầu từ con số 0”, “Mình biết vài từ và câu rất đơn giản”. Không cần biết mã A1/A2: câu trả lời tự đặt mức học, lưu trong trình duyệt và không hỏi lại sau khi hoàn thành. Hồ sơ demo cũ chưa trả lời cũng được hỏi một lần; đăng ký mới bắt đầu lại bước làm quen.
+
+Trang **Lộ trình học** tại `http://127.0.0.1:5174/#lo-trinh` đi từ **Pre-A1 → A1 → A2 → B1 → B2 → C1 → C2**. Người bắt đầu từ số 0 được học Pre-A1, có 26 chữ cái, số 0–10 và lời chào kèm giọng đọc chậm. Mỗi chặng có mục tiêu, trọng tâm và liên kết Speaking/Listening/Reading/Writing; người học có thể điều chỉnh chặng về sau. Nội dung thực hành theo mức chưa phải khóa học đầy đủ hoặc bài thi chứng nhận CEFR.
+
+Trang **Reading** tại `http://127.0.0.1:5174/#luyen-doc` có 7 bài đọc Pre-A1 đến C2, mỗi bài 3 câu hỏi đọc hiểu, kết quả và giải thích đáp án. Từ vựng trong bài có thể lưu vào sổ từ vựng. Hoàn thành bài ghi nhận 5 phút luyện tập; làm lại cùng bài trong một lần mở trang không cộng thêm phút. Speaking có câu mẫu, Listening có bài nghe/chính tả và Writing có đề/gợi ý riêng cho cả 7 mức. Trình độ được chọn từ liên kết lộ trình hoặc hồ sơ; hồ sơ A2/B1/B2 cũ được giữ nguyên.
+
 Ứng dụng demo luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Frontend hiện có 10 trang học tập responsive: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt. Đăng nhập/đăng ký/khôi phục tài khoản có trang riêng tại `#dang-nhap`, tách khỏi sidebar và thanh trên cùng của không gian học tập. Menu avatar dẫn đến trang đăng nhập; đăng nhập xong có nút vào không gian học tập. Dữ liệu và tùy chọn giao diện/âm thanh được lưu trong trình duyệt. Chi tiết kiểm chứng và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+Frontend hiện có 12 trang học tập responsive: tổng quan, lộ trình, hội thoại AI, Speaking, chủ đề nhập vai, Listening, Reading, Writing, sổ từ vựng, flashcard, hồ sơ và cài đặt. Đăng nhập/đăng ký/khôi phục tài khoản có trang riêng tại `#dang-nhap`, tách khỏi sidebar và thanh trên cùng của không gian học tập. Người mới làm quen với Mate trước khi vào học; người đã hoàn thành bước này có thể vào không gian học tập như trước. Dữ liệu và tùy chọn giao diện/âm thanh được lưu trong trình duyệt. Chi tiết kiểm chứng và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
 
 Giao diện có linh thú **Mate** đồng hành ở tổng quan, hội thoại và luyện tập: chào, đeo tai nghe, suy nghĩ, động viên và ăn mừng theo kết quả học. Banner gradient, thẻ màu/cạnh nổi và hiệu ứng tương tác hỗ trợ sáng/tối và điện thoại. Tiêu đề và tùy chọn chỉ giữ nhãn cần thiết; hướng dẫn luyện nói/flashcard có thể mở khi cần. Chế độ Giảm chuyển động trong Cài đặt hoặc tùy chọn hệ thống tắt animation. Nguồn thiết kế và bản SVG của Mate nằm trong [hướng dẫn linh thú](docs/LINH_THU.md).
 
@@ -24,7 +30,7 @@ frontend/
   src/components/   Thành phần giao diện và icon dùng chung
   src/demo/         Dữ liệu mẫu, lưu trữ và phát âm trình duyệt
   src/hooks/        Logic health API và test vòng đời
-  src/pages/        10 trang demo và trang health cũ
+  src/pages/        12 trang học tập, trang tài khoản và trang health cũ
   src/types/        Kiểu dữ liệu dùng chung
   tests/            Thiết lập Vitest/React Testing Library
   e2e/              Dành cho E2E khi triển khai luồng nghiệp vụ
@@ -62,7 +68,7 @@ Trên mọi hệ điều hành có thể dùng `python scripts/manage.py setup`.
 
 Mở web tại `http://127.0.0.1:5174/#tong-quan`. Frontend gọi `/api/ai/reply` qua Vite proxy trên trang hội thoại; proxy mặc định trỏ tới backend cổng 8010 nên không cần cấu hình URL API trong mã UI.
 
-Trang đăng nhập riêng: `http://127.0.0.1:5174/#dang-nhap`. Bố cục hai nửa với panel Mate navy/cyan cuộn sang khi đổi đăng nhập ↔ đăng ký; form “mở cuộn” theo hướng, sóng viền và tia sáng phụ. Có nút Google/Facebook/GitHub (mức giao diện, bấm sẽ báo chưa khả dụng). Các liên kết cũ `#tai-khoan` và `#cai-dat?muc=tai-khoan` cũng mở trang này. Cài đặt chỉ chứa tùy chọn học tập; khách có thể quay về học mà không đăng nhập. Phiên tài khoản hiện vẫn được mô phỏng trên trình duyệt, chưa có xác thực backend, OAuth hoặc gửi email.
+Trang đăng nhập riêng: `http://127.0.0.1:5174/#dang-nhap`. Bố cục hai nửa với panel Mate navy/cyan cuộn sang khi đổi đăng nhập ↔ đăng ký; form “mở cuộn” theo hướng, sóng viền và tia sáng phụ. Có nút Google/Facebook/GitHub (mức giao diện, bấm sẽ báo chưa khả dụng). Các liên kết cũ `#tai-khoan` và `#cai-dat?muc=tai-khoan` cũng mở trang này. Cài đặt chỉ chứa tùy chọn học tập; cần đăng nhập và hoàn thành làm quen để mở không gian học tập. Phiên tài khoản hiện vẫn được mô phỏng trên trình duyệt, chưa có xác thực backend, OAuth hoặc gửi email.
 
 Đổi cổng bằng `dev-backend --port 8011` / `dev-frontend --port 5175`. Khi đổi cổng backend, đặt `$env:BACKEND_URL = 'http://127.0.0.1:8011'` trong terminal frontend. Nếu chạy web ngoài Vite proxy, cấu hình CORS theo origin thực tế.
 

@@ -41,6 +41,7 @@ describe('Giao diện tối giản', () => {
       'luyen-noi',
       'luyen-nghe',
       'luyen-viet',
+      'luyen-doc',
       'chu-de-nhap-vai',
       'so-tu-vung',
       'flashcard',
@@ -68,8 +69,8 @@ describe('Giao diện tối giản', () => {
     const goal = screen.getByRole('progressbar', { name: 'Mục tiêu hôm nay' });
     expect(goal).toHaveAttribute('aria-valuenow', '0');
     expect(goal).toHaveAttribute('aria-valuemax', '100');
-    fireEvent.click(screen.getByRole('button', { name: 'Luyện nghe' }));
-    expect(await screen.findByRole('heading', { name: 'Luyện nghe', level: 1 })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Listening' }));
+    expect(await screen.findByRole('heading', { name: 'Listening', level: 1 })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Phát bài nghe' })).toBeVisible();
   });
 

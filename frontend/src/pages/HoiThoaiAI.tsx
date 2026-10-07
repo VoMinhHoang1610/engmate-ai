@@ -5,6 +5,7 @@ import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 import { chuDeMau, tuVungMau, type TrinhDo } from '../demo/duLieu';
 import { docTiengAnh } from '../demo/amThanh';
+import { danhSachTrinhDo, layTrinhDoHoc } from '../demo/trinhDo';
 
 interface TinNhan {
   id: number;
@@ -14,8 +15,11 @@ interface TinNhan {
 export function HoiThoaiAI() {
   const { hoSo, luuTu, tuVung } = useDuLieu();
   const topicId = new URLSearchParams(window.location.hash.split('?')[1]).get('chu-de');
-  const topic = chuDeMau.find((item) => item.id === topicId) ?? chuDeMau[0];
-  const [level, setLevel] = useState<TrinhDo>(hoSo.trinhDo);
+  const topic =
+    chuDeMau.find((item) => item.id === topicId) ??
+    chuDeMau.find((item) => item.trinhDo.split(' – ').includes(layTrinhDoHoc(hoSo.trinhDo))) ??
+    chuDeMau[0];
+  const [level, setLevel] = useState<TrinhDo>(() => layTrinhDoHoc(hoSo.trinhDo));
   const [tinNhan, setTinNhan] = useState<TinNhan[]>([{ id: 0, vai: 'ai', noiDung: topic.mau }]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -113,9 +117,11 @@ export function HoiThoaiAI() {
                 value={level}
                 onChange={(e) => setLevel(e.target.value as TrinhDo)}
               >
-                <option>A2</option>
-                <option>B1</option>
-                <option>B2</option>
+                {danhSachTrinhDo.map((muc) => (
+                  <option key={muc.id} value={muc.id}>
+                    {muc.id}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

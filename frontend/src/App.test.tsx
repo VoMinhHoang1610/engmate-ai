@@ -58,7 +58,7 @@ describe('EngMate demo', () => {
 
     expect(screen.getByRole('heading', { name: /Chào Anh/ })).toBeVisible();
     const navigation = screen.getByRole('navigation', { name: 'Menu chính' });
-    expect(within(navigation).getAllByRole('link')).toHaveLength(10);
+    expect(within(navigation).getAllByRole('link')).toHaveLength(12);
     expect(within(navigation).getByRole('link', { name: 'Tổng quan' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -109,11 +109,13 @@ describe('EngMate demo', () => {
   it('routes to every Vietnamese page and falls back for unknown routes', () => {
     moTrang('#tong-quan');
     const pages = [
+      ['#lo-trinh', 'Lộ trình học'],
       ['#hoi-thoai-ai', 'Hội thoại AI'],
-      ['#luyen-noi', 'Luyện nói'],
+      ['#luyen-noi', 'Speaking'],
       ['#chu-de-nhap-vai', 'Chủ đề & nhập vai'],
-      ['#luyen-nghe', 'Luyện nghe'],
-      ['#luyen-viet', 'Luyện viết'],
+      ['#luyen-nghe', 'Listening'],
+      ['#luyen-viet', 'Writing'],
+      ['#luyen-doc', 'Reading'],
       ['#so-tu-vung', 'Sổ từ vựng'],
       ['#flashcard', 'Flashcard'],
       ['#ho-so', 'Hồ sơ học tập'],
@@ -233,7 +235,7 @@ describe('EngMate demo', () => {
     fireEvent.click(screen.getByRole('button', { name: /Câu tiếp theo/ }));
 
     doiTrang('#luyen-nghe');
-    await screen.findByRole('heading', { name: 'Luyện nghe' });
+    await screen.findByRole('heading', { name: 'Listening' });
     fireEvent.click(screen.getByRole('radio', { name: /A small latte with oat milk/ }));
     fireEvent.click(screen.getByRole('button', { name: /Kiểm tra đáp án/ }));
     expect(screen.getByRole('status')).toHaveTextContent('Chinh xac');
@@ -245,7 +247,7 @@ describe('EngMate demo', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Chinh xac');
 
     doiTrang('#luyen-viet');
-    await screen.findByRole('heading', { name: 'Luyện viết' });
+    await screen.findByRole('heading', { name: 'Writing' });
     fireEvent.click(screen.getByRole('button', { name: /Gợi ý mở đầu/ }));
     fireEvent.change(screen.getByLabelText('Bài viết tiếng Anh'), {
       target: { value: 'I am study English because it is very good.' },

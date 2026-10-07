@@ -3,7 +3,8 @@ import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { Select } from '../components/Select';
 import { useDuLieu } from '../demo/LuuTru';
-import type { TrinhDo } from '../demo/duLieu';
+import type { TrinhDo, HoSo as DuLieuHoSo } from '../demo/duLieu';
+import { danhSachTrinhDo } from '../demo/trinhDo';
 
 export function HoSo() {
   const { hoSo, capNhat, phutHoc, luotOn, tuVung } = useDuLieu();
@@ -22,7 +23,7 @@ export function HoSo() {
       <TieuDeTrang ten="Hồ sơ học tập" />
       <div className="profile-layout">
         <aside className="panel profile-summary">
-            <label className="avatar-upload" title="Nhấn để đổi ảnh">
+          <label className="avatar-upload" title="Nhấn để đổi ảnh">
             <div className="avatar-wrapper">
               {form.anhDaiDien ? (
                 <img src={form.anhDaiDien} alt="Avatar" className="avatar large avatar-img" />
@@ -35,9 +36,9 @@ export function HoSo() {
               </div>
             </div>
             <span className="avatar-upload-text">Sửa ảnh</span>
-            <input 
-              type="file" 
-              accept="image/*" 
+            <input
+              type="file"
+              accept="image/*"
               style={{ display: 'none' }}
               onChange={(e) => {
                 const file = e.target.files?.[0];
@@ -53,7 +54,7 @@ export function HoSo() {
                   };
                   reader.readAsDataURL(file);
                 }
-              }} 
+              }}
             />
           </label>
           <h2>{hoSo.ten}</h2>
@@ -94,10 +95,7 @@ export function HoSo() {
             </label>
             <label>
               Tài khoản
-              <input
-                disabled
-                value={form.taiKhoan}
-              />
+              <input disabled value={form.taiKhoan} />
             </label>
             <label>
               Số điện thoại
@@ -119,7 +117,7 @@ export function HoSo() {
               Giới tính
               <Select
                 value={form.gioiTinh}
-                onChange={(val) => setForm({ ...form, gioiTinh: val as any })}
+                onChange={(val) => setForm({ ...form, gioiTinh: val as DuLieuHoSo['gioiTinh'] })}
                 options={[
                   { value: '', label: 'Chưa xác định' },
                   { value: 'Nam', label: 'Nam' },
@@ -144,11 +142,10 @@ export function HoSo() {
             <Select
               value={form.trinhDo}
               onChange={(val) => setForm({ ...form, trinhDo: val as TrinhDo })}
-              options={[
-                { value: 'A2', label: 'A2 — Cơ bản' },
-                { value: 'B1', label: 'B1 — Trung cấp' },
-                { value: 'B2', label: 'B2 — Trên trung cấp' },
-              ]}
+              options={danhSachTrinhDo.map((muc) => ({
+                value: muc.id,
+                label: `${muc.id} — ${muc.ten}`,
+              }))}
             />
           </label>
           <label>

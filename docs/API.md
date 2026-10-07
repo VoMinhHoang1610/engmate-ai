@@ -27,7 +27,7 @@ HTTP 200:
 ```
 
 - `message`: chuỗi 1–2000 ký tự sau khi bỏ khoảng trắng hai đầu.
-- `level`: A2/B1/B2; mặc định A2. Field ngoài hợp đồng bị từ chối.
+- `level`: Pre-A1/A1/A2/B1/B2/C1/C2; mặc định A2 để giữ tương thích hợp đồng cũ. Frontend gửi mức đã chọn trong lộ trình/hồ sơ. Field ngoài hợp đồng bị từ chối. A0/C3 không phải giá trị hỗ trợ.
 - HTTP 422: đầu vào sai, quá dài/rỗng hoặc trình độ không hỗ trợ.
 - HTTP 504: provider timeout; response `{"detail":"AI provider timed out."}` không tiết lộ chi tiết nội bộ.
 

@@ -8,7 +8,6 @@ import { useDuLieu } from '../demo/LuuTru';
 type CheDoTaiKhoan = 'dang-nhap' | 'dang-ky' | 'quen-mat-khau';
 type IntroPhase = 'jump' | 'greet' | 'morph' | 'ready';
 
-const INTRO_STORAGE_KEY = 'engmate-auth-intro-done';
 const LOI_CHAO_INTRO = 'Chào mừng đến với học tiếng anh cùng EngMate!';
 
 function boQuaIntroNgay(daDangNhap: boolean, giamChuyenDong: boolean): boolean {
@@ -44,10 +43,6 @@ export function TaiKhoan() {
 
   useEffect(() => {
     if (intro !== 'jump') return;
-    if (caiDat.giamChuyenDong || daDangNhap) {
-      ketThucIntro();
-      return;
-    }
     const greet = window.setTimeout(() => setIntro('greet'), 780);
     const morph = window.setTimeout(() => setIntro('morph'), 2680);
     const done = window.setTimeout(() => {
@@ -137,7 +132,11 @@ export function TaiKhoan() {
         return;
       }
     }
-    capNhat({ daDangNhap: true, hoSo: { ...hoSo, email, ten: ten.trim() || hoSo.ten } });
+    capNhat({
+      daDangNhap: true,
+      ...(cheDo === 'dang-ky' ? { daLamQuen: false } : {}),
+      hoSo: { ...hoSo, email: email || hoSo.email, ten: ten.trim() || hoSo.ten },
+    });
     setThongBao('Đã vào tài khoản.');
   }
 
@@ -181,7 +180,13 @@ export function TaiKhoan() {
               className={`auth-intro-speech${intro === 'greet' || intro === 'morph' ? ' is-on' : ''}`}
             >
               {LOI_CHAO_INTRO.slice(0, soKyTu)}
-              <span className="cursor-blink" aria-hidden="true" style={{ opacity: soKyTu < LOI_CHAO_INTRO.length ? 1 : 0 }}>|</span>
+              <span
+                className="cursor-blink"
+                aria-hidden="true"
+                style={{ opacity: soKyTu < LOI_CHAO_INTRO.length ? 1 : 0 }}
+              >
+                |
+              </span>
             </p>
           </div>
         )}
@@ -219,7 +224,7 @@ export function TaiKhoan() {
             className={`auth-stage${dangKy ? ' is-register' : ''}${khoiPhuc ? ' is-recovery' : ''}${dangIntro ? ' is-intro-hidden' : ' is-intro-reveal'}`}
             data-auth-direction={huong}
             aria-hidden={dangIntro && intro !== 'morph' ? true : undefined}
-            {...(dangIntro && intro !== 'morph' ? { inert: true as any } : {})}
+            inert={dangIntro && intro !== 'morph'}
           >
             <div className="auth-stage-glow" aria-hidden="true" />
             <section className="auth-form-pane" aria-labelledby="auth-title">
@@ -340,7 +345,8 @@ export function TaiKhoan() {
                       />
                       {provider && (
                         <p className="auth-provider-note" role="status">
-                          Đăng nhập bằng {provider} hiện chưa khả dụng. Bạn có thể dùng email.
+                          Đăng nhập bằng {provider} hiện chưa khả dụng. Bạn có thể dùng tài khoản để
+                          đăng nhập.
                         </p>
                       )}
                     </div>

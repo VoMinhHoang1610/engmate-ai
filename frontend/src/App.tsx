@@ -6,23 +6,26 @@ import { MenuNguoiDung } from './components/MenuNguoiDung';
 import { LuuTru, useDuLieu } from './demo/LuuTru';
 import { danhSachTrang, layTrang } from './demo/duLieu';
 import { TongQuan } from './pages/TongQuan';
+import { LoTrinhHoc } from './pages/LoTrinhHoc';
 import { HoiThoaiAI } from './pages/HoiThoaiAI';
 import { LuyenNoi } from './pages/LuyenNoi';
 import { ChuDeNhapVai } from './pages/ChuDeNhapVai';
 import { LuyenNghe } from './pages/LuyenNghe';
 import { LuyenViet } from './pages/LuyenViet';
+import { LuyenDoc } from './pages/LuyenDoc';
 import { SoTuVung } from './pages/SoTuVung';
 import { Flashcard } from './pages/Flashcard';
 import { HoSo } from './pages/HoSo';
 import { CaiDat } from './pages/CaiDat';
 import { TaiKhoan } from './pages/TaiKhoan';
 import { HoTroNhanh } from './components/HoTroNhanh';
+import { LamQuenCungMate } from './pages/LamQuenCungMate';
 
 function KhungTrang() {
   const [trang, setTrang] = useState(layTrang);
   const [hash, setHash] = useState(window.location.hash);
   const [menu, setMenu] = useState(false);
-  const { hoSo, loiLuu, daDangNhap } = useDuLieu();
+  const { hoSo, loiLuu, daDangNhap, daLamQuen } = useDuLieu();
   useEffect(() => {
     const timers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
     const showScrollbar = (event: Event) => {
@@ -66,16 +69,19 @@ function KhungTrang() {
     return () => window.removeEventListener('keydown', escape);
   }, []);
   useEffect(() => {
-    document.title = `${trang === 'dang-nhap' ? 'Đăng nhập' : danhSachTrang.find((item) => item.id === trang)?.ten} · EngMate-AI`;
-  }, [trang]);
+    document.title = `${daDangNhap && !daLamQuen ? 'Làm quen cùng Mate' : trang === 'dang-nhap' ? 'Đăng nhập' : danhSachTrang.find((item) => item.id === trang)?.ten} · EngMate-AI`;
+  }, [trang, daDangNhap, daLamQuen]);
+  if (daDangNhap && !daLamQuen) return <LamQuenCungMate />;
   if (!daDangNhap || trang === 'dang-nhap') return <TaiKhoan key={hash} />;
   const pages = {
     'tong-quan': <TongQuan />,
+    'lo-trinh': <LoTrinhHoc />,
     'hoi-thoai-ai': <HoiThoaiAI key={hash} />,
     'luyen-noi': <LuyenNoi />,
     'chu-de-nhap-vai': <ChuDeNhapVai />,
     'luyen-nghe': <LuyenNghe />,
     'luyen-viet': <LuyenViet />,
+    'luyen-doc': <LuyenDoc />,
     'so-tu-vung': <SoTuVung />,
     flashcard: <Flashcard />,
     'ho-so': <HoSo />,

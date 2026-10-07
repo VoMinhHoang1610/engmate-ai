@@ -1,12 +1,13 @@
 # Kiến trúc
 
-Cập nhật: 2026-10-06.
+Cập nhật: 2026-10-07.
 
 ```mermaid
 flowchart LR
   UI[React + TypeScript] --> Router[Hash router]
-  Router --> Learning[App shell + 10 trang học tập]
+  Router --> Learning[App shell + 12 trang học tập]
   Router --> Auth[Trang đăng nhập độc lập]
+  Router --> Onboarding[Mate hỏi mức học lần đầu]
   Router --> Store[Context + localStorage]
   Router --> Browser[Web Speech + MediaRecorder]
   Router --> Proxy[Vite proxy /api]
@@ -20,9 +21,12 @@ flowchart LR
 - Router kiểm tra request bằng Pydantic, gọi service và chuyển timeout thành HTTP 504.
 - Service chịu trách nhiệm cung cấp prompt/ngữ cảnh. Provider SDK từ bước tiếp theo chỉ nằm trong `llm/`.
 - Application factory tạo app riêng cho integration test; dependency override mô phỏng lỗi không gọi mạng.
-- App tự quản lý hash route để bản demo không cần thêm router dependency. Menu desktop/mobile, header và footer dùng chung cho 10 trang học tập. Route đăng nhập dùng bố cục riêng, không render sidebar/topbar học tập.
+- App tự quản lý hash route để bản demo không cần thêm router dependency. Menu desktop/mobile, header và footer dùng chung cho 12 trang học tập. Route đăng nhập dùng bố cục riêng, không render sidebar/topbar học tập.
+- `demo/trinhDo.ts` định nghĩa bảy mức Pre-A1 đến C2, mục tiêu và đề Speaking/Writing. `LoTrinhHoc` lưu chặng tự chọn vào hồ sơ; `NenTangTiengAnh` dạy chữ cái/số/lời chào qua Web Speech. Bài kỹ năng đọc tham số `trinh-do` hợp lệ, sau đó fallback trình độ hồ sơ; query không đổi hồ sơ trừ khi bấm liên kết từ lộ trình. `baiNghe.ts` và `baiDocBoSung.ts` bổ sung nội dung theo cả bảy mức. LocalStorage cũ giữ tương thích; hồ sơ mới mặc định Pre-A1. Schema/prompt API chấp nhận bảy mức, vẫn dùng mock.
+- Reading dùng `demo/baiDoc.ts` chứa bài đọc, câu hỏi, đáp án, giải thích và từ vựng. `pages/LuyenDoc.tsx` quản lý lựa chọn và kết quả tại trang; đổi bài/làm lại xóa đáp án. Chấm trực tiếp từ đáp án biên soạn, không gọi AI. Lưu từ và ghi nhận 5 phút qua Context hiện có; Set ở trang ngăn cộng phút lặp cùng bài trong một lần mở trang, không phải bộ đo thời gian thực. Không thêm endpoint hoặc dependency.
 - `demo/LuuTru.tsx` cung cấp Context cho hồ sơ, từ vựng, thống kê, lịch ôn và cài đặt; dữ liệu được kiểm tra trước khi đọc từ `localStorage` và lỗi ghi được báo trên giao diện. Cài đặt mới dùng cùng khóa `engmate-demo-v1`, bổ sung giá trị mặc định cho dữ liệu cũ hoặc tùy chọn sai định dạng, giữ hồ sơ và lịch ôn.
-- Route `#dang-nhap` render trang độc lập `TaiKhoan` cho đăng nhập/đăng ký/khôi phục. Alias `#tai-khoan` và `#cai-dat?muc=tai-khoan` cũng resolve về route này. `CaiDat` chỉ chứa giao diện và âm thanh. Hai bố cục dùng cùng provider `LuuTru` để giữ hồ sơ, theme và phiên khi chuyển trang. Khách vẫn được học; đăng nhập thành công có nút về tổng quan.
+- Route `#dang-nhap` render trang độc lập `TaiKhoan` cho đăng nhập/đăng ký/khôi phục. Alias `#tai-khoan` và `#cai-dat?muc=tai-khoan` cũng resolve về route này. `CaiDat` chỉ chứa giao diện và âm thanh. Các bố cục dùng cùng provider `LuuTru` để giữ hồ sơ, theme và phiên khi chuyển trang. Khách mở trang tài khoản; người đã làm quen có nút về tổng quan sau đăng nhập.
+- Khi `daDangNhap && !daLamQuen`, `KhungTrang` hiển thị `LamQuenCungMate` trước mọi route học tập/tài khoản và đặt tiêu đề trang tương ứng. `demo/lamQuen.ts` ánh xạ bảy mô tả gần gũi sang `TrinhDo`; xem trước chỉ đổi state tại trang, xác nhận mới cập nhật hồ sơ/`daLamQuen` và chuyển tổng quan. Radio native, focus heading và live status hỗ trợ bàn phím/trình đọc màn hình. Cờ được lưu cùng khóa `engmate-demo-v1`; dữ liệu thiếu cờ được hiểu là chưa làm quen, giữ nguyên hồ sơ/thống kê/từ vựng. Đăng xuất giữ cờ, đăng ký mới đặt lại false. Không thêm API hoặc dependency.
 - `DangNhapMangXaHoi` render nút/logo Google/Facebook/GitHub và callback chọn nhà cung cấp; hiện chỉ báo chưa khả dụng, không gọi OAuth hoặc thay phiên. `TaiKhoan` dùng khung hai nửa (form + panel Mate): panel và form đổi chỗ bằng CSS `translate` khi đăng nhập ↔ đăng ký; form “mở cuộn” theo hướng với clip-path/xoay nhẹ; sóng viền và hiệu ứng phụ. Chỉ một form tại mỗi thời điểm, giữ email/tên, tạo lại ô mật khẩu. Web Animations API co giãn chiều cao khung; mobile xếp dọc + pill chuyển chế độ. Không thêm dependency; giảm chuyển động dừng CSS/WAAPI và dọn listener khi unmount.
 - `MenuNguoiDung` hiển thị Đăng nhập khi chưa đăng nhập, Hồ sơ học tập/Đăng xuất khi đã đăng nhập; mở qua hover/click, đóng qua mouseleave, blur, pointer ngoài, Escape hoặc chuyển route. Trạng thái phiên vẫn ở localStorage, chưa có xác thực backend.
 - Provider áp dụng giao diện sáng/tối/theo hệ thống, giảm chuyển động và tốc độ đọc lên dataset của document; listener `matchMedia` được dọn khi đổi tùy chọn/unmount. CSS dùng dataset cho theme/motion; `docTiengAnh` nhân tốc độ câu với tùy chọn đọc của người học.

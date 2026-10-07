@@ -4,31 +4,17 @@ import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
 import { docTiengAnh } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
-import { tuVungMau } from '../demo/duLieu';
+import { baiNghe } from '../demo/baiNghe';
+import { layTrinhDoHoc } from '../demo/trinhDo';
 
-const baiNghe = [
-  {
-    ten: 'A morning at the café',
-    chuDe: 'ĐỜI SỐNG',
-    text: "Good morning! I'd like a takeaway coffee, please. A small latte with oat milk. I have a meeting at nine, so I'm in a hurry. Thank you!",
-    cauHoi: 'What does the customer order?',
-    dapAn: ['A tea with lemon', 'A small latte with oat milk', 'A large black coffee'],
-    dung: 1,
-    chinhTa: "I'd like a takeaway coffee, please.",
-  },
-  {
-    ten: 'An exciting opportunity',
-    chuDe: 'CÔNG VIỆC',
-    text: 'I have an interview tomorrow. It is a great opportunity to join a new team. I feel confident because I have three years of experience. I want to improve my skills.',
-    cauHoi: 'How much experience does the speaker have?',
-    dapAn: ['One year', 'Two years', 'Three years'],
-    dung: 2,
-    chinhTa: 'I feel confident because I have three years of experience.',
-  },
-];
 export function LuyenNghe() {
-  const { luuTu, tuVung, ghiNhanHoc } = useDuLieu();
-  const [index, setIndex] = useState(0);
+  const { luuTu, tuVung, ghiNhanHoc, hoSo } = useDuLieu();
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      0,
+      baiNghe.findIndex((bai) => bai.trinhDo === layTrinhDoHoc(hoSo.trinhDo)),
+    ),
+  );
   const [tocDo, setTocDo] = useState(0.85);
   const [tab, setTab] = useState('Trắc nghiệm');
   const [dapAn, setDapAn] = useState<number | null>(null);
@@ -57,11 +43,13 @@ export function LuyenNghe() {
   }
   return (
     <>
-      <TieuDeTrang ten="Luyện nghe" />
+      <TieuDeTrang ten="Listening" />
       <div className="practice-layout">
         <section className="panel listening-panel">
           <div className="section-title">
-            <span className="pill peach">{bai.chuDe} · A2 – B1</span>
+            <span className="pill peach">
+              {bai.chuDe} · {bai.trinhDo}
+            </span>
             <select
               aria-label="Chọn bài nghe"
               value={index}
@@ -75,8 +63,11 @@ export function LuyenNghe() {
                 setChepLoi(false);
               }}
             >
-              <option value={0}>Bài 01 · Quán cà phê</option>
-              <option value={1}>Bài 02 · Công việc</option>
+              {baiNghe.map((item, i) => (
+                <option key={item.trinhDo} value={i}>
+                  {item.trinhDo} · {item.ten}
+                </option>
+              ))}
             </select>
           </div>
           <div className="listening-art">
@@ -232,7 +223,7 @@ export function LuyenNghe() {
         <aside>
           <section className="panel">
             <h2>Từ khóa trong bài</h2>
-            {[tuVungMau[index === 0 ? 5 : 0], tuVungMau[index === 0 ? 3 : 1]].map((tu) => (
+            {bai.tuVung.map((tu) => (
               <div className="listening-word" key={tu.id}>
                 <div>
                   <strong>{tu.tu}</strong>

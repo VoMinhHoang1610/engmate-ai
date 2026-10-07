@@ -4,14 +4,13 @@ import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
 import { docTiengAnh } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
+import { ChonTrinhDo } from '../components/ChonTrinhDo';
+import { cauNoiTheoTrinhDo, layTrinhDoHoc } from '../demo/trinhDo';
 
-const cauMau = [
-  'I would like a cup of coffee, please.',
-  'I feel more confident speaking English.',
-  'Could you tell me how to get to the station?',
-];
 export function LuyenNoi() {
-  const { ghiNhanHoc } = useDuLieu();
+  const { ghiNhanHoc, hoSo } = useDuLieu();
+  const [trinhDo, setTrinhDo] = useState(() => layTrinhDoHoc(hoSo.trinhDo));
+  const cauMau = cauNoiTheoTrinhDo[trinhDo];
   const [bai, setBai] = useState(0);
   const [dangGhi, setDangGhi] = useState(false);
   const [dangDung, setDangDung] = useState(false);
@@ -95,11 +94,24 @@ export function LuyenNoi() {
   }
   return (
     <>
-      <TieuDeTrang ten="Luyện nói" />
+      <TieuDeTrang ten="Speaking" />
+      <ChonTrinhDo
+        value={trinhDo}
+        disabled={dangGhi || dangXin || dangDung}
+        onChange={(value) => {
+          window.speechSynthesis?.cancel();
+          boBanGhi();
+          setTrinhDo(value);
+          setBai(0);
+          setVanBan('');
+          setKetQua(false);
+          setLoi('');
+        }}
+      />
       <div className="practice-layout">
         <section className="panel speaking-panel">
           <div className="section-title">
-            <span className="pill purple">SHADOWING · A2 – B1</span>
+            <span className="pill purple">SHADOWING · {trinhDo}</span>
             <span className="muted">
               Câu {bai + 1} / {cauMau.length}
             </span>

@@ -3,11 +3,13 @@ import { TrangTri } from '../components/TrangTri';
 import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 import { chuDeMau, diChuyen } from '../demo/duLieu';
+import { danhSachTrinhDo } from '../demo/trinhDo';
 
 const kyNang = [
-  { ten: 'Luyện nói', icon: 'mic', trang: 'luyen-noi' },
-  { ten: 'Luyện nghe', icon: 'headphones', trang: 'luyen-nghe' },
-  { ten: 'Luyện viết', icon: 'pen', trang: 'luyen-viet' },
+  { ten: 'Speaking', icon: 'mic', trang: 'luyen-noi' },
+  { ten: 'Listening', icon: 'headphones', trang: 'luyen-nghe' },
+  { ten: 'Reading', icon: 'book', trang: 'luyen-doc' },
+  { ten: 'Writing', icon: 'pen', trang: 'luyen-viet' },
   { ten: 'Ôn từ vựng', icon: 'layers', trang: 'flashcard' },
 ] as const;
 
@@ -57,6 +59,18 @@ export function TongQuan() {
       </div>
       <div className="dashboard-columns">
         <div className="dashboard-practice">
+          <a className="panel dashboard-roadmap" href="#lo-trinh">
+            <span className="icon-tile">
+              <BieuTuong ten="compass" size={24} />
+            </span>
+            <div>
+              <strong>Lộ trình học · {hoSo.trinhDo}</strong>
+              <span>
+                {danhSachTrinhDo.find((muc) => muc.id === hoSo.trinhDo)?.ten} · Pre-A1 → C2
+              </span>
+            </div>
+            <BieuTuong ten="arrow" size={20} />
+          </a>
           <section>
             <div className="section-title">
               <h2>Luyện tập</h2>

@@ -1,5 +1,35 @@
 # Kiểm thử
 
+## Mate làm quen sau đăng nhập lần đầu (D-20)
+
+- `pages/LamQuenCungMate.test.tsx`: 13 test tích hợp App/TaiKhoan/Context; đăng nhập thật bằng thông tin demo, focus/title và bố cục riêng, bảy mô tả không hiện mã CEFR, xem trước không đổi dữ liệu, xác nhận từng lựa chọn đặt đúng mức và Speaking theo hồ sơ; giữ thống kê/từ vựng/email. Kiểm tra reload/đăng nhập lại không hỏi, dữ liệu cũ thiếu cờ được hỏi một lần, đổi route không bỏ qua, đăng nhập sai/khôi phục không tạo bước làm quen, đăng ký mới và đăng xuất khi chưa trả lời.
+- Cùng các test lộ trình/Reading/nhập môn/hỗ trợ: 37/37 qua. Coverage chọn lọc trang/data làm quen: statements 94.11%, branches 80%, functions/lines 100%; không đại diện cho toàn frontend.
+- Chrome QA riêng: 8 tổ hợp sáng/tối × 320/390/768/1440 px, không tràn ngang/cắt lựa chọn; luồng đăng nhập → Mate → bắt đầu từ số 0 → tổng quan, reload và đăng xuất/đăng nhập lại qua, không lỗi JS. Đã xem ảnh desktop sáng/mobile tối.
+- Lint/type-check và build chuẩn frontend qua. Toàn frontend 49/89 qua, cùng 40 lỗi kiểm thử cũ tập trung ở luồng tài khoản/điều kiện đăng nhập/văn bản; chi tiết mới nhất trong PROGRESS.
+
+## Lộ trình Pre-A1 đến C2 (D-19)
+
+- `pages/LoTrinhHoc.test.tsx`: thứ tự bảy chặng/default Pre-A1, lưu và khôi phục mức không mất dữ liệu cũ, liên kết đúng mức, nội dung và chấm Reading/Listening ở từng mức, request hội thoại đúng level; query sai fallback, A1 không trộn Pre-A1 khi lọc chủ đề; đổi độ khó xóa phản hồi nhưng giữ nháp Writing; chọn/lưu mức C2 trong hồ sơ.
+- `components/NenTangTiengAnh.test.tsx`: 26 chữ cái, số 0–10, lời chào/bản dịch, đọc chậm 0.7, fallback nếu giọng đọc không hỗ trợ.
+- 15 test mới cùng 9 Reading/hỗ trợ: 24/24 qua; coverage chọn lọc trinhDo/LoTrinhHoc/NenTangTiengAnh/ChonTrinhDo 100% statements/branches/functions/lines. Backend 21/21 và coverage 100%; test API nhận đủ bảy mức, từ chối A0/C3.
+- Chrome QA: 232 tổ hợp (lộ trình và bốn kỹ năng × bảy mức, sáng/tối, 320/390/768/1440 px), không tràn ngang/cắt điều khiển; chọn C2/reload giữ hồ sơ, API qua proxy trả 200 đúng mức cho cả bảy mức. Không lỗi JavaScript; đã xem ảnh desktop sáng/mobile tối. Vite bundle 60 modules và smoke qua.
+- Lint phần tác vụ và backend qua. Build chuẩn/lint toàn repo vẫn còn lỗi có sẵn ở TaiKhoan; kiểm thử frontend cũ còn 40 lỗi, chi tiết trong PROGRESS.
+
+## Nút hỗ trợ kính mờ với Mate (D-18)
+
+- Điều chỉnh ống nghe cổ điển/rung: 4 test hỗ trợ tiếp tục qua; Chrome kiểm tra `mate-support-ring`/`mate-phone-ring` có transform thay đổi theo thời gian và đều tắt khi app/hệ thống giảm chuyển động. Đã xem ảnh phóng to ống nghe và dây xoắn.
+
+- `components/HoTroNhanh.test.tsx`: hiển thị điện thoại; click/keyboard mở và đóng/Escape trả focus; pointer capture đúng nút khi nhấn SVG con; drag không mở nhầm; giới hạn nút/panel khi kéo và resize; bỏ qua pointer phụ, ngưỡng chuyển động, cancel/lost capture.
+- 4/4 test mới và 5/5 Reading qua. ESLint phần sửa và Vite bundle qua; build TypeScript toàn repo vẫn còn biến chưa dùng ở TaiKhoan.
+- Chrome QA riêng đo opacity 0.55 khi nghỉ và 1 khi hover ở sáng/tối; kéo bằng Input.dispatchMouseEvent, mở panel sau kéo vẫn trong viewport. Input.dispatchTouchEvent kiểm tra kéo và panel ở 320/390/768 px; không lỗi JavaScript. Đã xem ảnh kính mờ/đậm và panel mobile.
+
+## Reading và tên kỹ năng tiếng Anh (D-17)
+
+- `frontend/src/pages/LuyenDoc.test.tsx`: bắt buộc trả lời đủ trước khi nộp, chấm đúng/sai và giải thích, khóa đáp án sau khi nộp, làm lại không cộng phút lặp; đổi cả 3 bài xóa kết quả; lưu từ một lần và khôi phục; menu/tổng quan/route/title Reading và Speaking/Listening/Writing.
+- 5/5 test mới qua. Coverage chọn lọc Reading: statements 97.05%, branches 97.36%, functions và lines 100%; không đại diện cho coverage toàn frontend.
+- Chrome headless riêng: 3 bài × sáng/tối × 320/390/768/1024/1440 px (30 tổ hợp), không tràn ngang trang hoặc điều khiển Reading; chấm 3/3, cộng phút, lưu từ và không lỗi JavaScript. Đã xem ảnh desktop sáng và mobile tối.
+- Toàn bộ frontend: 17 qua, 40 lỗi; bản mã trước thay đổi: 12 qua, cùng 40 lỗi. Lỗi cũ tập trung ở luồng tài khoản/điều kiện đăng nhập và assertion văn bản. Backend 16/16 qua, coverage 100%. Build chuẩn và lint toàn repo còn lỗi ở HoTroNhanh/HoSo/TaiKhoan có sẵn; eslint/Prettier các file của tác vụ, Vite bundle và smoke qua. Chi tiết trong PROGRESS.
+
 ## Mạng xã hội và chuyển cảnh tài khoản (D-16)
 
 - `pages/TaiKhoan.test.tsx`: từng nút Google/Facebook/GitHub có phản hồi, không gọi mạng/thay dữ liệu phiên hoặc giả đăng nhập thành công. Chuyển hai hướng (group/pill hoặc CTA panel) giữ email/tên, tạo mới ô mật khẩu với autocomplete phù hợp, chỉ có một form; đăng ký/đăng nhập cục bộ vẫn dùng được và không lưu mật khẩu. Khôi phục bỏ nút xã hội, xóa thông báo nhà cung cấp và quay về đúng biểu mẫu.
