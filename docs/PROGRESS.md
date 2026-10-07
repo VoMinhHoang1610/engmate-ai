@@ -1,5 +1,11 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-07 — Chuyển backend/API đang làm dở sang nhánh riêng
+
+- Bảo toàn mã/backend/tests/cấu hình và lockfiles trên `feat/backend-learning-api`, dựa trên `feat/sqlserver-schema`; giữ nhánh giao diện và nhánh CI tách biệt.
+- Commit WIP là checkpoint, không xác nhận backend đã hoàn thiện. Lần kiểm thử trước các chỉnh sửa cuối đạt 27/27 tests và coverage 84,59%; worker-thread/timeout/cancel và Docker/env mới chưa kiểm chứng lại đầy đủ.
+- Phạm vi, giới hạn và bước tiếp theo ở `BACKEND_IMPLEMENTATION_WIP.md`. Tác vụ này chỉ tổ chức nhánh; không triển khai, push hay thay đổi nhánh dùng chung.
+
 ## 2026-10-07 — Làm rõ đường dẫn chạy kiểm thử SQL Server
 
 - **Lỗi người dùng gặp:** sqlcmd không tìm thấy `tests/verify.sql` khi terminal chưa ở `database/sqlserver`.
