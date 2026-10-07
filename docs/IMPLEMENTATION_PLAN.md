@@ -1,10 +1,13 @@
 # Bước code tiếp theo
 
-1. Thiết kế schema DB, SQLAlchemy async/Alembic và migrations; viết test trên PostgreSQL test riêng.
-2. Models, auth/JWT, hồ sơ CEFR, phân quyền và xóa dữ liệu tài khoản.
-3. Hợp đồng hội thoại/chat streaming, lưu lịch sử, phân tích lỗi, retry/fallback và timeout.
-4. Adapter LLM thật và đánh giá prompt; test mặc định vẫn dùng mock.
-5. UI đăng nhập/chat/gợi ý, MSW và E2E cho luồng hoàn chỉnh.
-6. Đo độ trễ, xử lý ngắt kết nối, rồi mới mở rộng memory/dashboard.
+Backend MVP đã triển khai trên `feat/backend-learning-api`: SQL Server repository/migration runner, auth JWT, hồ sơ/cài đặt, catalog, hội thoại, luyện tập, media, từ vựng/flashcard và dashboard. Xem [API](API.md), [kiểm thử](TESTING.md) và kết quả thực tế trong [PROGRESS](PROGRESS.md).
+
+1. Nối UI ở `feat/social-login-motion` với các endpoint nghiệp vụ: token/refresh, rowversion, request UUID, loading/error và media qua Bearer; thay dữ liệu localStorage bằng response server. Xử lý các lỗi frontend đã ghi ở nhật ký nhánh UI trước khi hợp nhất; thêm MSW/Playwright cho luồng hoàn chỉnh.
+2. Xác định chính sách nhập localStorage cũ. Counter tổng không có lịch sử nên cần baseline riêng; không giả lập lượt ôn hoặc phiên học quá khứ.
+3. Chọn provider/model và ngân sách để triển khai adapter LLM thật, structured output, retry/fallback và đánh giá prompt. Tests mặc định tiếp tục dùng mock; không coi mock là chấm nói/viết thật.
+4. Cấu hình và tích hợp OAuth Google/Facebook/GitHub, xác minh email, giao diện reset password và xóa tài khoản nếu cần. SMTP reset backend đã có nhưng chưa gửi thử qua tài khoản thật.
+5. STT/TTS server và streaming cần hợp đồng riêng; upload recording hiện chỉ lưu/kiểm tra audio, không chuyển giọng nói thành văn bản.
+6. Kiểm thử tải và concurrency bằng nhiều connection, cancellation khi client ngắt, crash recovery của evaluation pending và đo độ trễ. Giới hạn auth hiện theo từng process; nhiều worker cần rate limiter chia sẻ.
+7. Chuẩn bị production hosting, SQL credentials/TLS, backup, media lifecycle, migration version tiếp theo và chạy workflow mới trên GitHub. Memory dài hạn/tóm tắt thực hiện sau khi có yêu cầu.
 
 Mỗi thay đổi cập nhật test, `REQUIREMENTS.md`, API/kiến trúc khi liên quan và thêm mục mới ở đầu `PROGRESS.md`. Nhật ký gồm ngày, phạm vi, file thay đổi, kết quả kiểm chứng, giới hạn và bước tiếp theo.

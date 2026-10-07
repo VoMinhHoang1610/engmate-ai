@@ -7,8 +7,23 @@ permissions:
   contents: read
 jobs:
   checks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          # Unique disposable CI credentials; not an application account/secret.
+          MSSQL_SA_PASSWORD: EngMate-CI-${{ github.run_id }}-${{ github.run_attempt }}!
+        ports: ["1433:1433"]
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'EngMate-CI-${{ github.run_id }}-${{ github.run_attempt }}!' -Q 'SELECT 1' -b"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-start-period 30s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,11 +34,19 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Install SQL Server ODBC driver
+        run: |
+          curl -fsSL https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -o /tmp/microsoft-prod.deb
+          sudo dpkg -i /tmp/microsoft-prod.deb
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 ffmpeg
       - name: Install
         run: python scripts/manage.py setup
       - name: Lint and types
         run: python scripts/manage.py lint
       - name: Tests and coverage
+        env:
+          SQLSERVER_TEST_ODBC_CONNECTION: "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,1433;DATABASE=tempdb;UID=sa;PWD=EngMate-CI-${{ github.run_id }}-${{ github.run_attempt }}!;Encrypt=yes;TrustServerCertificate=yes"
         run: python scripts/manage.py coverage
       - name: Frontend production build
         run: python scripts/manage.py build
