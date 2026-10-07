@@ -2,9 +2,19 @@
 
 ## Bản tích hợp develop demo
 
-Kết quả cuối: 57 backend tests và 56 frontend tests qua; backend coverage 92,83%, frontend statements 85,88%/branches 84,34%/functions 81,36%/lines 88,27%. Lint/types/build và Docker HTTP smoke qua. Thông tin chạy/scope ở PROGRESS và DEMO_DEVELOP.
+Kết quả ngày 2026-10-08: 70 backend tests và 92 frontend tests qua, gồm 22 SQL integration; backend coverage 92,83%, frontend statements 88,97%/branches 86,39%/functions 87,09%/lines 90,96%. Lint/types/build và Docker HTTP smoke qua. Thông tin chạy/scope ở PROGRESS và DEMO_DEVELOP.
 
 UI mới yêu cầu đăng nhập abc/123 trước trang học tập. `frontend/tests/demo.ts` tạo fixture phiên cục bộ hợp lệ; guest menu kiểm tra riêng trong LuuTru provider. TaiKhoan tests vẫn kiểm tra credential sai, password mismatch, giữ profile/preferences, xóa password khi chuyển form và OAuth không tạo phiên giả. Test intro kiểm tra timers/sessionStorage/remount; `HoTroNhanh.test.tsx` kiểm tra pointer từ SVG và drag không mở panel. Test storage dùng jsdom.window gốc thay Node Web Storage. Không skip/bỏ assertion thất bại hoặc hạ coverage threshold.
+
+## Giao diện mới từ sua-giao-dien (D-17 đến D-20)
+
+- `pages/LamQuenCungMate.test.tsx`: đăng nhập demo, bảy mô tả và xác nhận, preview không sửa dữ liệu, migration thiếu cờ, reload/logout/đăng ký mới và chặn bỏ qua bằng route.
+- `pages/LoTrinhHoc.test.tsx`, `components/NenTangTiengAnh.test.tsx`: bảy mức, lưu/khôi phục, liên kết kỹ năng, query fallback, đề/đáp án theo mức, alphabet/số/lời chào và Web Speech fallback.
+- `pages/LuyenDoc.test.tsx`: trả lời đủ, chấm và giải thích, khóa đáp án, làm lại/đổi bài, chống cộng phút lặp, lưu từ và khôi phục.
+- `components/HoTroNhanh.test.tsx`: điện thoại Mate, click/bàn phím/Escape/focus, capture từ SVG, kéo tiếp từ vị trí hiện tại, clamp/resize và cancel/lost capture.
+- `backend/tests/unit/test_security.py`: mức lưu profile/conversation bị giới hạn theo SQL v1; `tests/integration/test_sqlserver.py` xác nhận mức mới trả 422 và không sửa hồ sơ/tạo hội thoại. `tests/integration/test_api.py` kiểm tra mock reply đủ bảy mức; unit service kiểm tra prompt v2 được truyền vào provider. Không nới SQL schema trong merge.
+
+Các số liệu Chrome QA của nhánh nguồn là lịch sử trong PROGRESS; không coi đó là browser E2E mới của bản merge. Fixture phiên học cũ có `daLamQuen=true`; test làm quen kiểm tra riêng false/thiếu cờ và đăng ký lại.
 
 ## Backend API SQL Server (DB-05, B-01 đến B-09)
 

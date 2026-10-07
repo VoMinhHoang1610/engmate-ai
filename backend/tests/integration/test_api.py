@@ -17,7 +17,7 @@ async def test_health(client: AsyncClient) -> None:
     assert response.json() == {"status": "ok", "service": "engmate-ai"}
 
 
-@pytest.mark.parametrize("level", ["A2", "B1", "B2"])
+@pytest.mark.parametrize("level", ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"])
 async def test_mock_reply(client: AsyncClient, level: str) -> None:
     """The mock accepts all supported levels and identifies its output."""
     response = await client.post(
@@ -37,7 +37,8 @@ async def test_mock_reply(client: AsyncClient, level: str) -> None:
         {"message": ""},
         {"message": "   "},
         {"message": "x" * 2001},
-        {"message": "Hello", "level": "C2"},
+        {"message": "Hello", "level": "C3"},
+        {"message": "Hello", "level": "A0"},
         {"message": "Hello", "extra": True},
         {},
     ],

@@ -9,6 +9,7 @@ type CheDoTaiKhoan = 'dang-nhap' | 'dang-ky' | 'quen-mat-khau';
 type IntroPhase = 'jump' | 'greet' | 'morph' | 'ready';
 
 const INTRO_STORAGE_KEY = 'engmate-auth-intro-done';
+
 const LOI_CHAO_INTRO = 'Chào mừng đến với học tiếng anh cùng EngMate!';
 
 function boQuaIntroNgay(daDangNhap: boolean, giamChuyenDong: boolean): boolean {
@@ -148,6 +149,7 @@ export function TaiKhoan() {
     }
     capNhat({
       daDangNhap: true,
+      ...(cheDo === 'dang-ky' ? { daLamQuen: false } : {}),
       hoSo: {
         ...hoSo,
         email: email || hoSo.email,
@@ -363,7 +365,8 @@ export function TaiKhoan() {
                       />
                       {provider && (
                         <p className="auth-provider-note" role="status">
-                          Đăng nhập bằng {provider} hiện chưa khả dụng. Bạn có thể dùng email.
+                          Đăng nhập bằng {provider} hiện chưa khả dụng. Bạn có thể dùng tài khoản để
+                          đăng nhập.
                         </p>
                       )}
                     </div>

@@ -15,7 +15,8 @@ from pydantic import (
     field_validator,
 )
 
-from app.schemas.ai import Level
+# Schema v1 CHECK constraints only permit these persisted levels.
+DatabaseLevel = Literal["A2", "B1", "B2"]
 
 MAX_ID = 9223372036854775807
 
@@ -118,7 +119,7 @@ class ProfileUpdate(Versioned):
     birth_date: date | None = None
     gender: Literal["male", "female", "other"] | None = None
     avatar_asset_id: int | None = Field(default=None, gt=0, le=MAX_ID)
-    cefr_level: Level = "A2"
+    cefr_level: DatabaseLevel = "A2"
     learning_goal: str = Field(default="Giao tiếp tự tin", min_length=1, max_length=200)
     daily_goal_minutes: int = Field(default=20, ge=10, le=60)
     time_zone_id: str = Field(default="Asia/Ho_Chi_Minh", max_length=64)
@@ -185,7 +186,7 @@ class ConversationCreate(Input):
 
     client_request_id: UUID
     topic_code: str | None = Field(default=None, min_length=1, max_length=40)
-    level: Level = "A2"
+    level: DatabaseLevel = "A2"
     title: str = Field(default="English practice", min_length=1, max_length=200)
 
 

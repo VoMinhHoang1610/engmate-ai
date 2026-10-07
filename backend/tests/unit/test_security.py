@@ -17,7 +17,12 @@ from app.core.security import (
     token_hash,
     verify_password,
 )
-from app.schemas.learning import ProfileUpdate, Register, SettingsUpdate
+from app.schemas.learning import (
+    ConversationCreate,
+    ProfileUpdate,
+    Register,
+    SettingsUpdate,
+)
 
 SECRET = "isolated-test-key-with-more-than-32-characters"
 
@@ -104,3 +109,18 @@ def test_profile_validation() -> None:
         SettingsUpdate(
             version="0" * 16, theme="light", reduced_motion=False, speech_rate=0.8
         )
+
+
+@pytest.mark.parametrize("level", ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"])
+def test_persisted_levels_match_sql_schema(level: str) -> None:
+    """Expanded mock levels must not bypass the SQL v1 CHECK/column limits."""
+    profile = {"version": "0" * 16, "display_name": "Name", "cefr_level": level}
+    conversation = {"client_request_id": uuid4(), "level": level}
+    if level in ("A2", "B1", "B2"):
+        assert ProfileUpdate.model_validate(profile).cefr_level == level
+        assert ConversationCreate.model_validate(conversation).level == level
+    else:
+        with pytest.raises(ValidationError):
+            ProfileUpdate.model_validate(profile)
+        with pytest.raises(ValidationError):
+            ConversationCreate.model_validate(conversation)

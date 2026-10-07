@@ -223,6 +223,30 @@ async def test_reset_delivery_does_not_reveal_accounts(
     assert known.json() == unknown.json()
 
 
+async def test_unsupported_sql_levels_are_rejected_without_writes(
+    sql_client: AsyncClient,
+) -> None:
+    """UI/mock levels beyond SQL v1 return 422 and preserve stored learner data."""
+    await account(sql_client)
+    profile = (await sql_client.get("/api/me/profile")).json()
+    for level in ("Pre-A1", "A1", "C1", "C2"):
+        update = await sql_client.put(
+            "/api/me/profile",
+            json={
+                "version": profile["version"],
+                "display_name": "Unsupported level",
+                "cefr_level": level,
+            },
+        )
+        conversation = await sql_client.post(
+            "/api/conversations",
+            json={"client_request_id": str(uuid4()), "level": level},
+        )
+        assert update.status_code == conversation.status_code == 422
+        assert (await sql_client.get("/api/me/profile")).json() == profile
+        assert (await sql_client.get("/api/conversations")).json() == []
+
+
 async def test_profile_preferences(sql_client: AsyncClient) -> None:
     """Persist UI fields while rejecting stale versions and forged owners."""
     await account(sql_client)

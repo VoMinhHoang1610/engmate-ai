@@ -15,7 +15,7 @@ from app.db.repository import Repository
 from app.llm.base import LLMClient
 from app.schemas.ai import Level
 from app.schemas.learning import ConversationCreate, MessageCreate
-from app.services.ai_service import PROMPT_PATH
+from app.services.ai_service import PROMPT_PATH, PROMPT_VERSION
 from app.services.common import (
     finish_session,
     now,
@@ -89,7 +89,7 @@ class ConversationService(LearningService):
                     AIRoleSnapshot=(
                         topic["AIRole"] if topic else "English conversation partner"
                     ),
-                    PromptVersion="persona.v1",
+                    PromptVersion=PROMPT_VERSION,
                 )
                 repo.insert(
                     "Messages",

@@ -15,9 +15,10 @@ function luuTienDo(phutHomNay: number, ngayHoatDong: string) {
   localStorage.setItem(
     'engmate-demo-v1',
     JSON.stringify({
-      hoSo: hoSoMau,
+      hoSo: { ...hoSoMau, trinhDo: 'B1' },
       tuVung: [tuVungMau[0]],
       daDangNhap: true,
+      daLamQuen: true,
       phutHoc: phutHomNay,
       luotOn: 0,
       phutHomNay,
@@ -38,6 +39,7 @@ describe('Mate đồng hành cùng người học', () => {
   it('encourages a wrong answer, celebrates a correct answer and resets on retry', () => {
     window.history.replaceState(null, '', '#luyen-nghe');
     render(<App />);
+    fireEvent.change(screen.getByLabelText('Chọn bài nghe'), { target: { value: '2' } });
     expect(document.querySelector('.listening-art [data-mate-mood="listening"]')).not.toBeNull();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: /A tea with lemon/ }));
@@ -62,6 +64,7 @@ describe('Mate đồng hành cùng người học', () => {
   it('also follows the evaluated dictation result', () => {
     window.history.replaceState(null, '', '#luyen-nghe');
     render(<App />);
+    fireEvent.change(screen.getByLabelText('Chọn bài nghe'), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('tab', { name: 'Chép chính tả' }));
     fireEvent.change(screen.getByLabelText('Câu chính tả'), {
       target: { value: "  I'D LIKE A TAKEAWAY COFFEE PLEASE! " },
@@ -107,6 +110,7 @@ describe('Mate đồng hành cùng người học', () => {
     expect(screen.getByText('Còn 3 phút nữa!')).toBeVisible();
     expect(document.querySelector('.daily-mate [data-mate-mood="celebrating"]')).toBeNull();
     doiTrang('#luyen-nghe');
+    fireEvent.change(screen.getByLabelText('Chọn bài nghe'), { target: { value: '2' } });
     fireEvent.click(screen.getByRole('radio', { name: /A small latte with oat milk/ }));
     fireEvent.click(screen.getByRole('button', { name: /Kiểm tra đáp án/ }));
     doiTrang('#tong-quan');

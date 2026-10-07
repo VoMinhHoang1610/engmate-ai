@@ -4,6 +4,7 @@ import { BieuTuong } from '../components/BieuTuong';
 import { Select } from '../components/Select';
 import { useDuLieu } from '../demo/LuuTru';
 import type { HoSo as HoSoData, TrinhDo } from '../demo/duLieu';
+import { danhSachTrinhDo } from '../demo/trinhDo';
 
 export function HoSo() {
   const { hoSo, capNhat, phutHoc, luotOn, tuVung } = useDuLieu();
@@ -147,11 +148,10 @@ export function HoSo() {
             <Select
               value={form.trinhDo}
               onChange={(val) => setForm({ ...form, trinhDo: val as TrinhDo })}
-              options={[
-                { value: 'A2', label: 'A2 — Cơ bản' },
-                { value: 'B1', label: 'B1 — Trung cấp' },
-                { value: 'B2', label: 'B2 — Trên trung cấp' },
-              ]}
+              options={danhSachTrinhDo.map((muc) => ({
+                value: muc.id,
+                label: `${muc.id} — ${muc.ten}`,
+              }))}
             />
           </label>
           <label>

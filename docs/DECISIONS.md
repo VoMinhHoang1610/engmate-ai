@@ -1,5 +1,25 @@
 # Quyết định kỹ thuật
 
+## 2026-10-08 — Hợp nhất UI mới với backend SQL v1
+
+- Giữ luồng làm quen, Reading/lộ trình bảy mức, hỗ trợ Mate mới và toàn bộ backend đã có trên develop. Giữ sửa lỗi phiên intro, username và storage jsdom của develop.
+- Tách kiểu mức SQL khỏi kiểu AI mock: database v1 có CHECK A2/B1/B2 và cột varchar(2), nên không thể dùng chung kiểu bảy mức. API lưu dữ liệu từ chối mức chưa hỗ trợ bằng validation 422.
+- Chọn giữ schema v1; mở rộng schema/catalog lên bảy mức cần migration riêng được review. Merge không chạy migration trên database ứng dụng và không tự chuyển dữ liệu localStorage.
+- Giữ prompt v1 bất biến; nội dung bảy mức được lưu thành persona.v2, service và PromptVersion của hội thoại mới dùng chung phiên bản để snapshot có thể truy vết.
+
+## 2026-10-07 — Mate hỏi trình độ lần đầu bằng ngôn ngữ gần gũi
+
+- Người mới không cần mở lộ trình và hiểu mã CEFR. Mate hỏi trực tiếp sau khi tạo phiên; bảy lựa chọn mô tả những việc người học làm được, mỗi lựa chọn có ví dụ và lời động viên. Ánh xạ nội bộ sang bảy chặng dùng chung cho kỹ năng; không hiển thị mã trong câu hỏi/câu trả lời.
+- Dùng một bước làm quen riêng thay vì popup có thể đóng hoặc chọn mức mặc định âm thầm. Người học xác nhận để đặt mức; xem trước không đổi hồ sơ. Đây là tự mô tả khả năng để chọn bài phù hợp, chưa phải bài kiểm tra xếp lớp; vẫn có thể điều chỉnh ở lộ trình/hồ sơ.
+- Cờ `daLamQuen` trong Context/localStorage giúp không hỏi lại khi reload hoặc đăng nhập lại. Dữ liệu demo cũ chưa có cờ được hỏi một lần, giữ nguyên tiến độ. Vì demo chưa có tài khoản backend riêng biệt, cờ thuộc hồ sơ trên trình duyệt; đăng ký mới đặt lại cờ. Không thêm OAuth, xác thực hoặc dịch vụ AI.
+
+## 2026-10-07 — Lộ trình nhập môn đến thành thạo
+
+- Dùng A1–C2 theo [các mức CEFR](https://www.coe.int/en/web/common-european-framework-reference-languages/level-descriptions), bổ sung Pre-A1 theo [CEFR Companion Volume](https://www.coe.int/en/web/common-european-framework-reference-languages/cefr-companion-volume-and-its-language-versions) làm điểm vào cho người chưa học; không gán A0 hoặc C3 thành mức CEFR.
+- Người mới mặc định Pre-A1; hồ sơ cũ giữ nguyên. Một danh sách chung định nghĩa type, lựa chọn và mục tiêu frontend. API mở rộng Literal tương ứng; giữ default A2 để tương thích client cũ.
+- Chặng được người học tự chọn, không tự coi đã đạt CEFR vì làm vài câu mẫu. Bài thực hành được biên soạn theo mức, chưa phải giáo trình đầy đủ/chuẩn hóa hay kiểm tra xếp lớp. Liên kết chặng truyền query cho đúng bài; đổi độ khó tại trang luyện không tự nâng hồ sơ.
+- Giữ Web Speech/MediaRecorder và AI mock; không thêm dịch vụ trả phí hoặc dependency. Reading chấm đáp án biên soạn; phản hồi Speaking/Writing vẫn ghi rõ minh họa cố định.
+
 ## 2026-10-07 — Tích hợp develop phục vụ demo
 
 - Merge backend/database và nhánh UI đã đồng bộ CI trên nhánh tích hợp; khi checks qua, develop nhận bằng fast-forward. Không merge backup WIP cũ, không sửa lịch sử nguồn/main hoặc push remote.

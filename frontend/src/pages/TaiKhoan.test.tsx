@@ -79,7 +79,9 @@ describe('Trang đăng nhập độc lập', () => {
       const before = localStorage.getItem('engmate-demo-v1');
       fireEvent.click(screen.getByRole('button', { name: `Tiếp tục với ${provider}` }));
       expect(
-        screen.getByText(`Đăng nhập bằng ${provider} hiện chưa khả dụng. Bạn có thể dùng email.`),
+        screen.getByText(
+          `Đăng nhập bằng ${provider} hiện chưa khả dụng. Bạn có thể dùng tài khoản để đăng nhập.`,
+        ),
       ).toHaveAttribute('role', 'status');
       expect(localStorage.getItem('engmate-demo-v1')).toBe(before);
       expect(fetch).not.toHaveBeenCalled();
@@ -122,7 +124,13 @@ describe('Trang đăng nhập độc lập', () => {
       target: { value: 'registerPassword' },
     });
     fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+    expect(screen.getByRole('heading', { name: 'Tiếng Anh của bạn đang ở đâu?' })).toBeVisible();
+    expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).daLamQuen).toBe(false);
+    fireEvent.click(screen.getByRole('radio', { name: /Mình tự trò chuyện được về cuộc sống/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu học cùng Mate' }));
+    doiTrang('#dang-nhap');
     expect(screen.getByRole('heading', { name: 'Chào mừng, Lan Anh!' })).toBeVisible();
+    expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).hoSo.taiKhoan).toBe('lananh');
     expect(
       screen.queryByRole('group', { name: 'Đăng nhập bằng tài khoản khác' }),
     ).not.toBeInTheDocument();

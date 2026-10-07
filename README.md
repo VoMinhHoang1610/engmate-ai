@@ -1,12 +1,20 @@
 # EngMate-AI
 
+Sau lần đăng nhập đầu tiên, **Mate** chào và hỏi trình độ bằng những câu dễ hiểu như “Mình bắt đầu từ con số 0”, “Mình biết vài từ và câu rất đơn giản”. Không cần biết mã A1/A2: câu trả lời tự đặt mức học, lưu trong trình duyệt và không hỏi lại sau khi hoàn thành. Hồ sơ demo cũ chưa trả lời cũng được hỏi một lần; đăng ký mới bắt đầu lại bước làm quen.
+
+Trang **Lộ trình học** tại `http://127.0.0.1:5174/#lo-trinh` đi từ **Pre-A1 → A1 → A2 → B1 → B2 → C1 → C2**. Người bắt đầu từ số 0 được học Pre-A1, có 26 chữ cái, số 0–10 và lời chào kèm giọng đọc chậm. Mỗi chặng có mục tiêu, trọng tâm và liên kết Speaking/Listening/Reading/Writing; người học có thể điều chỉnh chặng về sau. Nội dung thực hành theo mức chưa phải khóa học đầy đủ hoặc bài thi chứng nhận CEFR.
+
+Trang **Reading** tại `http://127.0.0.1:5174/#luyen-doc` có 7 bài đọc Pre-A1 đến C2, mỗi bài 3 câu hỏi đọc hiểu, kết quả và giải thích đáp án. Từ vựng trong bài có thể lưu vào sổ từ vựng. Hoàn thành bài ghi nhận 5 phút luyện tập; làm lại cùng bài trong một lần mở trang không cộng thêm phút. Speaking có câu mẫu, Listening có bài nghe/chính tả và Writing có đề/gợi ý riêng cho cả 7 mức. Trình độ được chọn từ liên kết lộ trình hoặc hồ sơ; hồ sơ A2/B1/B2 cũ được giữ nguyên.
+
 Ứng dụng demo luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Kiểm chứng bản tích hợp ngày 2026-10-07: **57 backend + 56 frontend tests qua** (21 SQL integration), coverage backend 92,83%; frontend statements 85,88%, branches 84,34%, functions 81,36%, lines 88,27%. Lint/build qua; kết quả Docker/Git cuối và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md). CI mới chưa chạy trên GitHub.
+Kiểm chứng bản tích hợp ngày 2026-10-08: **70 backend + 92 frontend tests qua** (22 SQL integration), coverage backend 92,83%; frontend statements 88,97%, branches 86,39%, functions 87,09%, lines 90,96%. Lint/build và Docker smoke qua; kết quả Git cuối và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md). CI của bản merge mới chưa chạy trên GitHub.
 
-Bản tích hợp `develop` có giao diện đa trang, backend và schema SQL Server. Frontend có 10 trang học tập và trang đăng nhập riêng, linh thú Mate, theme sáng/tối, giảm chuyển động và lưu dữ liệu trong trình duyệt. Hội thoại gọi `/api/ai/reply` dùng mock. Backend có API tài khoản/JWT, hồ sơ/cài đặt, catalog, hội thoại, luyện tập, từ vựng/flashcard, media và dashboard; xem [API.md](docs/API.md).
+Bản tích hợp `develop` có giao diện đa trang, backend và schema SQL Server. Frontend có 12 trang học tập và trang đăng nhập riêng, linh thú Mate, theme sáng/tối, giảm chuyển động và lưu dữ liệu trong trình duyệt. Hội thoại gọi `/api/ai/reply` dùng mock. Backend có API tài khoản/JWT, hồ sơ/cài đặt, catalog, hội thoại, luyện tập, từ vựng/flashcard, media và dashboard; xem [API.md](docs/API.md).
 
 **Demo giao diện hiện dùng localStorage và tài khoản abc / 123 tại #dang-nhap.** Các API lưu dữ liệu SQL/JWT thử riêng qua Swagger; UI chưa nối chúng. Không cần DB/API key để demo giao diện và AI mock. OAuth, chấm nói/viết AI thật và STT chưa có.
+
+Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
 
 ## Cấu trúc
 
@@ -26,7 +34,7 @@ frontend/
   src/components/   UI, icon, menu avatar và linh thú Mate
   src/demo/         Dữ liệu mẫu, localStorage và browser audio
   src/hooks/        Logic health API và test vòng đời
-  src/pages/        10 trang học tập, đăng nhập và health cũ
+  src/pages/        12 trang học tập, đăng nhập và health cũ
   src/types/        Kiểu dữ liệu dùng chung
   tests/            Thiết lập Vitest/React Testing Library
   e2e/              Dành cho E2E khi triển khai luồng nghiệp vụ
@@ -64,7 +72,7 @@ Hướng dẫn trình diễn, tài khoản demo và bảng các nhánh đã hợ
 - API: http://127.0.0.1:8010/api/health
 - Swagger: http://127.0.0.1:8010/docs
 
-Frontend gọi `/api/health` qua Vite proxy. Proxy mặc định trỏ tới backend cổng 8010; không cần cấu hình URL API trong mã UI.
+Frontend gọi `/api/ai/reply` trên trang hội thoại qua Vite proxy. Proxy mặc định trỏ tới backend cổng 8010; không cần cấu hình URL API trong mã UI.
 
 Đổi cổng bằng `dev-backend --port 8011` / `dev-frontend --port 5175`. Khi đổi cổng backend, đặt `$env:BACKEND_URL = 'http://127.0.0.1:8011'` trong terminal frontend. Nếu chạy web ngoài Vite proxy, cấu hình CORS theo origin thực tế.
 

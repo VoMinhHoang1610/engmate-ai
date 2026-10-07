@@ -30,7 +30,9 @@ Lỗi có `detail`, không trả input mật khẩu/token, SQL statement, tham s
 | --- | --- | --- |
 | GET | `/api/health` | Liveness: `{"status":"ok","service":"engmate-ai"}`, không gọi DB/AI |
 | GET | `/api/ready` | Kiểm tra kết nối, schema v1 và 22 bảng/2 view; thành công có `database=sqlserver`, `schema_version=1` |
-| POST | `/api/ai/reply` | Body `message` 1–2000, `level` A2/B1/B2; response `reply`, `provider=mock`, `level`; không lưu |
+| POST | `/api/ai/reply` | Body `message` 1–2000, `level` Pre-A1/A1/A2/B1/B2/C1/C2 (mặc định A2); response `reply`, `provider=mock`, `level`; không lưu |
+
+Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
 
 ## Tài khoản, hồ sơ, cài đặt
 
@@ -80,7 +82,7 @@ Questions trước nộp không trả ExpectedText, Explanation hoặc IsCorrect
 | GET | `/api/evaluations/{identity}` | Evaluation và `errors`; ResultJson được decode thành `result_json` object/array/null |
 | POST | `/api/evaluations/{identity}/cancel` | Hủy evaluation pending, tin trả lời thành cancelled; thao tác lặp an toàn |
 
-topic_code bỏ/null là free_chat; roleplay kiểm tra topic active và level hỗ trợ. Role/CEFR/prompt được snapshot. Provider nhận persona.v1, role và tối đa 20 tin gần nhất. Một conversation chỉ có một reply pending: gửi tin mới hoặc đóng khi pending trả 409. Retry cùng UUID trả trạng thái hiện có, không gọi AI lần hai.
+topic_code bỏ/null là free_chat; roleplay kiểm tra topic active và level hỗ trợ. Role/CEFR/prompt được snapshot. Provider nhận persona.v2, role và tối đa 20 tin gần nhất. Một conversation chỉ có một reply pending: gửi tin mới hoặc đóng khi pending trả 409. Retry cùng UUID trả trạng thái hiện có, không gọi AI lần hai.
 
 SQL reserve hai tin và evaluation pending, commit, gọi LLM ngoài transaction (timeout 30 giây), rồi finalize atomic. SQL chạy worker thread, không chặn event loop. Lỗi provider lưu failed và trả 502; retry UUID cũ trả bản failed để client biết kết quả. Muốn thử mới dùng UUID mới. Nếu process/request gián đoạn, client đọc lịch sử và cancel pending; kết quả provider đến muộn không hồi sinh job cancelled. Hiện response JSON hoàn chỉnh, chưa có SSE/streaming hay tự retry job nền.
 
@@ -137,6 +139,9 @@ View tổng hợp StudySessions và FlashcardReviews độc lập để không n
 
 | Màn hình / dữ liệu demo | API backend |
 | --- | --- |
+| LamQuenCungMate / daLamQuen | Chỉ localStorage; chưa có cờ làm quen SQL |
+| LoTrinhHoc / trinhDo | UI có 7 mức; profile SQL v1 chỉ nhận A2/B1/B2 |
+| LuyenDoc / bài đọc, đáp án | Chỉ localStorage; chưa có lessons skill reading hoặc API chấm Reading |
 | TaiKhoan / daDangNhap | auth register/login/refresh/logout/forgot/reset; trạng thái lấy từ me |
 | HoSo / ten, email, trinhDo, mucTieu, phutMoiNgay | me, me/profile, me/account; avatar qua media; số liệu qua dashboard |
 | CaiDat / giaoDien, giamChuyenDong, tocDoDoc | settings: sang→light, toi→dark, he-thong→system; reduced_motion; speech_rate |

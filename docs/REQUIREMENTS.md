@@ -1,6 +1,6 @@
 # Yêu cầu và backlog
 
-Cập nhật: 2026-10-07. Bản develop hợp nhất UI demo đa trang, backend và schema SQL Server. UI nghiệp vụ dùng localStorage, chưa nối API SQL/JWT; hội thoại dùng mock reply.
+Cập nhật: 2026-10-08. Bản develop hợp nhất UI demo đa trang, backend và schema SQL Server. UI nghiệp vụ dùng localStorage, chưa nối API SQL/JWT; hội thoại dùng mock reply.
 
 | ID | Yêu cầu khung | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ S-07 ở trên là kết quả CI lịch sử của scaffold. Workflow SQL Serve
 | ID | Yêu cầu demo | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
 | D-01 | Giao diện hiện đại, sidebar desktop và menu drawer trên mobile | Responsive review, build | Đã hoàn thành |
-| D-02 | 10 trang học tập: tổng quan, hội thoại AI, luyện nói, chủ đề nhập vai, luyện nghe, luyện viết, sổ từ vựng, flashcard, hồ sơ và cài đặt; trang đăng nhập độc lập | Vitest route/menu/tài khoản | Đã test |
+| D-02 | 12 trang học tập: tổng quan, lộ trình, hội thoại AI, Speaking, chủ đề nhập vai, Listening, Reading, Writing, sổ từ vựng, flashcard, hồ sơ và cài đặt; trang đăng nhập độc lập | Vitest route/menu/tài khoản | Đã test |
 | D-03 | Tên file, component và hash route tiếng Việt không dấu | Rà soát `frontend/src` | Đã hoàn thành |
 | D-04 | Lưu hồ sơ, từ vựng, thống kê ngày và lịch ôn trong trình duyệt | Test lưu/khôi phục/lỗi storage | Đã test |
 | D-05 | Hội thoại gọi `/api/ai/reply`; các phản hồi mô phỏng phải có nhãn rõ ràng | Test success/error/abort | Đã test với mock |
@@ -71,6 +71,11 @@ S-07 ở trên là kết quả CI lịch sử của scaffold. Workflow SQL Serve
 | D-14 | Thêm trang trí và animation cho toàn giao diện: banner/nhân vật, thẻ màu, hover, chuyển trang, nút và các trang luyện tập; giữ chữ gọn, hỗ trợ giảm chuyển động | Chrome chuyển động thực/hover/giảm chuyển động/responsive; Vitest luồng đang có, lint/build/smoke | Đã test |
 | D-15 | Dùng robot đã chọn làm linh thú Mate nhất quán; biểu cảm theo hoạt động/kết quả, giao diện học vui với thẻ nổi, giữ đăng nhập riêng/chữ gọn | Vitest kết quả nghe/ôn/mục tiêu; Chrome sáng/tối/mobile/giảm chuyển động, lint/build/smoke | Đã test |
 | D-16 | Thêm giao diện Google/Facebook/GitHub; panel Mate cuộn đổi đăng nhập ↔ đăng ký theo brand EngMate, form mở theo hướng; chỉ hoàn thiện giao diện | Vitest không tạo phiên xã hội giả/giữ dữ liệu/luồng tài khoản; Chrome đo translate panel/form desktop + mobile xếp dọc/giảm chuyển động; lint/build | Đã test giao diện; OAuth chưa kết nối |
+| D-17 | Reading với 7 bài đọc Pre-A1 đến C2, trắc nghiệm/điểm/giải thích, lưu từ vựng và ghi nhận phút học; tên kỹ năng Speaking/Listening/Reading/Writing trong menu, tổng quan, tiêu đề | 5 Vitest mới, coverage Reading; Chrome 30 tổ hợp bài/theme/viewport và luồng chấm/lưu từ | Đã test |
+| D-18 | Nút hỗ trợ Mate cầm điện thoại, kính mờ khi nghỉ/đậm khi hover và kéo; kéo chuột/cảm ứng có giới hạn màn hình, panel và bàn phím hoạt động | 5 Vitest; Chrome QA lịch sử sáng/tối, hover/kéo và cảm ứng 320/390/768 px | Đã test |
+| D-19 | Lộ trình Pre-A1 → C2; người mới có chữ cái/số đếm/lời chào; lưu và khôi phục mức học, bốn kỹ năng/nhập vai/API mock không lưu hỗ trợ bảy mức; SQL v1 A2/B1/B2 | 15 Vitest mới; 21 backend tests; Chrome 232 tổ hợp và API cả bảy mức | Đã test nội dung thực hành; chưa phải khóa học/bài thi chứng nhận CEFR |
+| D-20 | Mate hỏi khả năng tiếng Anh ngay sau đăng nhập đầu tiên bằng mô tả dễ hiểu, không hiện mã CEFR trong lựa chọn; tự đặt mức học và nhớ đã làm quen; đăng ký mới được hỏi lại | 13 Vitest luồng đăng nhập/lưu/migration/bảy câu trả lời; Chrome 8 tổ hợp sáng/tối/viewport và đăng nhập lại | Đã test |
 
+Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
 
 Các kết quả Chrome trong bảng là QA lịch sử của nhánh giao diện; không coi đó là browser E2E mới của bản tích hợp. API backend đã có auth/SMTP reset, nhưng UI tài khoản hiện vẫn cục bộ. UI hiện yêu cầu đăng nhập demo abc/123 trước khi vào học tập; liên kết vào không gian học tập chỉ dùng sau khi đăng nhập. Lint/test/coverage/build của bản tích hợp đều qua; không còn lỗi assertion Việt hóa cản kiểm chứng. Chi tiết ở PROGRESS và DEMO_DEVELOP.

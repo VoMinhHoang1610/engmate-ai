@@ -1,5 +1,68 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-08 — Hợp nhất code giao diện mới vào develop
+
+- **Yêu cầu:** merge code mới từ `sua-giao-dien` vào `develop`; commit tiếng Việt không dấu theo yêu cầu trước đó.
+- **Nguồn:** `develop` 5a61e99 và `sua-giao-dien` 83d2952 sau fetch. Hợp nhất trên `chore/merge-giao-dien-moi`, xử lý 13 file xung đột; giữ các nhánh nguồn, backup và stash.
+- **Kết quả:** giữ backend/API SQL Server và UI mới: Reading 7 bài/21 câu hỏi, lộ trình bảy mức/nhập môn, Mate làm quen và hỗ trợ cầm điện thoại. Giữ sửa lỗi intro/username/profile và setup test jsdom của develop. Fixture người học cũ đã làm quen, test đăng ký và menu mới hoàn thành bước Mate bằng thao tác người dùng; bài nghe/viết cũ được chọn rõ mức để giữ kiểm tra hành vi.
+- **Tương thích:** tách DatabaseLevel A2/B1/B2 khỏi Level bảy mức của mock; thêm 7 unit cases và 1 SQL workflow kiểm tra mức chưa hỗ trợ trả 422, không ghi profile/conversation. Giữ schema v1; đưa prompt mới sang persona.v2, giữ v1 và ghi đúng phiên bản snapshot. Giữ regression capture từ SVG/kéo nhiều lần của hỗ trợ; không skip test hoặc hạ ngưỡng coverage.
+- **File:** router/account/profile/support/CSS, dữ liệu và trang/test Reading/lộ trình/làm quen/nhập môn, fixture tests; backend schema/services/prompts/tests; README, API/kiến trúc/yêu cầu/kiểm thử/quyết định/changelog/demo/prompt/database docs. SQL scripts, CI/Compose và `.env` giữ nguyên.
+- **Kiểm chứng:** `python scripts/manage.py lint`, `test`, `coverage`, `build` đều qua. Ruff/Black/mypy 46 source files, ESLint/TypeScript/Prettier qua. Backend **70/70**, frontend **92/92**, gồm **22 SQL integration** trên SQL Server 2022/tempdb có guard và rollback. Backend coverage **92,83%**; frontend statements **88,97%**, branches **86,39%**, functions **87,09%**, lines **90,96%**; tất cả trên 80%. Production build **62 modules**. Schema `em` trong tempdb còn NULL sau test.
+- **Docker:** stack riêng `engmate-ai-ui-merge-verify` build và hai dịch vụ healthy tại 18012/15176; HTTP smoke qua backend health/web/proxy/AI mock. Đã dừng/xóa container và network riêng, giữ volume; không ảnh hưởng stack khác, không gọi paid API/SMTP thật.
+- **Git:** tạo merge commit `chore: hop nhat giao dien moi va giu backend tren develop`, đưa develop tới kết quả qua fast-forward sau kiểm chứng; không push. Commit đầy đủ và trạng thái cuối xem lịch sử Git.
+- **Giới hạn/tiếp theo:** UI vẫn localStorage/demo abc/123 và mock; SQL v1 chỉ ba mức, chưa lưu Reading hoặc cờ Mate. Mở rộng schema/nối UI và AI/OAuth/STT thật là công việc tiếp theo. Chưa chạy GitHub Actions hoặc browser E2E mới; các QA Chrome bên dưới là lịch sử nhánh nguồn.
+
+## 2026-10-07 — Mate hỏi khả năng tiếng Anh sau lần đăng nhập đầu tiên
+
+- **Yêu cầu:** người mới được linh thú hỏi trình độ ngay khi đăng nhập; các lựa chọn dùng từ ngữ gần gũi, không cần hiểu mã A1/A2 hay tự mở lộ trình để chọn.
+- **Kết quả:** trang làm quen riêng với Mate chào theo tên, bảy câu mô tả từ “Mình bắt đầu từ con số 0” đến diễn đạt tự nhiên, ví dụ cụ thể và lời động viên theo lựa chọn. Xem trước không đổi hồ sơ; xác nhận tự đặt mức học và chuyển tổng quan. Mã CEFR chỉ dùng nội bộ trong bước này. Radio native, focus tiêu đề và live status; có sáng/tối/mobile/giảm chuyển động.
+- **Lưu dữ liệu:** thêm `daLamQuen` cùng khóa hiện tại; hoàn thành rồi reload/đăng nhập lại không hỏi. Hồ sơ cũ thiếu cờ được hỏi một lần, giữ từ vựng/thống kê/trình độ cho đến khi xác nhận. Đăng xuất khi chưa trả lời giữ bước đang chờ; đổi route không bỏ qua. Đăng ký mới đặt lại cờ. Sửa việc đăng nhập bằng tên tài khoản làm rỗng email hồ sơ.
+- **File:** thêm `demo/lamQuen.ts`, `pages/LamQuenCungMate.tsx` và test; cập nhật App/LuuTru/TaiKhoan/CSS, fixture người học đã làm quen trong test lộ trình/Reading; README và docs. Loại biến intro chưa dùng, nhánh setState thừa đã được khởi tạo xử lý, dùng thuộc tính inert có kiểu tại TaiKhoan để build/lint chuẩn qua; giữ thay đổi tài khoản của người dùng. Không thêm dependency/API/xác thực backend.
+- **Kiểm chứng:** 13 test mới; cùng lộ trình/Reading/nhập môn/hỗ trợ 37/37 qua. Coverage chọn lọc trang/data làm quen: statements 94.11%, branches 80%, functions/lines 100%. Chạy `python scripts/manage.py lint` qua Ruff/Black/mypy/ESLint/TypeScript/Prettier; `build` qua 62 modules, `smoke` qua backend/frontend/proxy/mock.
+- **Kiểm thử toàn dự án:** `test` và `coverage` đều đã chạy; backend 21/21 và coverage 100%. Frontend 49/89 qua, cùng 40 lỗi cũ trong sáu bộ test tài khoản/phiên/văn bản; coverage toàn frontend không đạt kiểm chứng vì các test này lỗi. Không vô hiệu hóa test cũ. Pytest cảnh báo không ghi được cache nhưng các test vẫn qua.
+- **Chrome:** hồ sơ QA riêng, đăng nhập → Mate → chọn bắt đầu số 0 → tổng quan, reload và đăng xuất/đăng nhập lại đều qua. 8 tổ hợp sáng/tối × 320/390/768/1440 px không tràn ngang/cắt lựa chọn; không lỗi JS. Đã xem ảnh desktop sáng/mobile tối trong `.cache/onboarding-*.png`.
+- **Giới hạn:** câu trả lời là tự mô tả khả năng để đặt bài phù hợp, chưa phải bài kiểm tra xếp lớp. Demo lưu một hồ sơ trên trình duyệt; chưa có cờ theo tài khoản backend. Có thể điều chỉnh mức ở lộ trình/hồ sơ về sau.
+- **Trạng thái:** nhánh `feat/mate-first-login-onboarding`, chưa commit/push; frontend/backend vẫn 5174/8010. Việc tiếp theo khi được yêu cầu: cập nhật bộ test cũ theo luồng tài khoản hiện tại hoặc thêm đánh giá năng lực thực tế.
+
+## 2026-10-07 — Lộ trình từ số 0 đến C2
+
+- **Yêu cầu:** mở lộ trình từ người chưa từng học đến mức thành thạo, bổ sung các mức cơ bản.
+- **Kết quả:** thêm trang `#lo-trinh`, menu và liên kết tổng quan; bảy chặng Pre-A1/A1/A2/B1/B2/C1/C2 với mục tiêu và trọng tâm. Người mới mặc định Pre-A1; có bài nhập môn 26 chữ cái, số 0–10 và lời chào/bản dịch, phát âm chậm. Lưu chặng tự chọn và giữ hồ sơ/trình độ cũ.
+- **Bốn kỹ năng:** mỗi mức có ba câu Speaking, bài Listening + trắc nghiệm/chính tả, bài Reading + ba câu hỏi/giải thích, đề/gợi ý Writing. Tổng cộng 7 bài đọc/21 câu hỏi và 7 bài nghe. Hồ sơ/hội thoại/nhập vai hỗ trợ bảy mức; sửa lọc A1 không trộn Pre-A1. Link lộ trình truyền `trinh-do` và đồng bộ hồ sơ; query sai fallback. API/prompt mở rộng bảy mức, giữ mock và default API A2.
+- **File:** thêm `demo/trinhDo.ts`, `demo/baiNghe.ts`, `demo/baiDocBoSung.ts`, `components/ChonTrinhDo.tsx`, `components/NenTangTiengAnh.tsx`, `pages/LoTrinhHoc.tsx` và hai bộ test; cập nhật router/tổng quan/hồ sơ/lưu trữ/bốn kỹ năng/hội thoại/nhập vai, data/test Reading, CSS; backend schema/prompt/API tests; README và docs. Không thêm dependency; giữ thay đổi tài khoản của người dùng. Thay `any` có sẵn tại trường giới tính HoSo bằng kiểu dữ liệu tương ứng để lint file sửa được.
+- **Kiểm chứng:** 15 test mới, tổng 24/24 test lộ trình/nhập môn/Reading/hỗ trợ qua. Coverage chọn lọc trinhDo/LoTrinhHoc/NenTangTiengAnh/ChonTrinhDo 100% cả statements/branches/functions/lines. Backend 21/21, coverage 100%; Ruff/Black/mypy qua. Eslint phần tác vụ/Prettier qua; Vite bundle 60 modules và smoke qua.
+- **Chrome:** 232 tổ hợp trang kỹ năng/mức/theme/viewport 320–1440 px, không tràn ngang/cắt input/nút. Chọn C2/reload giữ mức, nhập môn đúng số ô; tất cả bảy mức API qua proxy trả 200 đúng level. Đã xem ảnh lộ trình desktop sáng/mobile tối, không lỗi JS. Backend được khởi động lại để tiến trình đang chạy nhận schema mới.
+- **Giới hạn và lỗi cũ:** nội dung là bài thực hành theo mức, chưa phải giáo trình đầy đủ, kiểm tra xếp lớp hoặc chứng nhận CEFR; chặng là tự chọn, chưa tự nâng cấp. Phản hồi Speaking/Writing vẫn là minh họa cố định. Toàn frontend 36/76 qua, cùng 40 lỗi cũ; coverage toàn frontend không hợp lệ. Lint toàn repo còn 3 lỗi và build chuẩn còn 1 lỗi biến chưa dùng trong TaiKhoan, không sửa luồng tài khoản ngoài phạm vi.
+- **Trạng thái:** nhánh `feat/beginner-to-c2-roadmap`, chưa commit/push; frontend/backend 5174/8010. Việc tiếp theo: giáo trình đầy đủ/đánh giá năng lực khi có yêu cầu và xử lý bộ test tài khoản cũ.
+
+## 2026-10-07 — Mate cầm ống nghe cổ điển và rung tự động
+
+- **Điều chỉnh:** đổi điện thoại trên tay Mate thành ống nghe điện thoại bàn cổ điển, hai đầu nghe/nói và dây xoắn bằng SVG; giữ màu navy/cyan và tay cầm sát mặt.
+- **Hiệu ứng:** Mate lắc ±3° và ống nghe rung ±8° theo nhịp ngắn, nghỉ giữa các chu kỳ 3.6 giây; không dịch chuyển vị trí nút. Tạm dừng khi kéo; Giảm chuyển động trong ứng dụng/hệ thống tắt animation. Giữ kính mờ/hover và các thao tác hỗ trợ.
+- **File:** `components/LinhThu.tsx`, `index.css`, tài liệu changelog/kiểm thử/tiến trình; không thêm dependency.
+- **Kiểm chứng:** 4/4 test hỗ trợ qua, ESLint component và Prettier qua, Vite bundle 54 modules qua. Chrome đo được hai animation và 13 trạng thái transform khác nhau trong 15 mẫu; cả hai chế độ giảm chuyển động đều không có animation. Đã xem ảnh phóng to nút.
+- **Trạng thái:** nhánh `feat/mate-classic-handset`, dev tiếp tục 5174/8010; chưa commit/push. Các lỗi kiểm thử/build chung đã ghi ở mục trước vẫn ngoài phạm vi điều chỉnh hình/animation này.
+
+## 2026-10-07 — Nút hỗ trợ Mate nghe điện thoại, nền kính mờ
+
+- **Yêu cầu:** thay nút hỗ trợ bằng linh thú nghe điện thoại; bình thường kính mờ, đậm khi hover/kéo như nút Home ảo.
+- **Kết quả:** Mate có biểu cảm `support`, cầm điện thoại cạnh mặt, dùng chung component CSS/SVG hiện có. Nút 68 px với góc bo 24 px, blur 16 px, độ mờ 0.55 khi nghỉ; hover/focus/kéo/mở panel chuyển opacity 1 và nền navy trong 220 ms. Có giao diện sáng/tối, giữ tùy chọn giảm chuyển động.
+- **Thao tác:** kéo bằng chuột/cảm ứng với pointer capture trên nút, không mở panel sau drag; giới hạn nút trong viewport, xử lý cancel/lost capture và resize. Panel neo gần nút và được giới hạn màn hình; click/bàn phím mở, nút đóng/Escape đóng và trả focus. Chỉ render panel khi mở để điều khiển ẩn không nhận focus. Giữ nội dung hỗ trợ hiện có.
+- **File:** `components/HoTroNhanh.tsx`, `components/LinhThu.tsx`, `index.css`; thêm `components/HoTroNhanh.test.tsx`; cập nhật tài liệu. Giữ toàn bộ Reading và thay đổi TaiKhoan có sẵn, không thêm dependency.
+- **Kiểm chứng:** 4/4 test hỗ trợ mới, cùng Reading 9/9 qua. Coverage chọn lọc hỗ trợ/Mate: statements 97.05%, branches 87.23%, functions 94.73%, lines 98.33%; riêng HoTroNhanh lines/functions 100%. ESLint phần sửa và Vite bundle 54 modules qua; HTTP smoke qua. Chrome thực đo opacity nghỉ 0.55/hover 1 ở sáng/tối, kéo chuột không mở nhầm và panel nằm trong màn hình; cảm ứng 320/390/768 px qua, không lỗi JS. Đã xem ảnh nút nghỉ/hover và panel mobile.
+- **Kiểm tra toàn dự án:** backend 16/16 qua, coverage 100%; Ruff/Black/mypy qua. Frontend 21/61 qua, cùng 40 lỗi cũ từ tác vụ Reading. Đã loại 4 lỗi lint và 3 lỗi TypeScript của HoTroNhanh; lint chung còn 4 lỗi HoSo/TaiKhoan, build chuẩn còn biến INTRO_STORAGE_KEY chưa dùng ở TaiKhoan. Coverage toàn frontend chưa hợp lệ vì test cũ lỗi.
+- **Trạng thái:** nhánh `feat/mate-support-glass`, chưa commit/push; frontend/backend vẫn 5174/8010.
+
+## 2026-10-07 — Reading và nhãn kỹ năng tiếng Anh
+
+- **Yêu cầu:** thêm luyện đọc; đổi tên kỹ năng thành Speaking, Listening, Reading, Writing (dùng chính tả Writing).
+- **Kết quả:** thêm route `#luyen-doc`, menu và thẻ tổng quan; 3 bài A2/B1/B2, mỗi bài 3 câu hỏi kèm giải thích; yêu cầu trả lời đủ, khóa đáp án sau khi nộp, làm lại/đổi bài, Mate theo kết quả. Từ vựng bài đọc lưu qua Context/localStorage; mỗi bài cộng 5 phút một lần trong một lần mở trang. Hướng dẫn vẫn tiếng Việt, đường dẫn cũ giữ nguyên.
+- **File:** thêm `demo/baiDoc.ts`, `pages/LuyenDoc.tsx`, `pages/LuyenDoc.test.tsx`; cập nhật App, danh sách trang, TongQuan, tiêu đề nói/nghe/viết, CSS, assertion nhãn/menu/route và README/yêu cầu/kiến trúc/kiểm thử/changelog. Không thêm dependency/API. Prettier định dạng lại một số khai báo CSS có sẵn.
+- **Kiểm chứng:** 5/5 test Reading qua; coverage chọn lọc statements 97.05%, branches 97.36%, functions/lines 100%. Eslint và Prettier các file tác vụ qua. Vite bundle qua (54 modules); smoke backend/frontend/proxy/mock qua. Backend 16/16 tests và coverage 100%; Ruff/Black/mypy qua.
+- **Trình duyệt:** Chrome QA riêng rà 30 tổ hợp (3 bài × 2 theme × 5 viewport 320–1440 px); không tràn ngang hoặc cắt điều khiển Reading. Luồng chọn đáp án đúng 3/3, cộng 5 phút, lưu từ qua; không lỗi JavaScript. Đã xem ảnh desktop sáng/mobile tối.
+- **Lỗi tồn tại trước thay đổi:** frontend toàn bộ 17/57 qua, 40 lỗi; chạy bản HEAD trước tác vụ trong `.cache/reading-baseline` xác nhận 12/52 qua với cùng 40 lỗi. Coverage toàn frontend chưa hợp lệ vì test lỗi. Lint toàn repo còn 8 lỗi ở HoTroNhanh/HoSo/TaiKhoan; build chuẩn còn 4 lỗi TypeScript ở HoTroNhanh/TaiKhoan, chạy build bản HEAD cũng gặp đúng 4 lỗi. Không sửa phần tài khoản/trợ giúp ngoài phạm vi, giữ thay đổi người dùng trong TaiKhoan trong lúc thực hiện.
+- **Trạng thái:** nhánh `feat/reading-practice`, chưa commit/push; dev frontend/backend vẫn chạy 5174/8010. Việc tiếp theo: xử lý lỗi kiểm thử và build cũ trong tác vụ riêng.
+
 ## 2026-10-07 — Hợp nhất các nhánh vào develop để demo
 
 - **Yêu cầu:** rà soát mọi nhánh và hợp nhất bản demo vào develop; commit mới dùng tiếng Việt không dấu. Fetch toàn bộ remote: không có commit mới. Làm trên `chore/tich-hop-demo-develop` trước khi fast-forward develop; không sửa main, không push/force/rebase/xóa nhánh.

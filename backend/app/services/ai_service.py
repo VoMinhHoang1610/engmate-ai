@@ -5,7 +5,8 @@ from pathlib import Path
 from app.llm.base import LLMClient
 from app.schemas.ai import ReplyRequest, ReplyResponse
 
-PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / "persona.v1.txt"
+PROMPT_VERSION = "persona.v2"
+PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
 
 
 class AIService:

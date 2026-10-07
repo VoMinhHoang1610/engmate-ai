@@ -1,5 +1,9 @@
 # Thiết kế cơ sở dữ liệu SQL Server — EngMate-AI
 
+## Tương thích với UI mới — 2026-10-08
+
+UI demo có bảy mức Pre-A1 đến C2, Reading và Mate làm quen. Schema v1 giữ nguyên: CefrLevel chỉ A2/B1/B2; catalog kỹ năng chưa có Reading và chưa có cờ làm quen. API lưu hồ sơ/hội thoại từ chối mức ngoài schema bằng 422, có unit/SQL integration test xác nhận không ghi dữ liệu. Mở rộng database cần migration riêng trước khi nối UI; merge không chạy migration trên database ứng dụng.
+
 ## Trạng thái tích hợp backend — 2026-10-07
 
 Tài liệu dưới đây giữ bản thiết kế và khảo sát ban đầu. Backend ở `feat/backend-learning-api` hiện đã kết nối SQL Server bằng SQLAlchemy Core/pyodbc và có auth/API học tập trên schema này; các nhận xét “chưa có backend” trong khảo sát là trạng thái trước triển khai.

@@ -46,7 +46,9 @@ describe('Menu avatar', () => {
     fireEvent.change(screen.getByLabelText('Tài khoản'), { target: { value: 'abc' } });
     fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: '123' } });
     fireEvent.submit(screen.getByLabelText('Tài khoản').closest('form')!);
-    fireEvent.click(screen.getByRole('link', { name: /Vào không gian học tập/ }));
+    expect(screen.getByRole('heading', { name: 'Tiếng Anh của bạn đang ở đâu?' })).toBeVisible();
+    fireEvent.click(screen.getByRole('radio', { name: /Mình bắt đầu từ con số 0/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu học cùng Mate' }));
     expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
     let avatar = screen.getByRole('button', { name: 'Mở menu tài khoản' });
     fireEvent.mouseEnter(avatar.closest('.user-menu')!);

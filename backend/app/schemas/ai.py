@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Level = Literal["A2", "B1", "B2"]
+Level = Literal["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"]
 
 
 class ReplyRequest(BaseModel):

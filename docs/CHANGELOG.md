@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Hợp nhất giao diện mới vào develop — 2026-10-08
+
+- Bổ sung Reading, lộ trình Pre-A1 đến C2, nhập môn, Mate làm quen sau đăng nhập và nút hỗ trợ mới; giữ backend/API SQL Server đã hoàn thiện.
+- Giữ sửa lỗi intro một lần mỗi tab, username/email và storage jsdom; cập nhật test đăng ký/đăng nhập theo bước làm quen, giữ kiểm tra luyện tập và kéo hỗ trợ.
+- API mock reply nhận bảy mức với prompt v2; API lưu SQL v1 vẫn nhận A2/B1/B2 và trả 422 cho mức chưa hỗ trợ.
+
 ### Bản demo develop — 2026-10-07
 
 - Hợp nhất UI đa trang, schema SQL Server, backend API và CI/Docker; thêm hướng dẫn demo và bảng các nhánh nguồn.
@@ -24,6 +30,16 @@
 - Bộ kiểm thử database chạy 45/45 kiểm tra trên SQL Server 2022, rollback toàn bộ môi trường thử. Chưa tích hợp database/auth/OAuth vào backend hoặc thay đổi cách chạy ứng dụng.
 
 ### Added
+
+- Mate chào và hỏi khả năng tiếng Anh ngay sau đăng nhập đầu tiên bằng bảy mô tả dễ hiểu, từ bắt đầu số 0 đến diễn đạt tự nhiên; không hiện mã A1/A2 trong lựa chọn. Câu trả lời tự đặt mức học, lưu và đưa vào tổng quan; lần đăng nhập sau không hỏi lại. Người đăng ký mới được làm quen lại.
+- Trang Lộ trình học từ Pre-A1 đến C2, điểm bắt đầu cho người chưa từng học, phần chữ cái/số đếm/lời chào có phát âm chậm; chọn chặng lưu trong hồ sơ.
+- Nội dung Speaking, Listening, Reading, Writing và nhập vai theo cả bảy mức; API hội thoại chấp nhận Pre-A1/A1/C1/C2 cùng ba mức cũ. Người mới mặc định Pre-A1; dữ liệu trình độ cũ được giữ.
+
+- Mate hỗ trợ cầm ống nghe điện thoại bàn cổ điển có dây xoắn, rung nhẹ tự động theo nhịp; tạm dừng khi kéo và tắt theo tùy chọn giảm chuyển động.
+
+- Nút hỗ trợ dùng Mate đang nghe điện thoại, nền kính mờ lúc nghỉ và đậm khi hover/kéo. Kéo bằng chuột/cảm ứng, giới hạn nút và hộp hỗ trợ trong màn hình; hỗ trợ Escape và bàn phím.
+
+- Reading: 3 bài A2/B1/B2 với 9 câu hỏi đọc hiểu, chấm điểm và giải thích, làm lại, lưu từ vựng và ghi nhận phút luyện tập. Thêm trong menu và tổng quan; tên kỹ năng đổi thành Speaking, Listening, Reading, Writing.
 
 - Nút tiếp tục với Google/Facebook/GitHub trên đăng nhập và đăng ký; hiện hoàn thiện giao diện, báo rõ chưa kết nối khi bấm.
 - Linh thú Mate với dáng chào, tai nghe, suy nghĩ, động viên và ăn mừng; component dùng chung, bản SVG nền trong suốt và hướng dẫn nhận diện.
