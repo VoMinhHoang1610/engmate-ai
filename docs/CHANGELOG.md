@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Thiết kế database SQL Server — 2026-10-07
+
+- Khảo sát toàn bộ giao diện/nghiệp vụ; bổ sung tài liệu ERD, từ điển dữ liệu, ánh xạ localStorage và quy tắc giao dịch.
+- Thêm schema 22 bảng, 2 view, seed 8 chủ đề/9 bài/4 câu hỏi/6 lựa chọn và truy vấn mẫu cho SQL Server; thay PostgreSQL trong kế hoạch triển khai tiếp.
+- Bộ kiểm thử database chạy 45/45 kiểm tra trên SQL Server 2022, rollback toàn bộ môi trường thử. Chưa tích hợp database/auth/OAuth vào backend hoặc thay đổi cách chạy ứng dụng.
+
 ### Added
 
 - Khung React/TypeScript và FastAPI/Python mới theo yêu cầu reset ngày 2026-10-04.
