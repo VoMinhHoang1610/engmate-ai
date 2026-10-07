@@ -1,5 +1,17 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-07 — Hoàn thiện backend/API theo giao diện và schema SQL Server
+
+- **Phạm vi:** tiếp tục checkpoint trên `feat/backend-learning-api`. Đối chiếu giao diện đa trang ở `feat/social-login-motion` và schema SQL hiện có; không merge UI hoặc thay đổi nhánh dùng chung.
+- **Backend:** 42 thao tác HTTP trên 35 paths: auth/JWT/refresh/logout/reset/đổi mật khẩu, account/profile/settings, catalog, hội thoại/tin nhắn/evaluation, luyện nghe/nói/viết, notebook/mastery, flashcard và dashboard. SQLAlchemy Core/pyodbc dùng schema có sẵn; migration runner chủ động và OpenAPI export cho Postman.
+- **Hoàn thiện so với WIP:** account email/username với current password và rowversion; notebook search/mastery; answer key listening sau nộp; JSON response đúng kiểu; validation độ dài UTF-16/ID/birthday/timezone; request size/auth limits, hash semaphore, lazy-engine lock; retry/cancel/timeout và SQL worker thread; private media kiểm tra truncated WAV/decoder. SMTP reset lỗi giao thư không làm response tiết lộ email tồn tại.
+- **Kiểm thử cuối:** `python scripts/manage.py coverage` với SQL Server 2022/tempdb: **57/57 backend tests qua**, gồm **21 SQL integration cases**; coverage toàn app **92,83%**. Frontend scaffold **13/13 tests qua**, coverage **100%**. Test SQL guard database/schema, outer transaction và rollback; không tạo hoặc dùng database ứng dụng để thử. SMTP/LLM đều giả.
+- **Kiểm tra khác:** lint qua Ruff/Black/mypy (**46 source files**) và ESLint/TypeScript/Prettier; TypeScript/Vite build qua. OpenAPI export qua, đếm được 35 paths/42 operations; `git diff --check` qua. Các SQL scripts 001–004/tests không sửa trong tác vụ này; 45 kiểm tra standalone là kết quả lịch sử riêng.
+- **Docker:** build backend với ODBC Driver 18/ffmpeg và frontend thành công; stack riêng `engmate-ai-backend-verify` cổng 18010/15174 đều healthy. HTTP smoke qua backend health, HTML, Vite proxy và AI mock. Xác nhận runtime có ODBC Driver 18 và `/usr/bin/ffprobe`. Đã dừng/xóa đúng containers/network thử, giữ volume; không tác động stack khác. SQL kiểm tra cuối trả `SCHEMA_ID(N'em') = NULL`, xác nhận schema thử đã rollback.
+- **CI/cấu hình:** workflow bổ sung SQL Server 2022 service dùng credential tạm và ODBC 18 để coverage không skip SQL. YAML parse được; workflow mới chưa push/chạy GitHub. Compose chuyển DB/JWT/SMTP, dùng private media volume và mount SQL scripts. Không in hoặc ghi đè .env/secrets.
+- **Tài liệu:** cập nhật API/README, ARCHITECTURE, REQUIREMENTS, TESTING, DECISIONS, CHANGELOG, PROMPTS, IMPLEMENTATION_PLAN, DATABASE_SQLSERVER và README SQL; đánh dấu WIP là checkpoint lịch sử.
+- **Giới hạn/bước tiếp:** frontend scaffold trên nhánh này chưa thay thế giao diện đa trang/localStorage; kết quả frontend không áp dụng cho nhánh UI đó. AI vẫn mock, không chấm nói/viết thật; OAuth, email verification, STT, streaming, account deletion và nhập localStorage còn backlog. SMTP thật/nhiều connection ghi đồng thời/load/SQL Server 2019 chưa kiểm thử. Nối UI theo API là bước tiếp theo; bật DB cần database đã tạo + DATABASE_ODBC_CONNECTION + JWT_SECRET rồi chạy migrate-backend. Chưa commit/push.
+
 ## 2026-10-07 — Chuyển backend/API đang làm dở sang nhánh riêng
 
 - Bảo toàn mã/backend/tests/cấu hình và lockfiles trên `feat/backend-learning-api`, dựa trên `feat/sqlserver-schema`; giữ nhánh giao diện và nhánh CI tách biệt.

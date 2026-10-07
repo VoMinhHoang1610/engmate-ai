@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Backend/API SQL Server — 2026-10-07
+
+- Hoàn thiện API auth JWT/Argon2, reset/đổi mật khẩu và thu hồi phiên; hồ sơ/cài đặt/account dùng rowversion.
+- Thêm catalog, hội thoại/lịch sử/evaluation, luyện nghe/nói/viết, notebook/mastery, flashcard/review và dashboard theo schema hiện có.
+- Media private: avatar và recording kiểm tra định dạng/duration; chấm listening bằng đáp án SQL, AI mock được ghi nhãn rõ.
+- Hoàn thiện ownership, request UUID/retry, rollback, worker thread/timeout/cancel, input limits và error responses không lộ bí mật.
+- Thêm migration runner, OpenAPI export cho Postman, hướng dẫn DB/JWT/SMTP, Docker ODBC/ffmpeg/media volume và workflow SQL Server tests.
+- Giao diện nghiệp vụ vẫn ở nhánh riêng chưa nối API. Chưa thêm OAuth, STT, streaming, provider AI thật hoặc gửi thử SMTP thật. Kết quả test cụ thể xem PROGRESS.
+
 ### Thiết kế database SQL Server — 2026-10-07
 
 - Khảo sát toàn bộ giao diện/nghiệp vụ; bổ sung tài liệu ERD, từ điển dữ liệu, ánh xạ localStorage và quy tắc giao dịch.

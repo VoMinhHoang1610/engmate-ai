@@ -1,5 +1,7 @@
 # Backend/API — công việc đang thực hiện
 
+> **Checkpoint lịch sử:** nội dung WIP dưới đây ghi lại lúc tách nhánh, trước tác vụ hoàn thiện backend. Trạng thái hiện tại và kết quả kiểm chứng ở [PROGRESS](PROGRESS.md), hợp đồng ở [API](API.md); không dùng các số test WIP làm kết quả hiện tại.
+
 Nhánh `feat/backend-learning-api` được tách ngày 2026-10-07 từ `feat/sqlserver-schema`. Schema dựa trên `develop`; nhánh backend không mang các commit giao diện của `feat/social-login-motion`.
 
 Đã bảo toàn các thay đổi SQLAlchemy Core/pyodbc, cấu hình DB/JWT, Argon2, tài khoản/refresh/reset mật khẩu, hồ sơ/cài đặt, danh mục, từ vựng/flashcard, hội thoại, bài luyện/thống kê, media riêng tư, migration runner, lockfile và Docker/Compose. AI vẫn là mock; frontend chưa nối các API nghiệp vụ mới.

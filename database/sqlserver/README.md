@@ -1,5 +1,7 @@
 # Database SQL Server cho EngMate-AI
 
+Backend đã có SQLAlchemy Core/pyodbc và migration runner trên `feat/backend-learning-api`. Sau khi tự tạo database rỗng và đặt `DATABASE_ODBC_CONNECTION`/`JWT_SECRET`, có thể chạy `python scripts/manage.py migrate-backend` từ root thay cho ba lệnh sqlcmd bên dưới. Runner kiểm tra schema version, seed/views chạy lại được; không tự tạo database. Xem [README ứng dụng](../../README.md) và [API](../../docs/API.md).
+
 Thiết kế **22 bảng, 2 view** cho toàn bộ giao diện học tập hiện tại và các luồng backend tương ứng. Xem [khảo sát, ERD, từ điển dữ liệu và quy tắc giao dịch](../../docs/DATABASE_SQLSERVER.md).
 
 Yêu cầu SQL Server 2019+; đã chạy kiểm chứng trên SQL Server 2022 Developer. Script dùng UTF-8; trong sqlcmd thêm `-f 65001` để giữ tiếng Việt/IPA.

@@ -149,7 +149,9 @@ class ConversationService(LearningService):
             "evaluation": public(evaluation),
         }
 
-    def prepare(self, user_id: int, identity: int, data: MessageCreate) -> PendingTurn | Record:
+    def prepare(
+        self, user_id: int, identity: int, data: MessageCreate
+    ) -> PendingTurn | Record:
         """Reserve a turn in a worker thread and commit before contacting AI."""
         with self.transaction(user_id) as repo:
             conversation = owned(
@@ -235,32 +237,74 @@ class ConversationService(LearningService):
             level = cast(Level, conversation["CefrLevel"])
             return PendingTurn(message, assistant, evaluation, prompt, level)
 
-    def finalize(self, user_id: int, turn: PendingTurn, status: str, reply: str | None, latency: int) -> Record:
+    def finalize(
+        self,
+        user_id: int,
+        turn: PendingTurn,
+        status: str,
+        reply: str | None,
+        latency: int,
+    ) -> Record:
         """Finalize both records atomically, respecting a learner's cancellation."""
         with self.transaction(user_id) as repo:
-            evaluation = owned(repo, "AIEvaluations", "EvaluationId", turn.evaluation["EvaluationId"], user_id)
+            evaluation = owned(
+                repo,
+                "AIEvaluations",
+                "EvaluationId",
+                turn.evaluation["EvaluationId"],
+                user_id,
+            )
             if evaluation["Status"] == "pending":
                 values: Record = {"Status": status}
                 if reply is not None:
                     values["Content"] = reply
-                repo.update("Messages", {"MessageId": turn.assistant["MessageId"]}, values)
-                evaluation = repo.update("AIEvaluations", {"EvaluationId": evaluation["EvaluationId"]}, {"Feedback": reply, "Status": status, "CompletedAt": now(), "LatencyMs": latency})
+                repo.update(
+                    "Messages", {"MessageId": turn.assistant["MessageId"]}, values
+                )
+                evaluation = repo.update(
+                    "AIEvaluations",
+                    {"EvaluationId": evaluation["EvaluationId"]},
+                    {
+                        "Feedback": reply,
+                        "Status": status,
+                        "CompletedAt": now(),
+                        "LatencyMs": latency,
+                    },
+                )
             return self.turn_result(repo, turn.message, evaluation)
 
-    async def send(self, user_id: int, identity: int, data: MessageCreate, client: LLMClient) -> Record:
+    async def send(
+        self, user_id: int, identity: int, data: MessageCreate, client: LLMClient
+    ) -> Record:
         """Run SQL off the event loop and bound AI latency without holding a lock."""
         turn = await run_in_threadpool(self.prepare, user_id, identity, data)
         if isinstance(turn, dict):
             return turn
         started = perf_counter()
         try:
-            reply = await asyncio.wait_for(client.generate(data.message, turn.level, turn.prompt), timeout=30)
+            reply = await asyncio.wait_for(
+                client.generate(data.message, turn.level, turn.prompt), timeout=30
+            )
             if not reply.strip():
                 raise ValueError("Empty provider reply")
         except Exception:
-            await run_in_threadpool(self.finalize, user_id, turn, "failed", None, int((perf_counter() - started) * 1000))
+            await run_in_threadpool(
+                self.finalize,
+                user_id,
+                turn,
+                "failed",
+                None,
+                int((perf_counter() - started) * 1000),
+            )
             raise HTTPException(502, "AI reply is temporarily unavailable.") from None
-        return await run_in_threadpool(self.finalize, user_id, turn, "completed", reply, int((perf_counter() - started) * 1000))
+        return await run_in_threadpool(
+            self.finalize,
+            user_id,
+            turn,
+            "completed",
+            reply,
+            int((perf_counter() - started) * 1000),
+        )
 
     def close(self, user_id: int, identity: int, abandoned: bool) -> Record:
         """Close once after outstanding replies finish; abandon credits zero time."""

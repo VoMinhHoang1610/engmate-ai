@@ -1,5 +1,13 @@
 # Thiết kế cơ sở dữ liệu SQL Server — EngMate-AI
 
+## Trạng thái tích hợp backend — 2026-10-07
+
+Tài liệu dưới đây giữ bản thiết kế và khảo sát ban đầu. Backend ở `feat/backend-learning-api` hiện đã kết nối SQL Server bằng SQLAlchemy Core/pyodbc và có auth/API học tập trên schema này; các nhận xét “chưa có backend” trong khảo sát là trạng thái trước triển khai.
+
+Xem [API](API.md), [kiến trúc](ARCHITECTURE.md) và [README chạy backend](../README.md). Migration runner `python scripts/manage.py migrate-backend` áp dụng 001–003 trong database đã được tạo và kiểm tra version; không tạo database hoặc tự chạy lúc startup. SQL artifacts không thay đổi trong tác vụ backend. Bộ API integration dùng tempdb có guard và rollback, độc lập với 45 kiểm tra T-SQL standalone.
+
+UI đa trang/localStorage chưa chuyển sang API; OAuth, STT và LLM thật còn trong backlog. Không tự nhập counter cũ vì thiếu lịch sử từng sự kiện.
+
 Cập nhật: 2026-10-07. Phạm vi bàn giao: thiết kế, script T-SQL, dữ liệu danh mục, truy vấn mẫu và kiểm thử database. Chưa kết nối FastAPI/React với database; chưa bật xác thực, OAuth hoặc AI thật. SQL Server thay thế phương án PostgreSQL trong backlog theo yêu cầu người dùng.
 
 ## 1. Kết quả khảo sát chương trình

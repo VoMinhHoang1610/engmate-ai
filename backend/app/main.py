@@ -12,6 +12,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError, NoSuchTableError
 from app.api.learning_routes import router as learning_router
 from app.api.routes import router
 from app.core.config import Settings, get_settings
+from app.core.request_limits import RequestLimits
 from app.db.database import Database
 from app.services.auth import Mailer, SMTPMailer
 
@@ -35,6 +36,9 @@ def create_app(
     application.state.settings = config
     application.state.database = db
     application.state.mailer = mailer if mailer is not None else SMTPMailer(config)
+    application.add_middleware(
+        RequestLimits, auth_limit=config.auth_requests_per_minute
+    )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,

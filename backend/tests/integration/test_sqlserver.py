@@ -8,6 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 from PIL import Image
 from pydantic import SecretStr
@@ -17,7 +18,13 @@ from sqlalchemy.engine import URL
 from app.core.config import Settings
 from app.db.database import Database
 from app.db.migrate import apply_scripts
+from app.db.repository import Repository
+from app.llm.mock import MockLLMClient
 from app.main import create_app
+from app.schemas.ai import Level
+from app.schemas.learning import MessageCreate
+from app.services.conversations import ConversationService, PendingTurn
+from app.services.practice import PracticeService
 
 pytestmark = pytest.mark.anyio
 CONNECTION = os.getenv("SQLSERVER_TEST_ODBC_CONNECTION")
@@ -195,8 +202,29 @@ async def test_reset_password(sql_client: AsyncClient, mailer: TestMailer) -> No
     ).status_code == 200
 
 
+async def test_reset_delivery_does_not_reveal_accounts(
+    sql_client: AsyncClient, mailer: TestMailer, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SMTP transport failure keeps the same HTTP response for known/unknown emails."""
+    await account(sql_client)
+
+    def fail(email: str, token: str) -> None:
+        """Simulate a configured mail server being offline."""
+        raise HTTPException(503, "Private SMTP connection failure")
+
+    monkeypatch.setattr(mailer, "send_reset", fail)
+    known = await sql_client.post(
+        "/api/auth/forgot-password", json={"email": "learner@example.test"}
+    )
+    unknown = await sql_client.post(
+        "/api/auth/forgot-password", json={"email": "unknown@example.test"}
+    )
+    assert known.status_code == unknown.status_code == 202
+    assert known.json() == unknown.json()
+
+
 async def test_profile_preferences(sql_client: AsyncClient) -> None:
-    """Persist UI fields and reject stale versions, invalid timezones and forged owners."""
+    """Persist UI fields while rejecting stale versions and forged owners."""
     await account(sql_client)
     profile = (await sql_client.get("/api/me/profile")).json()
     payload = {
@@ -251,7 +279,7 @@ async def test_catalogue_readiness(sql_client: AsyncClient) -> None:
 
 
 async def test_vocabulary_cards_statistics(sql_client: AsyncClient) -> None:
-    """A repeated review cannot multiply totals; archiving preserves historic reviews."""
+    """Deduplicate review credits and preserve historic reviews after archive."""
     await account(sql_client)
     word = (
         await sql_client.post(
@@ -369,6 +397,9 @@ async def test_practice_writing(sql_client: AsyncClient) -> None:
     assert result.status_code == 200, result.text
     assert result.json()["score_percent"] is None
     assert result.json()["evaluations"][0]["is_mock"] is True
+    assert (
+        result.json()["evaluations"][0]["result_json"]["assessment_available"] is False
+    )
     assert (await sql_client.post(url, json=submission)).json() == result.json()
     assert (
         await sql_client.post(url, json={**submission, "submitted_text": "changed"})
@@ -393,7 +424,8 @@ async def test_listening_grading(
     if mode == "multiple_choice":
         answer["selected_option_id"] = sql_database.external_connection.execute(
             text(
-                "SELECT OptionId FROM em.QuestionOptions WHERE QuestionId=:id AND IsCorrect=1"
+                "SELECT OptionId FROM em.QuestionOptions "
+                "WHERE QuestionId=:id AND IsCorrect=1"
             ),
             {"id": question["question_id"]},
         ).scalar_one()
@@ -427,6 +459,14 @@ async def test_listening_grading(
     assert result.json()["score_percent"] == 100
     assert result.json()["answers"][0]["is_correct"] is True
     assert result.json()["evaluations"] == []
+    assert result.json()["answer_key"][0]["question_id"] == question["question_id"]
+    if mode == "dictation":
+        assert result.json()["answer_key"][0]["expected_text"] is not None
+    else:
+        assert (
+            result.json()["answer_key"][0]["correct_option_id"]
+            == answer["selected_option_id"]
+        )
     assert (await sql_client.post(url, json=submission)).json() == result.json()
 
 
@@ -490,3 +530,377 @@ async def test_migration_repeat(sql_database: Database) -> None:
         == 9
     )
     sql_database.external_connection.exec_driver_sql("SET XACT_ABORT OFF;")
+
+
+def test_database_pool_runtime(sql_connection: Connection) -> None:
+    """Check the production pool/transaction path against SQL Server without DDL."""
+    assert CONNECTION is not None
+    database = Database(
+        Settings(
+            database_odbc_connection=SecretStr(CONNECTION),
+            jwt_secret=SecretStr("test-only-key-more-than-thirty-two-characters"),
+        )
+    )
+    try:
+        engine = database.get_engine()
+        assert database.get_engine() is engine
+        with database.transaction() as connection:
+            assert connection.execute(text("SELECT DB_NAME()")).scalar_one() == "tempdb"
+            assert connection.execute(text("SELECT 1")).scalar_one() == 1
+            with pytest.raises(ValueError):
+                database.models.table("untrusted-name", connection)
+    finally:
+        database.close()
+
+
+def learner_id(database: Database) -> int:
+    """Get the one isolated account's internal ID for service lifecycle assertions."""
+    assert database.external_connection is not None
+    result = database.external_connection.execute(
+        text("SELECT UserId FROM em.Users WHERE Username='learner'")
+    )
+    return int(result.scalar_one())
+
+
+async def test_account_edits_and_password_revocation(
+    sql_client: AsyncClient, mailer: TestMailer
+) -> None:
+    """Identity edits require the password; old-address reset tokens become unusable."""
+    data = await account(sql_client)
+    await sql_client.post(
+        "/api/auth/forgot-password", json={"email": "learner@example.test"}
+    )
+    token = mailer.messages[0][1]
+    body = {
+        "username": "renamed",
+        "email": "new@example.test",
+        "version": data["user"]["version"],
+        "current_password": "wrong",
+    }
+    assert (await sql_client.put("/api/me/account", json=body)).status_code == 401
+    body["current_password"] = PASSWORD
+    updated = await sql_client.put("/api/me/account", json=body)
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["username"] == "renamed"
+    assert (await sql_client.put("/api/me/account", json=body)).status_code == 409
+    assert (
+        await sql_client.post(
+            "/api/auth/reset-password",
+            json={"token": token, "new_password": "replacement-password"},
+        )
+    ).status_code == 400
+    changed = await sql_client.post(
+        "/api/auth/change-password",
+        json={"current_password": PASSWORD, "new_password": "replacement-password"},
+    )
+    assert changed.status_code == 204
+    assert (await sql_client.get("/api/me")).status_code == 401
+    assert (
+        await sql_client.post(
+            "/api/auth/refresh", json={"refresh_token": data["refresh_token"]}
+        )
+    ).status_code == 401
+    assert (
+        await sql_client.post(
+            "/api/auth/login",
+            json={"identifier": "new@example.test", "password": "replacement-password"},
+        )
+    ).status_code == 200
+
+
+async def test_expired_and_disabled_accounts(
+    sql_client: AsyncClient, sql_database: Database
+) -> None:
+    """Valid JWTs cannot bypass expired database sessions or disabled account status."""
+    data = await account(sql_client)
+    assert sql_database.external_connection is not None
+    sql_database.external_connection.execute(
+        text(
+            "UPDATE em.AuthSessions SET CreatedAt=DATEADD(day,-2,SYSUTCDATETIME()), "
+            "ExpiresAt=DATEADD(day,-1,SYSUTCDATETIME())"
+        )
+    )
+    assert (await sql_client.get("/api/me")).status_code == 401
+    assert (
+        await sql_client.post(
+            "/api/auth/refresh", json={"refresh_token": data["refresh_token"]}
+        )
+    ).status_code == 401
+    sql_database.external_connection.execute(
+        text("UPDATE em.Users SET Status='disabled'")
+    )
+    assert (
+        await sql_client.post(
+            "/api/auth/login", json={"identifier": "learner", "password": PASSWORD}
+        )
+    ).status_code == 401
+    assert (await sql_client.get("/api/me")).status_code == 401
+
+
+async def test_cancel_pending_chat(
+    sql_client: AsyncClient, sql_database: Database
+) -> None:
+    """Durable cancellation unblocks chat and discards any late provider result."""
+    await account(sql_client)
+    conversation = (
+        await sql_client.post(
+            "/api/conversations", json={"client_request_id": str(uuid4())}
+        )
+    ).json()
+    identity = conversation["conversation_id"]
+    service = ConversationService(sql_database)
+    user_id = learner_id(sql_database)
+    body = MessageCreate(client_request_id=uuid4(), message="Hello there")
+    pending = service.prepare(user_id, identity, body)
+    assert isinstance(pending, PendingTurn)
+    url = f"/api/conversations/{identity}/messages"
+    duplicate = await sql_client.post(url, json=body.model_dump(mode="json"))
+    assert duplicate.json()["reply"]["status"] == "pending"
+    assert (
+        await sql_client.post(
+            url, json={"client_request_id": str(uuid4()), "message": "Another"}
+        )
+    ).status_code == 409
+    assert (
+        await sql_client.post(f"/api/conversations/{identity}/close")
+    ).status_code == 409
+    evaluation_id = pending.evaluation["EvaluationId"]
+    evaluation_url = f"/api/evaluations/{evaluation_id}"
+    assert (await sql_client.get(evaluation_url)).json()["errors"] == []
+    assert (await sql_client.post(evaluation_url + "/cancel")).json()[
+        "status"
+    ] == "cancelled"
+    late = service.finalize(
+        user_id, pending, "completed", "late reply must not be saved", 5
+    )
+    assert late["reply"]["status"] == "cancelled"
+    assert late["reply"]["content"] == ""
+    assert (await sql_client.post(evaluation_url + "/cancel")).json()[
+        "status"
+    ] == "cancelled"
+    assert (
+        await sql_client.post(
+            url, json={"client_request_id": str(uuid4()), "message": "Try again"}
+        )
+    ).status_code == 200
+    await account(sql_client, "other")
+    assert (await sql_client.get(evaluation_url)).status_code == 404
+    assert (await sql_client.post(evaluation_url + "/cancel")).status_code == 404
+
+
+class FailingProvider(MockLLMClient):
+    """Simulate upstream failure without external API requests."""
+
+    async def generate(self, message: str, level: Level, system_prompt: str) -> str:
+        """Throw an error that must never be exposed to API consumers."""
+        raise TimeoutError("private-provider-error")
+
+
+async def test_failed_ai_lifecycle(
+    sql_client: AsyncClient, sql_database: Database
+) -> None:
+    """Provider failure remains inspectable, and retries do not duplicate saved work."""
+    await account(sql_client)
+    user_id = learner_id(sql_database)
+    conversation = (
+        await sql_client.post(
+            "/api/conversations", json={"client_request_id": str(uuid4())}
+        )
+    ).json()
+    service = ConversationService(sql_database)
+    body = MessageCreate(client_request_id=uuid4(), message="Hello")
+    with pytest.raises(HTTPException) as error:
+        await service.send(
+            user_id, conversation["conversation_id"], body, FailingProvider()
+        )
+    assert error.value.status_code == 502
+    assert "private-provider-error" not in error.value.detail
+    saved = await service.send(
+        user_id, conversation["conversation_id"], body, MockLLMClient()
+    )
+    assert saved["evaluation"]["status"] == saved["reply"]["status"] == "failed"
+    assert len(service.messages(user_id, conversation["conversation_id"], 0, 100)) == 3
+    lesson = (await sql_client.get("/api/lessons?skill=writing")).json()[0]
+    created = (
+        await sql_client.post(
+            "/api/practice/attempts",
+            json={
+                "client_request_id": str(uuid4()),
+                "lesson_id": lesson["lesson_id"],
+                "mode": "writing",
+            },
+        )
+    ).json()
+    from app.schemas.learning import AttemptSubmit
+
+    submission = AttemptSubmit(
+        version=created["version"], submitted_text="I like learning English."
+    )
+    practice = PracticeService(sql_database)
+    with pytest.raises(HTTPException) as error:
+        await practice.submit(
+            user_id, created["attempt_id"], submission, FailingProvider()
+        )
+    assert error.value.status_code == 502
+    assert (
+        practice.detail(user_id, created["attempt_id"])["evaluations"][0]["status"]
+        == "failed"
+    )
+
+
+async def test_vocabulary_edits_and_owner_checks(sql_client: AsyncClient) -> None:
+    """Preserve scheduling and reject sources owned by another learner."""
+    first = await account(sql_client)
+    word = (
+        await sql_client.post(
+            "/api/vocabulary", json={"word": "hello", "meaning": "xin chào"}
+        )
+    ).json()
+    identity = word["user_vocabulary_id"]
+    body = {"version": word["version"], "word": "hello", "meaning": "updated"}
+    response = await sql_client.put(f"/api/vocabulary/{identity}", json=body)
+    assert response.status_code == 200
+    assert response.json()["review_count"] == 0
+    assert (
+        await sql_client.put(f"/api/vocabulary/{identity}", json=body)
+    ).status_code == 409
+    await account(sql_client, "other")
+    assert (
+        await sql_client.put(f"/api/vocabulary/{identity}", json=body)
+    ).status_code == 404
+    assert (
+        await sql_client.post(
+            "/api/vocabulary",
+            json={"word": "hello", "meaning": "other", "source_message_id": 999999},
+        )
+    ).status_code == 404
+    sql_client.headers["Authorization"] = "Bearer " + first["access_token"]
+    assert (
+        await sql_client.post(
+            "/api/vocabulary",
+            json={
+                "word": "two",
+                "meaning": "two sources",
+                "source_message_id": 1,
+                "source_attempt_id": 1,
+            },
+        )
+    ).status_code == 422
+
+
+async def test_practice_speaking_and_abandon(sql_client: AsyncClient) -> None:
+    """Keep speaking demos ungraded and abandoned practice uncredited."""
+    await account(sql_client)
+    lesson = (await sql_client.get("/api/lessons?skill=speaking")).json()[0]
+    request = {
+        "client_request_id": str(uuid4()),
+        "lesson_id": lesson["lesson_id"],
+        "mode": "shadowing",
+    }
+    assert (
+        await sql_client.post(
+            "/api/practice/attempts", json={**request, "mode": "writing"}
+        )
+    ).status_code == 422
+    attempt = (await sql_client.post("/api/practice/attempts", json=request)).json()
+    url = f"/api/practice/attempts/{attempt['attempt_id']}/submit"
+    assert (
+        await sql_client.post(url, json={"version": attempt["version"]})
+    ).status_code == 422
+    result = await sql_client.post(
+        url,
+        json={
+            "version": attempt["version"],
+            "submitted_text": "I would like a cup of coffee, please.",
+        },
+    )
+    assert result.status_code == 200, result.text
+    assert result.json()["score_percent"] is None
+    another = (
+        await sql_client.post(
+            "/api/practice/attempts",
+            json={**request, "client_request_id": str(uuid4())},
+        )
+    ).json()
+    abandoned = await sql_client.post(
+        f"/api/practice/attempts/{another['attempt_id']}/abandon"
+    )
+    assert abandoned.json()["status"] == "abandoned"
+    assert abandoned.json()["duration_seconds"] == 0
+    assert (
+        await sql_client.post(
+            f"/api/practice/attempts/{another['attempt_id']}/submit",
+            json={"version": another["version"], "submitted_text": "Hello"},
+        )
+    ).status_code == 409
+
+
+async def test_manual_mastery_and_search(sql_client: AsyncClient) -> None:
+    """Mirror notebook filtering/toggles without awarding phantom reviews."""
+    await account(sql_client)
+    word = (
+        await sql_client.post(
+            "/api/vocabulary", json={"word": "100%", "meaning": "literal percentage"}
+        )
+    ).json()
+    await sql_client.post(
+        "/api/vocabulary", json={"word": "hello", "meaning": "xin chào"}
+    )
+    assert len((await sql_client.get("/api/vocabulary?search=%25")).json()) == 1
+    assert (await sql_client.get("/api/vocabulary?mastered=true")).json() == []
+    body = {"version": word["version"], "is_mastered": True}
+    url = f"/api/vocabulary/{word['user_vocabulary_id']}/mastery"
+    saved = await sql_client.put(url, json=body)
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["review_count"] == 0
+    assert saved.json()["next_review_at"] is None
+    assert (await sql_client.put(url, json=body)).status_code == 409
+    assert len((await sql_client.get("/api/vocabulary?mastered=true")).json()) == 1
+    assert (await sql_client.get("/api/dashboard")).json()["review_count"] == 0
+
+
+async def test_rollback_on_bad_submission(
+    sql_client: AsyncClient, sql_database: Database
+) -> None:
+    """Roll back calculated answers and completion on a stale rowversion."""
+    await account(sql_client)
+    lesson = (await sql_client.get("/api/lessons?skill=listening")).json()[0]
+    question = next(
+        row
+        for row in (await sql_client.get(f"/api/lessons/{lesson['lesson_id']}")).json()[
+            "questions"
+        ]
+        if row["question_type"] == "dictation"
+    )
+    attempt = (
+        await sql_client.post(
+            "/api/practice/attempts",
+            json={
+                "client_request_id": str(uuid4()),
+                "lesson_id": lesson["lesson_id"],
+                "mode": "dictation",
+            },
+        )
+    ).json()
+    url = f"/api/practice/attempts/{attempt['attempt_id']}/submit"
+    body = {
+        "version": "0" * 16,
+        "answers": [
+            {"question_id": question["question_id"], "answer_text": "incorrect"}
+        ],
+    }
+    assert (await sql_client.post(url, json=body)).status_code == 409
+    assert (
+        await sql_client.get(f"/api/practice/attempts/{attempt['attempt_id']}")
+    ).json()["answers"] == []
+    body["version"] = attempt["version"]
+    result = await sql_client.post(url, json=body)
+    assert result.status_code == 200, result.text
+    assert result.json()["score_percent"] == 0
+    assert sql_database.external_connection is not None
+    assert (
+        Repository(sql_database, sql_database.external_connection).one(
+            "StudySessions", StudySessionId=attempt["study_session_id"]
+        )["Status"]
+        == "completed"
+    )

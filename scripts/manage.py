@@ -92,6 +92,8 @@ def task(name: str, port: int | None = None) -> None:
         backend("pytest")
     elif name == "migrate-backend":
         backend("app.db.migrate")
+    elif name == "export-api":
+        backend("app.api.export_openapi")
     elif name == "test-frontend":
         frontend("run", "test")
     elif name == "coverage-backend":

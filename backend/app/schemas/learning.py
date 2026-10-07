@@ -6,15 +6,39 @@ from typing import Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    ValidationInfo,
+    field_validator,
+)
 
 from app.schemas.ai import Level
+
+MAX_ID = 9223372036854775807
 
 
 class Input(BaseModel):
     """Reject server-owned fields instead of silently accepting forged data."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    @field_validator("*")
+    @classmethod
+    def sql_length(cls, value: object, info: ValidationInfo) -> object:
+        """Respect SQL Server nvarchar capacities, including UTF-16 surrogate pairs."""
+        if isinstance(value, str) and info.field_name:
+            try:
+                units = len(value.encode("utf-16-le")) // 2
+            except UnicodeEncodeError as exc:
+                raise ValueError("Text contains invalid Unicode.") from exc
+            for constraint in cls.model_fields[info.field_name].metadata:
+                maximum = getattr(constraint, "max_length", None)
+                if maximum is not None and units > maximum:
+                    raise ValueError("Text exceeds the SQL Server UTF-16 length limit.")
+        return value
 
 
 def strong_password(value: SecretStr) -> SecretStr:
@@ -76,6 +100,14 @@ class Versioned(Input):
     version: str = Field(pattern=r"^[0-9a-fA-F]{16}$")
 
 
+class AccountUpdate(Versioned):
+    """Change username/email with current-password confirmation and rowversion."""
+
+    username: str = Field(min_length=3, max_length=64, pattern=r"^[a-zA-Z0-9_.-]+$")
+    email: str = Field(max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    current_password: SecretStr = Field(min_length=1, max_length=128)
+
+
 class ProfileUpdate(Versioned):
     """Editable learner fields; account email and identity are separate."""
 
@@ -85,7 +117,7 @@ class ProfileUpdate(Versioned):
     )
     birth_date: date | None = None
     gender: Literal["male", "female", "other"] | None = None
-    avatar_asset_id: int | None = Field(default=None, gt=0)
+    avatar_asset_id: int | None = Field(default=None, gt=0, le=MAX_ID)
     cefr_level: Level = "A2"
     learning_goal: str = Field(default="Giao tiếp tự tin", min_length=1, max_length=200)
     daily_goal_minutes: int = Field(default=20, ge=10, le=60)
@@ -134,19 +166,25 @@ class VocabularyCreate(Input):
     phonetic: str | None = Field(default=None, max_length=200)
     part_of_speech: str | None = Field(default=None, max_length=50)
     example_sentence: str | None = Field(default=None, max_length=2000)
-    source_message_id: int | None = Field(default=None, gt=0)
-    source_attempt_id: int | None = Field(default=None, gt=0)
+    source_message_id: int | None = Field(default=None, gt=0, le=MAX_ID)
+    source_attempt_id: int | None = Field(default=None, gt=0, le=MAX_ID)
 
 
 class VocabularyUpdate(VocabularyCreate, Versioned):
     """Update entry content while preserving the server's review schedule."""
 
 
+class MasteryUpdate(Versioned):
+    """Record the learner's explicit self-assessment, separate from a review."""
+
+    is_mastered: bool
+
+
 class ConversationCreate(Input):
     """Start a roleplay or free chat with an idempotent request ID."""
 
     client_request_id: UUID
-    topic_code: str | None = Field(default=None, max_length=40)
+    topic_code: str | None = Field(default=None, min_length=1, max_length=40)
     level: Level = "A2"
     title: str = Field(default="English practice", min_length=1, max_length=200)
 
@@ -161,8 +199,8 @@ class MessageCreate(Input):
 class Answer(Input):
     """Submit either an option ID or dictation text; never client scoring."""
 
-    question_id: int = Field(gt=0)
-    selected_option_id: int | None = Field(default=None, gt=0)
+    question_id: int = Field(gt=0, le=MAX_ID)
+    selected_option_id: int | None = Field(default=None, gt=0, le=MAX_ID)
     answer_text: str | None = Field(default=None, min_length=1, max_length=2000)
 
 
@@ -170,7 +208,7 @@ class AttemptCreate(Input):
     """Start one immutable revision before the learner begins practising."""
 
     client_request_id: UUID
-    lesson_id: int = Field(gt=0)
+    lesson_id: int = Field(gt=0, le=MAX_ID)
     mode: Literal["shadowing", "multiple_choice", "dictation", "writing"]
     playback_rate: float | None = Field(default=None, ge=0.5, le=2.0)
 
@@ -179,7 +217,7 @@ class AttemptSubmit(Versioned):
     """Submit work after starting; duration comes from the server session."""
 
     submitted_text: str | None = Field(default=None, min_length=1, max_length=5000)
-    recording_asset_id: int | None = Field(default=None, gt=0)
+    recording_asset_id: int | None = Field(default=None, gt=0, le=MAX_ID)
     answers: list[Answer] = Field(default_factory=list, max_length=100)
 
 
@@ -194,7 +232,7 @@ class ReviewCreate(Input):
     """One rating; repeated request IDs must not advance the schedule twice."""
 
     client_request_id: UUID
-    vocabulary_id: int = Field(gt=0)
+    vocabulary_id: int = Field(gt=0, le=MAX_ID)
     rating: Literal["again", "hard", "good", "easy"]
 
 

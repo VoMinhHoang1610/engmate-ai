@@ -56,6 +56,18 @@ class MediaService(LearningService):
             if content_type == "audio/wav":
                 with wave.open(str(path), "rb") as recording:
                     seconds = recording.getnframes() / recording.getframerate()
+                    if not 0 < seconds <= 60:
+                        raise ValueError("Invalid duration")
+                    expected_size = (
+                        recording.getnframes()
+                        * recording.getnchannels()
+                        * recording.getsampwidth()
+                    )
+                    if (
+                        len(recording.readframes(recording.getnframes()))
+                        != expected_size
+                    ):
+                        raise ValueError("Truncated WAV")
             else:
                 probe = shutil.which("ffprobe")
                 if probe is None:

@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from threading import Lock
 from typing import Any
 
 from fastapi import HTTPException
@@ -23,9 +24,15 @@ class Database:
         self.external_connection = connection
         self.engine: Engine | None = None
         self.models = ModelCatalog()
+        self.engine_lock = Lock()
 
     def get_engine(self) -> Engine:
         """Create a private engine without logging the connection string."""
+        with self.engine_lock:
+            return self.create_engine_once()
+
+    def create_engine_once(self) -> Engine:
+        """Initialize one pool while holding the creation lock."""
         if self.engine is None:
             secret = self.settings.database_odbc_connection
             if secret is None:

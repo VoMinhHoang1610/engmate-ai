@@ -18,6 +18,7 @@ class Settings(BaseModel):
     jwt_secret: SecretStr | None = None
     access_token_minutes: int = Field(default=15, ge=1, le=60)
     refresh_token_days: int = Field(default=30, ge=1, le=90)
+    auth_requests_per_minute: int = Field(default=30, ge=1, le=1000)
     media_directory: Path = Path(__file__).resolve().parents[3] / ".artifacts" / "media"
     smtp_host: str | None = None
     smtp_port: int = 587
@@ -53,8 +54,10 @@ def get_settings() -> Settings:
             "jwt_secret": os.getenv("JWT_SECRET") or None,
             "access_token_minutes": os.getenv("ACCESS_TOKEN_MINUTES", "15"),
             "refresh_token_days": os.getenv("REFRESH_TOKEN_DAYS", "30"),
+            "auth_requests_per_minute": os.getenv("AUTH_REQUESTS_PER_MINUTE", "30"),
             "media_directory": (
-                Path(__file__).resolve().parents[3] / os.getenv("MEDIA_DIRECTORY", ".artifacts/media")
+                Path(__file__).resolve().parents[3]
+                / os.getenv("MEDIA_DIRECTORY", ".artifacts/media")
             ),
             "smtp_host": os.getenv("SMTP_HOST") or None,
             "smtp_port": os.getenv("SMTP_PORT", "587"),

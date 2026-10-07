@@ -1,5 +1,6 @@
 """Shared clocks, ownership checks and serialization for learning services."""
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -23,7 +24,9 @@ def public(row: Record, exclude: tuple[str, ...] = ()) -> Record:
     for key, value in row.items():
         if key in exclude:
             continue
-        if isinstance(value, bytes):
+        if key == "ResultJson" and isinstance(value, str):
+            value = json.loads(value)
+        elif isinstance(value, bytes):
             value = value.hex()
         elif isinstance(value, UUID):
             value = str(value)

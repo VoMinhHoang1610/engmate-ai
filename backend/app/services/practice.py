@@ -130,6 +130,26 @@ class PracticeService(LearningService):
                 UserId=attempt["UserId"],
             )
         ]
+        result["answer_key"] = []
+        if attempt["Skill"] == "listening" and attempt["SubmittedAt"] is not None:
+            for question in repo.rows(
+                "LessonQuestions",
+                LessonId=attempt["LessonId"],
+                QuestionType=attempt["Mode"],
+            ):
+                correct_options = repo.rows(
+                    "QuestionOptions", QuestionId=question["QuestionId"], IsCorrect=True
+                )
+                result["answer_key"].append(
+                    {
+                        "question_id": question["QuestionId"],
+                        "expected_text": question["ExpectedText"],
+                        "explanation": question["Explanation"],
+                        "correct_option_id": (
+                            correct_options[0]["OptionId"] if correct_options else None
+                        ),
+                    }
+                )
         return result
 
     @staticmethod
@@ -244,7 +264,9 @@ class PracticeService(LearningService):
         }
         return len(data.answers) == len(incoming) and saved == incoming
 
-    def prepare(self, user_id: int, identity: int, data: AttemptSubmit) -> PendingFeedback | Record:
+    def prepare(
+        self, user_id: int, identity: int, data: AttemptSubmit
+    ) -> PendingFeedback | Record:
         """Commit answers and reserve feedback in a worker thread."""
         with self.transaction(user_id) as repo:
             attempt = owned(repo, "PracticeAttempts", "AttemptId", identity, user_id)
@@ -291,35 +313,82 @@ class PracticeService(LearningService):
             level = cast(Level, profile["CefrLevel"])
             return PendingFeedback(evaluation["EvaluationId"], level)
 
-    def finalize(self, user_id: int, identity: int, pending: PendingFeedback, status: str, feedback: str | None, latency: int) -> Record:
-        """Persist provider outcome while respecting cancellation and leaving score null."""
+    def finalize(
+        self,
+        user_id: int,
+        identity: int,
+        pending: PendingFeedback,
+        status: str,
+        feedback: str | None,
+        latency: int,
+    ) -> Record:
+        """Respect cancellation and keep mock feedback ungraded."""
         with self.transaction(user_id) as repo:
-            evaluation = owned(repo, "AIEvaluations", "EvaluationId", pending.evaluation_id, user_id)
+            evaluation = owned(
+                repo, "AIEvaluations", "EvaluationId", pending.evaluation_id, user_id
+            )
             if evaluation["Status"] == "pending":
-                repo.update("AIEvaluations", {"EvaluationId": pending.evaluation_id}, {"Status": status, "CompletedAt": now(), "Feedback": feedback, "LatencyMs": latency, "ResultJson": json.dumps({"is_mock": True, "assessment_available": False}) if feedback is not None else None})
-            return self.result(repo, owned(repo, "PracticeAttempts", "AttemptId", identity, user_id))
+                repo.update(
+                    "AIEvaluations",
+                    {"EvaluationId": pending.evaluation_id},
+                    {
+                        "Status": status,
+                        "CompletedAt": now(),
+                        "Feedback": feedback,
+                        "LatencyMs": latency,
+                        "ResultJson": (
+                            json.dumps({"is_mock": True, "assessment_available": False})
+                            if feedback is not None
+                            else None
+                        ),
+                    },
+                )
+            return self.result(
+                repo, owned(repo, "PracticeAttempts", "AttemptId", identity, user_id)
+            )
 
-    async def submit(self, user_id: int, identity: int, data: AttemptSubmit, client: LLMClient) -> Record:
+    async def submit(
+        self, user_id: int, identity: int, data: AttemptSubmit, client: LLMClient
+    ) -> Record:
         """Commit before AI, run SQL off the event loop, and bound provider latency."""
         pending = await run_in_threadpool(self.prepare, user_id, identity, data)
         if isinstance(pending, dict):
             return pending
         started = perf_counter()
         try:
-            feedback = await asyncio.wait_for(client.generate(
-                data.submitted_text
-                or "Recording saved. Audio analysis is unavailable in mock mode.",
-                pending.level,
-                PROMPT.read_text(encoding="utf-8"),
-            ), timeout=30)
+            feedback = await asyncio.wait_for(
+                client.generate(
+                    data.submitted_text
+                    or "Recording saved. Audio analysis is unavailable in mock mode.",
+                    pending.level,
+                    PROMPT.read_text(encoding="utf-8"),
+                ),
+                timeout=30,
+            )
             if not feedback.strip():
                 raise ValueError("Empty provider feedback")
         except Exception:
-            await run_in_threadpool(self.finalize, user_id, identity, pending, "failed", None, int((perf_counter() - started) * 1000))
+            await run_in_threadpool(
+                self.finalize,
+                user_id,
+                identity,
+                pending,
+                "failed",
+                None,
+                int((perf_counter() - started) * 1000),
+            )
             raise HTTPException(
                 502, "AI feedback is temporarily unavailable."
             ) from None
-        return await run_in_threadpool(self.finalize, user_id, identity, pending, "completed", feedback, int((perf_counter() - started) * 1000))
+        return await run_in_threadpool(
+            self.finalize,
+            user_id,
+            identity,
+            pending,
+            "completed",
+            feedback,
+            int((perf_counter() - started) * 1000),
+        )
 
     def abandon(self, user_id: int, identity: int) -> Record:
         """Close unfinished practice without awarding study time."""

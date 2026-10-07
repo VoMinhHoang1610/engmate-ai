@@ -11,6 +11,7 @@ from app.db.database import Database, Record
 from app.db.repository import Repository
 from app.schemas.learning import (
     FlashcardCreate,
+    MasteryUpdate,
     ProfileUpdate,
     ReviewCreate,
     SettingsUpdate,
@@ -140,7 +141,13 @@ class LearningService:
             )
 
     def vocabulary(
-        self, user_id: int, offset: int, limit: int, due: bool
+        self,
+        user_id: int,
+        offset: int,
+        limit: int,
+        due: bool,
+        search: str = "",
+        mastered: bool | None = None,
     ) -> list[Record]:
         """List active entries, optionally restricted to cards due now."""
         with self.transaction() as repo:
@@ -152,6 +159,13 @@ class LearningService:
                 query = query.where(
                     (table.c.NextReviewAt.is_(None)) | (table.c.NextReviewAt <= now())
                 )
+            if search:
+                query = query.where(
+                    table.c.Word.contains(search, autoescape=True)
+                    | table.c.Meaning.contains(search, autoescape=True)
+                )
+            if mastered is not None:
+                query = query.where(table.c.IsMastered == mastered)
             query = query.order_by(table.c.UserVocabularyId).offset(offset).limit(limit)
             return [
                 public(dict(row)) for row in repo.connection.execute(query).mappings()
@@ -234,6 +248,25 @@ class LearningService:
                     ReviewAll=data.review_all,
                 )
             return public(session)
+
+    def update_mastery(
+        self, user_id: int, identity: int, data: MasteryUpdate
+    ) -> Record:
+        """Match the notebook's manual toggle without manufacturing a review count."""
+        with self.transaction(user_id) as repo:
+            owned(repo, "UserVocabulary", "UserVocabularyId", identity, user_id)
+            return public(
+                repo.update(
+                    "UserVocabulary",
+                    {
+                        "UserVocabularyId": identity,
+                        "UserId": user_id,
+                        "ArchivedAt": None,
+                        "Version": bytes.fromhex(data.version),
+                    },
+                    {"IsMastered": data.is_mastered, "UpdatedAt": now()},
+                )
+            )
 
     def review(self, user_id: int, session_id: int, data: ReviewCreate) -> Record:
         """Insert the review and advance its vocabulary schedule atomically."""
@@ -340,7 +373,10 @@ class LearningService:
         with self.transaction() as repo:
             row = owned(repo, "AIEvaluations", "EvaluationId", identity, user_id)
             result = public(row)
-            result["errors"] = [public(error) for error in repo.rows("ErrorRecords", EvaluationId=identity)]
+            result["errors"] = [
+                public(error)
+                for error in repo.rows("ErrorRecords", EvaluationId=identity)
+            ]
             return result
 
     def cancel_evaluation(self, user_id: int, identity: int) -> Record:
@@ -348,9 +384,24 @@ class LearningService:
         with self.transaction(user_id) as repo:
             row = owned(repo, "AIEvaluations", "EvaluationId", identity, user_id)
             if row["Status"] == "pending":
-                row = repo.update("AIEvaluations", {"EvaluationId": identity}, {"Status": "cancelled", "CompletedAt": now()})
+                row = repo.update(
+                    "AIEvaluations",
+                    {"EvaluationId": identity},
+                    {"Status": "cancelled", "CompletedAt": now()},
+                )
                 if row["MessageId"] is not None:
-                    message = owned(repo, "Messages", "MessageId", row["MessageId"], user_id)
-                    reply = repo.one("Messages", ConversationId=message["ConversationId"], UserId=user_id, SequenceNumber=message["SequenceNumber"] + 1)
-                    repo.update("Messages", {"MessageId": reply["MessageId"]}, {"Status": "cancelled"})
+                    message = owned(
+                        repo, "Messages", "MessageId", row["MessageId"], user_id
+                    )
+                    reply = repo.one(
+                        "Messages",
+                        ConversationId=message["ConversationId"],
+                        UserId=user_id,
+                        SequenceNumber=message["SequenceNumber"] + 1,
+                    )
+                    repo.update(
+                        "Messages",
+                        {"MessageId": reply["MessageId"]},
+                        {"Status": "cancelled"},
+                    )
             return public(row)

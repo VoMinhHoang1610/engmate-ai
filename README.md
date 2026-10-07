@@ -2,7 +2,9 @@
 
 Khung phát triển ứng dụng luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Khung đã kiểm chứng local ngày 2026-10-04: 29 test qua, coverage khung 100% hai phía; lint/build/pre-commit và Docker smoke đều qua. Chi tiết và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+Kiểm chứng local backend SQL Server ngày 2026-10-07: 57 backend tests qua (21 SQL integration), coverage 92,83%; frontend scaffold 13 tests qua, coverage 100%. Lint/build và Docker HTTP smoke đều qua; CI mới chưa chạy trên GitHub. Chi tiết và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+
+Backend SQL Server trên `feat/backend-learning-api` có API tài khoản/JWT, hồ sơ/cài đặt, chủ đề/bài học, hội thoại, luyện nói/nghe/viết, sổ từ/flashcard, media và dashboard. Hợp đồng và ánh xạ các màn hình ở [API.md](docs/API.md). AI hiện vẫn là mock; giao diện đa trang ở nhánh `feat/social-login-motion` chưa nối các API nghiệp vụ này.
 
 ## Cấu trúc
 
@@ -14,7 +16,7 @@ backend/
   app/services/     Điều phối nghiệp vụ
   app/llm/          Interface và mock AI
   app/prompts/      Prompt có phiên bản
-  app/db/, models/  Vị trí dành cho DB/migrations từ bước tiếp theo
+  app/db/, models/  SQLAlchemy Core/pyodbc, reflection và migration SQL Server
   tests/unit/       Test cấu hình và service
   tests/integration/ Test API, validation, CORS và timeout
 frontend/
@@ -69,7 +71,27 @@ Frontend gọi `/api/health` qua Vite proxy. Proxy mặc định trỏ tới bac
 .\make.cmd down
 ```
 
-Compose chạy backend và frontend, proxy trỏ tới backend qua mạng Docker. Đây là stack phát triển; production frontend build tạo thư mục `frontend/dist/`. DB chưa được tích hợp vào khung này. Cổng mặc định 8010/5174 giúp tránh các ứng dụng hiện có đang dùng 8000/5173.
+Compose chạy backend/frontend, proxy qua mạng Docker. Đây là stack dev; production frontend build tạo `frontend/dist/`. Backend image có ODBC Driver 18 và ffmpeg; volume `learning-media` giữ upload. Mặc định không bật DB: health/mock demo vẫn chạy, API lưu dữ liệu trả 503. Cổng mặc định 8010/5174.
+
+## Bật backend SQL Server
+
+1. Cài dependencies bằng `python scripts/manage.py setup-backend`. Host Windows cần ODBC Driver 17 hoặc 18 và SQL Server 2019+; đã kiểm thử trên SQL Server 2022. WebM/Ogg cần ffmpeg/ffprobe trong PATH; WAV không cần công cụ ngoài.
+2. Tạo database ứng dụng rỗng bằng quyền quản trị theo [hướng dẫn SQL Server](database/sqlserver/README.md); runner không tự tạo database. Không chạy bộ test rollback trên database ứng dụng.
+3. Trong `.env` root, đặt `DATABASE_ODBC_CONNECTION` trỏ vào database đó và `JWT_SECRET` ngẫu nhiên ít nhất 32 ký tự. Ví dụ connection Windows auth (không có password): `DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=EngMateAI;Trusted_Connection=yes;TrustServerCertificate=yes`. Sinh secret riêng bằng Python secrets như `.env.example`, không đưa vào source/VITE_*.
+4. Chạy migration và backend:
+
+```powershell
+python scripts/manage.py migrate-backend
+python scripts/manage.py dev-backend
+```
+
+Runner áp dụng schema v1, seed và views trong transaction; chạy lại v1 không tạo schema lần hai, seed không thêm trùng. Version khác bị từ chối để yêu cầu migration được review. App không chạy DDL lúc startup. `/api/health` là liveness; `/api/ready` xác nhận SQL Server/schema sẵn sàng.
+
+Mở `http://127.0.0.1:8010/docs`, gọi register, lấy access_token rồi bấm Authorize để thử các API riêng tư. Các lỗi DB/schema đều trả 503 có thông báo cấu hình; không trả connection string. Tài khoản demo frontend abc/123 không phải tài khoản backend.
+
+Docker: connection dùng `ODBC Driver 18 for SQL Server`, SQL authentication và server TCP truy cập được từ container (Windows host thường là `host.docker.internal,<cổng>`), không dùng Windows Trusted_Connection khi chưa cấu hình Kerberos. Dùng TLS/certificate phù hợp với server; TrustServerCertificate chỉ dành cho môi trường dev với certificate tự ký. Compose chuyển biến DB/JWT/SMTP vào backend và mount scripts; có thể chạy `docker compose -p engmate-ai run --rm backend python -m app.db.migrate` sau khi cấu hình database. Không có SQL Server container mặc định trong stack app.
+
+Không cấu hình DB/JWT thì chỉ có demo mock không lưu. Thêm API key không tự bật AI thật: LLM_PROVIDER hiện chỉ chấp nhận mock. SMTP host/sender cần cấu hình để gửi reset link; OAuth, STT, streaming và provider thật còn backlog.
 
 ## Lệnh kiểm chứng
 
@@ -96,12 +118,25 @@ Lệnh tương ứng trên mọi hệ điều hành: `python scripts/manage.py <
 | `BACKEND_URL` | Vite proxy local; mặc định `http://127.0.0.1:8010` |
 | `SMOKE_BACKEND_URL`, `SMOKE_FRONTEND_URL` | URL stack cần kiểm tra HTTP |
 
-Compose đọc `.env` ở root. Backend local đọc biến môi trường của tiến trình; task runner không tự nạp `.env`. Không đặt API key trong biến frontend `VITE_*`.
+Compose đọc `.env` ở root. Không đặt API key trong biến frontend `VITE_*`.
+
+Backend hiện tự nạp `.env` root qua python-dotenv, không ghi đè biến đã đặt trong process. Biến mới: `DATABASE_ODBC_CONNECTION`, `JWT_SECRET`, `ACCESS_TOKEN_MINUTES=15`, `REFRESH_TOKEN_DAYS=30`, `AUTH_REQUESTS_PER_MINUTE=30`, `MEDIA_DIRECTORY=.artifacts/media`, `SMTP_HOST/PORT/USERNAME/PASSWORD/SENDER`, `FRONTEND_URL`; xem chú thích `.env.example`.
+
+Để đo coverage đầy đủ, đặt connection kiểm thử chỉ vào **tempdb với schema em chưa tồn tại**:
+
+```powershell
+$env:SQLSERVER_TEST_ODBC_CONNECTION = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=tempdb;Trusted_Connection=yes;TrustServerCertificate=yes'
+python scripts/manage.py coverage
+```
+
+Tests tạo DDL/catalog trong outer transaction, rollback cả schema và dữ liệu; không dùng API trả phí hoặc gửi email thật. `test-backend` khi thiếu connection vẫn chạy test không cần DB và báo skip SQL integration; coverage đầy đủ cần SQL Server. CI chuẩn bị SQL Server Developer riêng và ODBC 18 để các test SQL không bị bỏ qua.
+
+`python scripts/manage.py export-api` xuất OpenAPI vào `.artifacts/api/openapi.json`, không cần DB; có thể import Postman để gọi API.
 
 ## Tài liệu
 
 - [Thiết kế SQL Server: khảo sát, ERD, từ điển dữ liệu và giao dịch](docs/DATABASE_SQLSERVER.md)
-- [Script SQL Server và cách triển khai/kiểm thử](database/sqlserver/README.md) — 22 bảng, 2 view; backend chưa kết nối DB.
+- [Script SQL Server và cách triển khai/kiểm thử](database/sqlserver/README.md) — 22 bảng, 2 view; backend đã có repository/API.
 
 - [Quy tắc dành cho agent](AGENT.md) và [quy ước dự án](CLAUDE.md)
 
@@ -115,4 +150,4 @@ Compose đọc `.env` ở root. Backend local đọc biến môi trường của
 - [Prompt](docs/PROMPTS.md)
 - [Kế hoạch code tiếp theo](docs/IMPLEMENTATION_PLAN.md)
 
-Khung hiện có health, AI mock và trang trạng thái kết nối. Auth, DB, chat streaming, phân tích lỗi học tập và provider thật nằm trong backlog. Kết quả local không thay thế kết quả GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.
+Backend đã có API lưu dữ liệu SQL Server và auth/JWT; frontend nhánh này là khung trạng thái kết nối. Nối giao diện đa trang, OAuth, AI/STT thật và streaming là bước tiếp. Kết quả local không thay thế GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.

@@ -1,5 +1,16 @@
 # Quyết định kỹ thuật
 
+## 2026-10-07 — Hoàn thiện backend/API trên schema SQL Server
+
+- Dùng SQLAlchemy Core + pyodbc reflect whitelist bảng/view. Script T-SQL đã thiết kế là nguồn schema duy nhất; không sinh DDL ORM trùng lặp. Migration runner được gọi chủ động, không tự tạo DB khi server khởi động.
+- Giao dịch ngắn, khóa user và request UUID phối hợp retry; rowversion phát hiện sửa dữ liệu cũ. Mỗi request auth đối chiếu DB session để revoke có hiệu lực ngay. Argon2 cho mật khẩu, JWT access có issuer/audience/purpose; refresh/reset chỉ lưu hash.
+- SQL đồng bộ chạy worker thread cho luồng chat/practice async; LLM ngoài transaction, timeout và trạng thái lỗi/hủy lưu lại. Mock có nhãn và không tạo điểm AI nói/viết. Listening chấm SQL, trả answer key sau nộp; transcript vẫn phục vụ browser TTS demo.
+- Pillow xác thực/re-encode avatar; WAV đo duration từ frames; ffprobe kiểm tra WebM/Ogg. Media private, tải qua owner + Bearer. Image Docker có ODBC 18/ffmpeg; Windows local dùng driver hiện có, cần ffprobe riêng cho WebM/Ogg.
+- Reset mật khẩu qua SMTP STARTTLS tùy chọn. Thiếu cấu hình trả 503 đồng nhất; lỗi gửi khi đã cấu hình trả 202 đồng nhất và log chung không tiết lộ recipient/token. Không gửi email hoặc paid API trong tests.
+- Giới hạn body/auth work và semaphore hash mật khẩu chống chiếm hết tài nguyên trong một process. Rate limiter theo peer IP/process; deployment qua proxy/nhiều worker cần cấu hình riêng.
+- Test schema/API trong tempdb với guard + outer rollback; CI có SQL Server service disposable. CI mới chưa push/chạy GitHub; kiểm chứng local không thay thế kết quả workflow.
+- Giao diện đa trang giữ ở nhánh riêng; không tự merge hoặc sửa localStorage trong tác vụ backend. OAuth, email verification, STT, streaming, real LLM và account deletion còn trong backlog.
+
 ## 2026-10-07 — Thiết kế SQL Server theo chương trình hiện có
 
 - Chọn SQL Server theo yêu cầu người dùng, thay phương án PostgreSQL ở backlog; chưa đổi runtime backend hoặc cài dependency database. Script mục tiêu SQL Server 2019+, kiểm chứng trên SQL Server 2022 Developer.
