@@ -1,5 +1,25 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-08 — Đưa tài liệu README vào develop
+
+- **Yêu cầu:** merge tài liệu vừa hoàn thiện vào `develop`.
+- **Phạm vi:** `README.md`, `docs/LOCAL_DEVELOPMENT.md`, `database/sqlserver/README.md` và nhật ký này; không thay code, cấu hình hoặc `.env`.
+- **Kiểm chứng:** dùng kết quả tác vụ tài liệu ngay trước: lint, 70 backend/92 frontend tests, coverage, build, local dev/smoke và kiểm tra liên kết đều qua; `git diff --check` qua. Git hook kiểm tra lint/types khi tạo commit. Không chạy lại bộ test nghiệp vụ cho thay đổi chỉ gồm tài liệu.
+- **Git:** commit tiếng Việt không dấu `docs: cap nhat README va huong dan chay du an` trên `docs/readme-huong-dan-chay`, cập nhật `develop` bằng fast-forward; không push remote hoặc xóa nhánh nguồn.
+- **Còn thiếu:** giấy phép và liên hệ chờ người dùng xác nhận; không tự tạo LICENSE. Chi tiết phạm vi chạy thử nằm trong hướng dẫn local.
+
+## 2026-10-08 — Viết lại README cho người mới
+
+- **Yêu cầu:** README tiếng Việt giúp người mới hiểu và chạy repo trong khoảng 5 phút; đúng thứ tự nội dung, chỉ dùng thông tin/lệnh có trong repo, không chứa secret hoặc quy tắc agent/nhật ký cá nhân.
+- **Khảo sát:** đọc README cũ, cấu trúc/source React/FastAPI, package.json/pyproject/requirements, Makefile/make.cmd/manage.py, Dockerfile/Compose, .env.example và CI. Không đọc/in `.env` thực tế.
+- **Kết quả:** đưa mô tả/phạm vi demo lên đầu; thêm ví dụ API mock đã đối chiếu HTTP, tính năng, yêu cầu host, lựa chọn cài Docker/local, bảng cấu hình, cách chạy và ví dụ sử dụng, test/lint, cây thư mục và đóng góp. Không giả định UI đã gọi API SQL; giữ giới hạn SQL v1 và dữ liệu demo/localStorage. Bỏ lịch sử merge/quy tắc agent/số liệu QA khỏi README, giữ trong tài liệu lịch sử hiện có.
+- **Tài liệu chi tiết:** thêm `docs/LOCAL_DEVELOPMENT.md` cho wrapper Windows/Make, proxy/cổng, hooks/format/lock, SQL Windows/Docker, media, OpenAPI và phạm vi lệnh đã/ chưa chạy thử. Sửa hai nhận xét lỗi thời trong `database/sqlserver/README.md` để khớp backend hiện có.
+- **Kiểm chứng lệnh:** `.\make.cmd setup` qua (backend editable và npm ci); `python scripts/manage.py env`, lint/test/coverage/build/export-api/docker-check qua. Backend **70/70**, frontend **92/92**; SQL integration **22** dùng tempdb có guard/rollback. Coverage **92,83%** backend, frontend **88,97% statements / 86,39% branches / 87,09% functions / 90,96% lines**; build **62 modules**. Một lượt coverage có test giao diện timeout 5 giây; chạy lại riêng toàn coverage qua, không sửa test/assertion/timeout.
+- **Chạy thật:** dev-backend/dev-frontend qua task runner ở 18012/15176, HTTP smoke và phản hồi Hello/B1 khớp chính xác ví dụ README; đã dừng các process test. Project Docker `engmate-ai` đang chạy ở 8000/5173 được giữ nguyên. Docker/smoke project riêng đã qua trong tác vụ merge trước cùng ngày; không chạy lại docker-up/down mặc định trong tác vụ tài liệu.
+- **QA tài liệu:** 26 liên kết file/anchor hợp lệ, tất cả task có trong Makefile/manage.py, đủ 18 biến .env.example và ba biến proxy/smoke đọc từ source; thứ tự README khớp yêu cầu, git diff --check qua. Không thêm screenshot giả, code nghiệp vụ, dependency hoặc secret.
+- **Chưa chạy lại:** wrapper GNU Make/Linux/macOS, lock, hooks/pre-commit, migration CLI trên database ứng dụng; đã ghi phạm vi ở tài liệu chi tiết. Không khẳng định đã test SMTP thật/production hoặc GitHub Actions mới.
+- **Git/thông tin còn thiếu:** làm trên `docs/readme-huong-dan-chay`, chưa commit/merge/push. Repo không có LICENSE/CONTRIBUTING; đã hỏi giấy phép và liên hệ, chưa tự chọn hoặc tạo LICENSE. Tiếp theo: bổ sung mục giấy phép/liên hệ khi người dùng xác nhận và review/commit tài liệu khi được yêu cầu.
+
 ## 2026-10-08 — Hợp nhất code giao diện mới vào develop
 
 - **Yêu cầu:** merge code mới từ `sua-giao-dien` vào `develop`; commit tiếng Việt không dấu theo yêu cầu trước đó.

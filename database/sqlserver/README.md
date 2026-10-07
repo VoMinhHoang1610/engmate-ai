@@ -1,6 +1,6 @@
 # Database SQL Server cho EngMate-AI
 
-Backend đã có SQLAlchemy Core/pyodbc và migration runner trên `feat/backend-learning-api`. Sau khi tự tạo database rỗng và đặt `DATABASE_ODBC_CONNECTION`/`JWT_SECRET`, có thể chạy `python scripts/manage.py migrate-backend` từ root thay cho ba lệnh sqlcmd bên dưới. Runner kiểm tra schema version, seed/views chạy lại được; không tự tạo database. Xem [README ứng dụng](../../README.md) và [API](../../docs/API.md).
+Backend trên `develop` đã có SQLAlchemy Core/pyodbc và migration runner. Sau khi tự tạo database rỗng và đặt `DATABASE_ODBC_CONNECTION`/`JWT_SECRET`, có thể chạy `python scripts/manage.py migrate-backend` từ root thay cho ba lệnh sqlcmd bên dưới. Runner kiểm tra schema version, seed/views chạy lại được; không tự tạo database. Xem [hướng dẫn chạy SQL](../../docs/LOCAL_DEVELOPMENT.md#bật-api-sql-server) và [API](../../docs/API.md).
 
 Thiết kế **22 bảng, 2 view** cho toàn bộ giao diện học tập hiện tại và các luồng backend tương ứng. Xem [khảo sát, ERD, từ điển dữ liệu và quy tắc giao dịch](../../docs/DATABASE_SQLSERVER.md).
 
@@ -36,4 +36,4 @@ Nếu terminal đang ở thư mục khác, chuyển tới thư mục `EngMate-AI
 
 `-E` dùng Windows authentication. Đổi `-S` theo instance của bạn; không đưa mật khẩu vào file SQL/Git. Script test cần quyền tạo schema/bảng/view trong tempdb và từ chối nếu schema `em` đã có. Toàn bộ thay đổi rollback khi kết thúc hoặc kết nối lỗi đóng; không chạm database ứng dụng.
 
-FastAPI và frontend chưa sử dụng database này. Bước tiếp theo là models/repository, migration runner, auth thật và API lưu dữ liệu theo tài liệu thiết kế.
+FastAPI đã sử dụng schema này cho API tài khoản và học tập. Frontend demo vẫn lưu localStorage; thử API SQL/JWT riêng qua Swagger. SQL v1 hỗ trợ A2/B1/B2, còn UI/mock hỗ trợ Pre-A1 đến C2; xem [ánh xạ API](../../docs/API.md).
