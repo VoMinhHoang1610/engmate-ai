@@ -1,10 +1,12 @@
 # EngMate-AI
 
-Khung phát triển ứng dụng luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
+Ứng dụng demo luyện tiếng Anh với AI. Frontend dùng React + TypeScript strict + Vite + Tailwind; backend dùng Python + FastAPI + Pydantic v2. AI mặc định là mock, không gọi API tính phí.
 
-Kiểm chứng local backend SQL Server ngày 2026-10-07: 57 backend tests qua (21 SQL integration), coverage 92,83%; frontend scaffold 13 tests qua, coverage 100%. Lint/build và Docker HTTP smoke đều qua; CI mới chưa chạy trên GitHub. Chi tiết và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md).
+Kiểm chứng bản tích hợp ngày 2026-10-07: **57 backend + 56 frontend tests qua** (21 SQL integration), coverage backend 92,83%; frontend statements 85,88%, branches 84,34%, functions 81,36%, lines 88,27%. Lint/build qua; kết quả Docker/Git cuối và giới hạn xem [nhật ký tiến độ](docs/PROGRESS.md). CI mới chưa chạy trên GitHub.
 
-Backend SQL Server trên `feat/backend-learning-api` có API tài khoản/JWT, hồ sơ/cài đặt, chủ đề/bài học, hội thoại, luyện nói/nghe/viết, sổ từ/flashcard, media và dashboard. Hợp đồng và ánh xạ các màn hình ở [API.md](docs/API.md). AI hiện vẫn là mock; giao diện đa trang ở nhánh `feat/social-login-motion` chưa nối các API nghiệp vụ này.
+Bản tích hợp `develop` có giao diện đa trang, backend và schema SQL Server. Frontend có 10 trang học tập và trang đăng nhập riêng, linh thú Mate, theme sáng/tối, giảm chuyển động và lưu dữ liệu trong trình duyệt. Hội thoại gọi `/api/ai/reply` dùng mock. Backend có API tài khoản/JWT, hồ sơ/cài đặt, catalog, hội thoại, luyện tập, từ vựng/flashcard, media và dashboard; xem [API.md](docs/API.md).
+
+**Demo giao diện hiện dùng localStorage và tài khoản abc / 123 tại #dang-nhap.** Các API lưu dữ liệu SQL/JWT thử riêng qua Swagger; UI chưa nối chúng. Không cần DB/API key để demo giao diện và AI mock. OAuth, chấm nói/viết AI thật và STT chưa có.
 
 ## Cấu trúc
 
@@ -21,9 +23,10 @@ backend/
   tests/integration/ Test API, validation, CORS và timeout
 frontend/
   src/api/          HTTP client và test hợp đồng
-  src/components/   UI trạng thái kết nối
-  src/hooks/        Logic tải dữ liệu và test vòng đời
-  src/pages/        Trang khởi tạo
+  src/components/   UI, icon, menu avatar và linh thú Mate
+  src/demo/         Dữ liệu mẫu, localStorage và browser audio
+  src/hooks/        Logic health API và test vòng đời
+  src/pages/        10 trang học tập, đăng nhập và health cũ
   src/types/        Kiểu dữ liệu dùng chung
   tests/            Thiết lập Vitest/React Testing Library
   e2e/              Dành cho E2E khi triển khai luồng nghiệp vụ
@@ -47,6 +50,8 @@ Cần Python 3.11+ (Docker/CI dùng 3.13), Node.js 22.12+ (Docker/CI dùng 24), 
 Trên mọi hệ điều hành có thể dùng `python scripts/manage.py setup`. Linux/macOS có GNU Make có thể dùng `make setup`; Makefile gọi cùng bộ lệnh Python.
 
 ## Chạy local
+
+Hướng dẫn trình diễn, tài khoản demo và bảng các nhánh đã hợp nhất: [DEMO_DEVELOP.md](docs/DEMO_DEVELOP.md).
 
 ```powershell
 # Terminal 1
@@ -150,4 +155,4 @@ Tests tạo DDL/catalog trong outer transaction, rollback cả schema và dữ l
 - [Prompt](docs/PROMPTS.md)
 - [Kế hoạch code tiếp theo](docs/IMPLEMENTATION_PLAN.md)
 
-Backend đã có API lưu dữ liệu SQL Server và auth/JWT; frontend nhánh này là khung trạng thái kết nối. Nối giao diện đa trang, OAuth, AI/STT thật và streaming là bước tiếp. Kết quả local không thay thế GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.
+Bản develop đã hợp nhất frontend demo đa trang, backend SQL Server và auth/JWT. UI vẫn dùng localStorage, trừ hội thoại gọi API mock. Nối giao diện đa trang, OAuth, AI/STT thật và streaming là bước tiếp. Kết quả local không thay thế GitHub Actions; xem nhật ký để biết phạm vi đã kiểm chứng.

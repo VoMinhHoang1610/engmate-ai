@@ -1,10 +1,12 @@
 # Kiến trúc
 
-Cập nhật: 2026-10-07. Backend nghiệp vụ nằm trên `feat/backend-learning-api`; giao diện đa trang vẫn ở nhánh riêng và chưa được nối các API nghiệp vụ.
+Cập nhật: 2026-10-07. Bản develop demo hợp nhất giao diện đa trang, backend nghiệp vụ và SQL Server. UI dùng localStorage và API mock reply; API nghiệp vụ thử qua Swagger, chưa nối UI.
 
 ```mermaid
 flowchart LR
-  UI[React / Swagger / API client] --> API[FastAPI routes + Bearer authentication]
+  UI[React demo] --> Local[localStorage / browser audio]
+  UI --> MockRoute[API mock reply]
+  Client[Swagger / API client] --> API[FastAPI routes + Bearer authentication]
   API --> Service[Auth / Learning / Conversation / Practice / Media services]
   Service --> Repo[SQLAlchemy Core repository]
   Repo --> DB[SQL Server schema em]
@@ -23,7 +25,7 @@ flowchart LR
 - Pyodbc là driver đồng bộ. Các pha SQL của chat/luyện tập và xử lý media chạy trong worker thread; gọi LLM async ngoài transaction và có timeout. Tin nhắn/evaluation giữ trạng thái pending/completed/failed/cancelled; kết quả đến muộn không hồi sinh evaluation đã hủy.
 - StudySessions cung cấp thời lượng server tính; FlashcardReviews cung cấp lượt ôn. View tổng/ngày không join nhân dữ liệu. Ngày thống kê là ngày địa phương lúc hoàn thành phiên, chưa chia thời lượng qua nửa đêm; phiên bỏ dở không được cộng thời gian.
 - AI hiện là mock. Kết quả ghi `provider=mock`, không tạo điểm/phân tích AI thật. Listening chấm bằng đáp án SQL; answer key chỉ trả sau nộp, nhưng nội dung bài nghe vẫn có transcript phục vụ browser TTS của UI demo.
-- Docker dev gồm backend/frontend và volume media; database SQL Server là dịch vụ ngoài stack. Backend image có ODBC Driver 18 và ffmpeg. Frontend nhánh hiện tại là scaffold health/mock; production static hosting chưa cấu hình.
+- Docker dev gồm backend/frontend và volume media; database SQL Server là dịch vụ ngoài stack. Backend image có ODBC Driver 18 và ffmpeg. Frontend có 10 trang học tập và đăng nhập độc lập, Mate, theme/motion và dữ liệu trình duyệt; production static hosting chưa cấu hình.
 - `scripts/manage.py` tập trung các lệnh local/CI; Makefile và `make.cmd` là wrapper. OpenAPI xuất bằng `export-api` để nhập Postman.
 
 Chi tiết thiết kế: [SQL Server](DATABASE_SQLSERVER.md). Hợp đồng endpoint: [API](API.md). OAuth, email verification, STT, streaming và adapter LLM thật nằm trong [kế hoạch tiếp theo](IMPLEMENTATION_PLAN.md).

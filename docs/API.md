@@ -149,4 +149,4 @@ View tổng hợp StudySessions và FlashcardReviews độc lập để không n
 | Flashcard / bộ đến hạn, again/hard/good/easy | vocabulary due; flashcards sessions/reviews/close |
 | TongQuan / tổng phút, từ, lượt ôn, số liệu ngày | dashboard và daily_goal_minutes |
 
-Giao diện đa trang ở `feat/social-login-motion` vẫn dùng demo/localStorage; nhánh backend giữ frontend khung. Hợp đồng trên đã sẵn để nối UI, chưa tự nhập dữ liệu localStorage, chưa giả lập OAuth/STT/AI thật. Counters cũ không có lịch sử đầy đủ nên không tự chuyển vào StudySessions.
+Giao diện đa trang, backend và SQL schema đã được hợp nhất trong bản develop demo. UI vẫn dùng localStorage và endpoint mock `/api/ai/reply`; API nghiệp vụ SQL/JWT thử riêng qua Swagger, chưa nối UI. Hợp đồng trên sẵn để tích hợp tiếp; chưa tự nhập localStorage, chưa có OAuth/STT/AI thật. Counters cũ không có lịch sử đầy đủ nên không tự chuyển vào StudySessions. Xem [hướng dẫn demo](DEMO_DEVELOP.md).

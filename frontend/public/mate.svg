@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Mate — linh thú của EngMate AI</title>
+  <defs>
+    <linearGradient id="body" x1="65" y1="45" x2="166" y2="177" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/><stop offset="1" stop-color="#d6f2ff"/>
+    </linearGradient>
+    <linearGradient id="arm" x1="0" y1="0" x2="25" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/><stop offset="1" stop-color="#c7ecfa"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="110" cy="211" rx="57" ry="6" fill="#102d4e" opacity=".12"/>
+  <rect x="107" y="27" width="6" height="22" rx="3" fill="#eafaff"/>
+  <circle cx="110" cy="27" r="13" fill="#ffdf77" opacity=".1"/>
+  <circle cx="110" cy="27" r="8" fill="#ffdf77"/>
+  <rect x="26" y="120" width="25" height="48" rx="12" fill="url(#arm)" stroke="#e2f5fc" stroke-width="2" transform="rotate(25 38 132)"/>
+  <rect x="170" y="120" width="25" height="48" rx="12" fill="url(#arm)" stroke="#e2f5fc" stroke-width="2" transform="rotate(-135 182 132)"/>
+  <path d="M90 45h41c26 0 47 21 47 47v54c0 23-19 42-42 42H61c-10 0-18-8-18-18V92c0-26 21-47 47-47Z" fill="url(#body)"/>
+  <path d="M171 82v64c0 20-17 35-36 35H61c-7 0-11-4-11-11v-30" stroke="#c8e6f2" stroke-opacity=".35" stroke-width="7"/>
+  <rect x="67" y="83" width="87" height="62" rx="23" fill="#102d4e"/>
+  <rect x="91" y="99" width="8" height="12" rx="4" fill="#71ddf6"/>
+  <rect x="123" y="99" width="8" height="12" rx="4" fill="#71ddf6"/>
+  <path d="M100 116c0 12 20 12 20 0" stroke="#71ddf6" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="70" cy="152" rx="7.5" ry="3" fill="#f6b9ad" opacity=".6"/>
+  <ellipse cx="151" cy="152" rx="7.5" ry="3" fill="#f6b9ad" opacity=".6"/>
+</svg>
