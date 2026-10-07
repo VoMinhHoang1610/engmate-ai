@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Thiết kế database SQL Server — 2026-10-07
+
+- Khảo sát toàn bộ giao diện/nghiệp vụ; bổ sung tài liệu ERD, từ điển dữ liệu, ánh xạ localStorage và quy tắc giao dịch.
+- Thêm schema 22 bảng, 2 view, seed 8 chủ đề/9 bài/4 câu hỏi/6 lựa chọn và truy vấn mẫu cho SQL Server; thay PostgreSQL trong kế hoạch triển khai tiếp.
+- Bộ kiểm thử database chạy 45/45 kiểm tra trên SQL Server 2022, rollback toàn bộ môi trường thử. Chưa tích hợp database/auth/OAuth vào backend hoặc thay đổi cách chạy ứng dụng.
+
 ### Added
 
 - Nút tiếp tục với Google/Facebook/GitHub trên đăng nhập và đăng ký; hiện hoàn thiện giao diện, báo rõ chưa kết nối khi bấm.
@@ -23,6 +29,8 @@
 
 ### Changed
 
+- Bỏ pip cache của GitHub Actions để tránh lỗi đường dẫn cache khi kết thúc job.
+- Backend Docker dùng curl cho health check, giới hạn request 2 giây và cho phép khởi động 15 giây; frontend Compose có start period 30 giây.
 - Trang đăng nhập dùng panel Mate navy/cyan cuộn đổi chỗ với form khi đăng nhập ↔ đăng ký; form mở theo hướng, sóng viền và hiệu ứng phụ. Mobile xếp dọc với pill; giữ nút xã hội demo và giảm chuyển động.
 - Chuyển giữa đăng nhập/đăng ký/khôi phục bằng nền tab trượt, tiêu đề/chữ chuyển mờ và biểu mẫu trượt/nghiêng nhẹ; chiều cao khung co giãn mượt. Bấm đổi nhanh không kẹt trạng thái; giữ tên/email, làm mới ô mật khẩu; hỗ trợ giảm chuyển động.
 - Mate đồng hành ở banner, sidebar, đăng nhập, avatar/trợ lý hội thoại, ghi âm, nghe, viết, mục tiêu ngày và hoàn thành flashcard. Kết quả nghe đúng/sai dùng biểu cảm phù hợp; mục tiêu và phiên ôn dùng dữ liệu hiện có. Thẻ kỹ năng có màu nhẹ, cạnh nổi và phản hồi khi nhấn.

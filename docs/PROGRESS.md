@@ -1,5 +1,53 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-07 — Làm rõ đường dẫn chạy kiểm thử SQL Server
+
+- **Lỗi người dùng gặp:** sqlcmd không tìm thấy `tests/verify.sql` khi terminal chưa ở `database/sqlserver`.
+- **Sửa hướng dẫn:** thêm bước chuyển thư mục từ root repo bằng Push-Location/Pop-Location trong `database/sqlserver/README.md`, `docs/DATABASE_SQLSERVER.md`, `docs/TESTING.md`. Giải thích include `:r` cũng phụ thuộc thư mục làm việc, không chỉ tham số `-i`.
+- **Kiểm chứng:** kiểm tra file đầu vào và toàn bộ file include tồn tại sau khi chuyển đúng thư mục; không đổi SQL hay mã backend/frontend. Kết quả 45/45 SQL checks của tác vụ trước vẫn là lần kiểm thử runtime gần nhất; không chạy lại database cho thay đổi hướng dẫn.
+
+## 2026-10-07 — Khảo sát toàn diện và thiết kế database SQL Server
+
+- **Yêu cầu:** quan sát tổng thể chương trình rồi thiết kế database SQL Server. Đọc cấu trúc, tài liệu và mã của 10 trang học tập/trang tài khoản, Context/localStorage, audio/browser APIs, backend route/schema/service/provider. Xác nhận dữ liệu nghiệp vụ đang ở trình duyệt, backend có health/mock reply, chưa có DB/auth thật.
+- **Thiết kế:** schema `em` với 22 bảng/2 view: tài khoản/hồ sơ/cài đặt/OAuth/phiên/token, media, chủ đề/bài/câu hỏi/lựa chọn, phiên học/hội thoại/tin nhắn/lần làm/câu trả lời, AI/lỗi, notebook/flashcard. PK/FK/UNIQUE/CHECK/index, owner/type bằng khóa ghép, request ID chống trùng, UTC/ngày địa phương và rowversion. Không thêm nghiệp vụ admin/thanh toán/linh thú ngoài phạm vi.
+- **SQL artifacts:** `database/sqlserver/001_schema.sql`, `002_seed_catalog.sql`, `003_views.sql`, `004_example_queries.sql`, `tests/verify.sql`, `README.md`. Seed đúng 8 chủ đề, 3 bài nói, 2 bài nghe, 4 đề viết, 4 câu hỏi/6 lựa chọn; không seed tài khoản hoặc bí mật.
+- **Tài liệu:** thêm `docs/DATABASE_SQLSERVER.md` (khảo sát, ERD, dictionary, transaction/service rules, UI mapping, cách chạy/giới hạn); cập nhật README, ARCHITECTURE, IMPLEMENTATION_PLAN, REQUIREMENTS DB-01..05, DECISIONS, TESTING, CHANGELOG. Giữ các thay đổi đã staged trước tác vụ, không sửa CI/Docker hoặc code app.
+- **Database kiểm chứng:** SQL Server 2022 Developer `16.0.1200.5`; chạy `sqlcmd -S localhost -E -d tempdb -b -f 65001 -i tests/verify.sql -W` từ thư mục SQL Server. **45/45 kiểm tra qua**, gồm schema/views/query compile, seed chạy hai lần, dữ liệu đúng/sai/Unicode/owner/type/idempotency, thống kê và ngày UTC/Vietnam/ôn qua nửa đêm. Toàn bộ DDL/data rollback, xác nhận schema `em` không còn. Không tạo database `EngMateAI` thật và không thay đổi database ứng dụng.
+- **App kiểm chứng theo quy ước repo:** `python scripts/manage.py lint` qua Ruff/Black/mypy (26 files), frontend còn **8 lỗi ESLint** ở HoTroNhanh/HoSo/TaiKhoan; `build` còn **4 lỗi TypeScript** ở HoTroNhanh/TaiKhoan. `test` ngoài sandbox: backend **16/16**, frontend **12/52 qua, 40 lỗi** `localStorage.clear is not a function`. `coverage` ngoài sandbox: backend **100%**, frontend cùng **40 lỗi/12 qua**, chưa có kết quả coverage hợp lệ. Không sửa các lỗi frontend có sẵn trong tác vụ database. Lần test đầu trong sandbox bị `spawn EPERM`/cache denied; đã chạy lại với quyền phù hợp.
+- **Giới hạn:** SQL Server 2019 là mục tiêu compatibility chưa chạy riêng; không có concurrency/load/API/ORM/auth integration test. Counter cũ trong localStorage không đủ lịch sử để dựng lại chính xác; CEFR của seed đề viết là phân loại tạm. Các quy tắc service/transaction là thiết kế, chưa được tích hợp vào runtime.
+- **Tiếp theo:** kết nối FastAPI bằng models/repository/driver SQL Server và migration runner; triển khai auth/API lưu dữ liệu, onboarding từ localStorage và integration/E2E theo DB-05.
+
+## 2026-10-07 — Đồng bộ bản sửa CI/CD sang develop và nhánh feature
+
+- **Yêu cầu:** cập nhật bản sửa CI/CD đã hoàn thiện trên `main` sang `develop` và nhánh `feat/*` hiện có (`feat/social-login-motion`).
+- **Nguồn:** `main`/`origin/main` tại `fd931ff`, chứa commit sửa cấu hình `59180cf`; [CI của main đã thành công](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37507717773).
+- **Develop:** fast-forward từ `97e3672` lên `fd931ff` và push thành công; nội dung đúng bằng main đã kiểm chứng.
+- **Feature:** merge main vào `feat/social-login-motion` từ `e38ab99`. Giải quyết xung đột ở `docs/CHANGELOG.md`, `docs/DECISIONS.md`, `docs/PROGRESS.md`, `docs/REQUIREMENTS.md` bằng cách giữ cả lịch sử tính năng và ghi nhận CI; giữ phạm vi demo đa trang của feature. Ba file CI/Docker giống main; diff xác nhận không thay đổi frontend, backend app/tests hoặc scripts so với feature trước merge.
+- **Kiểm chứng:** Docker Compose config và diff whitespace qua; backend 16/16 tests, coverage 100%. Lint frontend có 8 lỗi và build có 4 lỗi TypeScript trong mã feature được giữ nguyên (`HoTroNhanh.tsx`, `HoSo.tsx`, `TaiKhoan.tsx`).
+- **Test frontend:** lần chạy mặc định trên Node 25.9.0 đạt 12/52, 40 lỗi do `localStorage.clear` không có; chạy coverage với `NODE_OPTIONS=--no-experimental-webstorage` riêng cho tiến trình test vẫn đạt 12/52, 40 lỗi hành vi/assertion. Frontend chưa có kết quả coverage hợp lệ. Không đổi assertion, tắt test hoặc thay logic ứng dụng trong tác vụ đồng bộ.
+- **Giới hạn CI:** workflow hiện kích hoạt khi có PR hoặc push vào main; push develop/feature không tự kích hoạt run mới. Kết quả CI main không được coi là bằng chứng toàn bộ feature đã qua kiểm tra.
+
+## 2026-10-07 — Xác nhận CI thành công trên GitHub
+
+- **Bàn giao:** cả ba sửa đổi cấu hình đã nằm trong một commit `59180cf` (`fix: correct ci/cd workflow and docker health checks`), push lên `fix/ci-cache-healthchecks`, sau đó đưa vào `main` bằng fast-forward và push thông thường theo phương án push main được cho phép trong tài liệu yêu cầu.
+- **Phương án kích hoạt CI:** dự kiến mở PR nháp nhưng API không có credential dùng được và công cụ trình duyệt không có phiên kết nối. Chuyển sang phương án push main trong phạm vi yêu cầu; không thay đổi cấu hình xác thực hoặc sửa lịch sử Git.
+- **Kết quả thực tế:** [run 37506823374](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37506823374), SHA `59180cf93fc9ba2953ea83cc02b0c805ee96f81b`, event `push`, branch `main`, kết luận `success`. Các bước install, lint/types, coverage, build, Docker validation, start stack, HTTP smoke, stop stack, upload coverage và các post step đều qua; bước logs-on-failure được bỏ qua đúng điều kiện.
+- **Lỗi đã xử lý:** `Post Run actions/setup-python@v5` thành công, không còn lỗi lưu pip cache làm thất bại job.
+- **File tài liệu cập nhật:** `docs/PROGRESS.md`, `docs/REQUIREMENTS.md`; đánh dấu S-07 đã được kiểm chứng local và GitHub Actions. Commit ghi kết quả này chỉ đổi tài liệu, không đổi cấu hình hoặc logic đã được CI kiểm chứng.
+- **Giới hạn:** Docker frontend vẫn là stack dev; production image là đề xuất tùy chọn chưa triển khai. AI vẫn dùng mock và các nghiệp vụ chưa triển khai giữ nguyên backlog.
+
+## 2026-10-07 — Sửa CI cache và health check Docker
+
+- **Yêu cầu:** đọc và thực hiện tài liệu `CICD Workflow Fixes — EngMate-AI.md`; áp dụng ba sửa đổi bắt buộc trong một commit trên nhánh `fix/ci-cache-healthchecks`, push nhánh và kiểm chứng GitHub Actions.
+- **Đối chiếu GitHub:** run [37220779051](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37220779051) thất bại ở `Post Run actions/setup-python@v5`, sau khi install, lint, coverage, build, Docker và smoke đều qua. Lỗi xảy ra khi kết thúc job, không phải lúc setup như mô tả trong file tham chiếu. Task runner chuyển pip cache sang `.cache/pip`; bỏ cấu hình cache của action để tránh lưu vào thư mục mặc định chưa có. Không kết luận pip-tools không tương thích với cache.
+- **Thay đổi:** bỏ hai dòng pip cache trong `.github/workflows/ci.yml`; cài curl tối thiểu trong `backend/Dockerfile`, probe có HTTP failure và timeout 2 giây, start period 15 giây; thêm start period 30 giây cho frontend trong `docker-compose.yml`.
+- **Phạm vi:** giữ phiên bản Python/Node, cổng, CORS, biến môi trường, tests và logic ứng dụng. Docker frontend production là đề xuất tùy chọn trong tài liệu tham chiếu và chưa triển khai.
+- **File thay đổi:** ba file cấu hình trên và `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/CHANGELOG.md`.
+- **Kiểm chứng local:** `.\make.cmd lint` qua Ruff, Black, mypy (26 files), ESLint, TypeScript và Prettier; `.\make.cmd test` qua 16 backend + 13 frontend tests; `.\make.cmd coverage` đạt 100% hai phía với ngưỡng 80%; `.\make.cmd build` qua (33 modules); `.\make.cmd docker-check`, `docker-up` và `smoke` đều qua.
+- **Health check thực tế:** Docker inspect xác nhận backend và frontend đều `healthy`, start period lần lượt `15s` và `30s`; backend dùng curl đúng cấu hình. HTTP smoke qua backend health, frontend HTML, API proxy và AI mock qua proxy.
+- **Môi trường kiểm chứng:** lần chạy test/coverage trong sandbox bị chặn tiến trình esbuild (`spawn EPERM`) và cache pytest; chạy lại ngoài sandbox thành công. Docker được kiểm chứng qua Docker Desktop với quyền truy cập daemon.
+- **GitHub tiếp theo:** workflow chỉ chạy trên PR hoặc push main; mở PR nháp từ nhánh sửa lỗi để chạy CI, không merge tự động. Kết quả CI của commit mới chưa có tại thời điểm ghi nhật ký; sẽ báo kết quả run khi GitHub hoàn tất.
+
 ## 2026-10-06 — Panel cuộn đăng nhập ↔ đăng ký
 
 - **Yêu cầu:** hiệu ứng chuyển đăng nhập/đăng ký kiểu cuộn panel như ảnh tham khảo, nhưng thiết kế và animation riêng theo EngMate, không copy cyan/trắng tutorial.

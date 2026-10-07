@@ -1,6 +1,6 @@
 # Bước code tiếp theo
 
-1. Thiết kế schema DB, SQLAlchemy async/Alembic và migrations; viết test trên PostgreSQL test riêng.
+1. Schema SQL Server đã thiết kế và chạy 45 kiểm tra rollback trên SQL Server 2022; xem `docs/DATABASE_SQLSERVER.md` và `database/sqlserver/`. Bước tiếp: triển khai models/repository, driver/ORM SQL Server và migration runner có version; integration test trên database test riêng.
 2. Models, auth/JWT, hồ sơ CEFR, phân quyền và xóa dữ liệu tài khoản.
 3. Hợp đồng hội thoại/chat streaming, lưu lịch sử, phân tích lỗi, retry/fallback và timeout.
 4. Adapter LLM thật và đánh giá prompt; test mặc định vẫn dùng mock.

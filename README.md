@@ -105,6 +105,9 @@ Compose đọc `.env` ở root. Backend local đọc biến môi trường của
 
 ## Tài liệu
 
+- [Thiết kế SQL Server: khảo sát, ERD, từ điển dữ liệu và giao dịch](docs/DATABASE_SQLSERVER.md)
+- [Script SQL Server và cách triển khai/kiểm thử](database/sqlserver/README.md) — 22 bảng, 2 view; backend chưa kết nối DB.
+
 - [Quy tắc dành cho agent](AGENT.md) và [quy ước dự án](CLAUDE.md)
 
 - [Yêu cầu và backlog](docs/REQUIREMENTS.md)
