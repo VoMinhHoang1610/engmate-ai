@@ -4,7 +4,9 @@ import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
 import { chuDeMau, tuVungMau, type TrinhDo } from '../demo/duLieu';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { dungDoc } from '../demo/amThanh';
+import { useThuAm } from '../hooks/useThuAm';
 import { danhSachTrinhDo, layTrinhDoHoc } from '../demo/trinhDo';
 
 interface TinNhan {
@@ -24,6 +26,7 @@ export function HoiThoaiAI() {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [loi, setLoi] = useState('');
+  const thuAm = useThuAm(setInput, setLoi);
   const [giaiThich, setGiaiThich] = useState(false);
   const controller = useRef<AbortController | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
@@ -34,7 +37,7 @@ export function HoiThoaiAI() {
     return () => {
       mounted.current = false;
       controller.current?.abort();
-      window.speechSynthesis?.cancel();
+      dungDoc();
     };
   }, []);
   useEffect(() => {
@@ -43,7 +46,7 @@ export function HoiThoaiAI() {
   async function gui(event: FormEvent) {
     event.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if (!text || busy || thuAm.active) return;
     const userMessage: TinNhan = { id: Date.now(), vai: 'ban', noiDung: text };
     setTinNhan((cu) => [...cu, userMessage]);
     setInput('');
@@ -115,6 +118,7 @@ export function HoiThoaiAI() {
               <select
                 aria-label="Độ khó hội thoại"
                 value={level}
+                disabled={busy || thuAm.active}
                 onChange={(e) => setLevel(e.target.value as TrinhDo)}
               >
                 {danhSachTrinhDo.map((muc) => (
@@ -140,15 +144,15 @@ export function HoiThoaiAI() {
                   <span className="message-author">{message.vai === 'ai' ? 'EngMate' : 'Bạn'}</span>
                   <div className="message-bubble">{message.noiDung}</div>
                   {message.vai === 'ai' && (
-                    <button
+                    <NutDoc
                       className="text-button message-audio"
-                      onClick={() => {
-                        if (!docTiengAnh(message.noiDung))
-                          setLoi('Trình duyệt chưa hỗ trợ đọc câu mẫu.');
-                      }}
+                      text={message.noiDung}
+                      preload={message === tinNhan.at(-1)}
+                      onError={setLoi}
+                      disabled={thuAm.active}
                     >
                       <BieuTuong ten="volume" size={15} /> Nghe câu mẫu
-                    </button>
+                    </NutDoc>
                   )}
                 </div>
               </div>
@@ -165,7 +169,7 @@ export function HoiThoaiAI() {
             <div className="suggestion-row">
               <span>Thử nói:</span>
               {['A latte, please.', 'Could you help me?', 'Tell me more.'].map((text) => (
-                <button key={text} onClick={() => setInput(text)}>
+                <button key={text} disabled={busy || thuAm.active} onClick={() => setInput(text)}>
                   {text}
                 </button>
               ))}
@@ -178,17 +182,27 @@ export function HoiThoaiAI() {
                 placeholder="Viết câu trả lời bằng tiếng Anh..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                disabled={busy}
+                disabled={busy || thuAm.active}
               />
+              <button
+                className="btn secondary"
+                type="button"
+                disabled={busy || thuAm.processing}
+                aria-label={thuAm.recording ? 'Dừng ghi âm' : 'Trả lời bằng giọng nói'}
+                onClick={() => void thuAm.toggle()}
+              >
+                <BieuTuong ten={thuAm.recording ? 'pause' : 'mic'} />
+              </button>
               <button
                 className="btn primary"
                 type="submit"
-                disabled={busy || !input.trim()}
+                disabled={busy || thuAm.active || !input.trim()}
                 aria-label="Gửi tin nhắn"
               >
                 <BieuTuong ten="send" />
               </button>
             </form>
+            {thuAm.active && <p role="status">{thuAm.status}</p>}
             {loi && (
               <p role="alert" className="error-text">
                 {loi}

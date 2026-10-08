@@ -1,5 +1,25 @@
 # Kiểm thử
 
+Schema MySQL: [verify_catalog.sql](../database/mysql/tests/verify_catalog.sql) kiểm tra chỉ đọc danh mục và đáp án. Bootstrap đã tạo thành công trên MySQL 8.0.45 với datadir/cổng riêng; 45 assertion CLI qua cho seed/Reading/ownership/bảy mức/voice/onboarding/Version/views. Chưa thử MySQL 8.4.
+
+## API và giao diện MySQL — 2026-10-09
+
+Tạo database test riêng từ SQL root, tên kết thúc `_test`, chưa có tài khoản. Đặt `MYSQL_TEST_URL=mysql+pymysql://username:password@host:port/EngMateAI_test?charset=utf8mb4` trong terminal rồi chạy `python scripts/manage.py test` và `coverage`. test_mysql.py từ chối schema tên khác hoặc có tài khoản; outer transaction/savepoint rollback toàn bộ dữ liệu thử, không tạo DDL. SQL Server tests vẫn cần SQLSERVER_TEST_ODBC_CONNECTION riêng; 22 cases skip khi không cấu hình không được coi là đã kiểm chứng lại SQL Server.
+
+| Yêu cầu | Kiểm thử |
+| --- | --- |
+| MySQL mapping, UTC/pool, catalog, Version/voice/onboarding | test_mysql_catalog, test_mysql_pool, test_mysql_levels_voice_onboarding |
+| Auth, ownership, revoke/reset, media, retry/rollback | 13 workflow API dùng chung với test_sqlserver, chạy MySQL |
+| Reading/Listening chấm server, không lộ đáp án, dictation audio | test_mysql_grading, test_mysql_dictation_audio (speech mock) |
+| Auth/refresh và logout với response muộn | api/database.test.ts |
+| Khởi chạy không khôi phục token cũ; đăng nhập chờ tải và vào home, lỗi tải thử lại, đăng ký làm quen | api/database.test.ts, Mysql.test.tsx, TaiKhoan.test.tsx |
+| Context, lưu dữ liệu, bài tập, chat, flashcard retry | Mysql.test.tsx |
+| Đăng ký → lưu → reload → logout/login | Chrome headless với EngMateAI_browser_test riêng |
+
+Chrome đã kiểm tra đăng ký, A1/onboarding, hồ sơ, từ sau reload, Reading 100%, Writing, chat, flashcard và logout/login; không có pageerror hoặc tràn ngang ở 390 px. Artifact local `.artifacts/browser-check/mysql.cjs`, mysql-reading.png, mysql-mobile.png. Không ghi account E2E vào EngMateAI của người dùng hoặc gọi speech trả phí trong lượt này. Kết quả coverage đầy đủ ở mục mới nhất PROGRESS.
+
+Luồng đăng nhập mới cần đăng nhập lại sau reload. Script `.artifacts/browser-check/login-startup.cjs` kiểm tra đăng ký/làm quen → home → lưu từ → logout/login → reload hiện login → mật khẩu sai → login vào home ngay → từ còn trong MySQL → mobile 390 px. Dùng EngMateAI_browser_test riêng. Script mysql.cjs cũ ghi kết quả lịch sử của chính sách khôi phục phiên, không còn phù hợp để chạy nguyên trạng.
+
 ## Bản tích hợp develop demo
 
 Kết quả ngày 2026-10-08: 70 backend tests và 92 frontend tests qua, gồm 22 SQL integration; backend coverage 92,83%, frontend statements 88,97%/branches 86,39%/functions 87,09%/lines 90,96%. Lint/types/build và Docker HTTP smoke qua. Thông tin chạy/scope ở PROGRESS và DEMO_DEVELOP.
@@ -122,3 +142,15 @@ Các mục dưới giữ hướng dẫn và kết quả QA trước đây. Số 
 - Test `limits demo labels to AI features`: sidebar/topbar và các trang không dùng AI không chứa nhãn demo; banner AI, hội thoại và phân tích nói/viết có nhãn AI kèm demo.
 - Test luồng tài khoản kiểm tra nút Đăng nhập/Tạo tài khoản/Gửi yêu cầu, đăng xuất và thông báo ghi nhận yêu cầu trên trình duyệt.
 - Chrome: kiểm tra nhãn và tràn ngang trên cả 10 route ở 1440/360/390 px.
+
+## Speech Blaze
+
+B-SPEECH → tests/unit/test_speech.py: payload/multipart, poll/download, timeout, lỗi provider, dữ liệu sai, giới hạn dung lượng, quyền truy cập và Origin. Test dùng MockTransport, không gọi API trả phí. Smoke thật đã kiểm tra TTS Hello. và STT từ audio sinh ra; xem [BLAZE_SPEECH.md](BLAZE_SPEECH.md). Coverage riêng speech dùng --cov=app.services.speech --cov=app.api.speech_routes --cov=app.schemas.speech; không thay thế coverage toàn backend/SQL.
+
+Frontend speech: amThanh.test.ts kiểm tra request/play/cancel/errors/multipart; useThuAm.test.ts kiểm tra transcript, giải phóng micro, từ chối quyền và bỏ kết quả muộn; App.test.tsx kiểm tra điền transcript Speaking. Chrome headless đã phát MP3 thật và thu MediaRecorder từ file âm thanh mẫu, gọi Blaze STT rồi điền Speaking/Chat. Không coi input mẫu là kiểm chứng micro vật lý hoặc mọi trình duyệt. Artifact trong .artifacts/browser-check.
+
+Chọn giọng: test_speech.py kiểm tra catalog/filter/gender/error/route; CaiDat.test.tsx kiểm tra tải, chọn, lưu/khôi phục, nghe thử và retry; amThanh.test.ts kiểm tra speaker_id trên TTS. Chrome đã kiểm tra lựa chọn Alice được giữ sau reload và gửi đúng voice cho Speaking. Artifact .artifacts/browser-check/settings-voices*.png.
+
+Độ trễ: amThanh.test.ts kiểm tra phát clip đã chuẩn bị không chờ fetch, dedup preload/click, hủy độc lập, lỗi/retry/timeout, key giọng/tốc độ, LRU/TTL/giới hạn bytes và xóa khi logout. NutDoc.test.tsx kiểm tra preload im lặng, hover/focus, debounce, đổi tùy chọn và hủy khi rời trang. Chrome headless với Blaze thật: cold 1.654 ms, prepared 76 ms, replay 47 ms, không có request mới khi phát từ cache. Script/result ở .artifacts/browser-check/latency*. Một lượt kiểm tra thêm giọng Brian gặp backend 503 từ provider; không coi lượt đó là kiểm chứng playback giọng Brian.
+
+Lượt QA tối ưu audio: 128 frontend tests qua; coverage 90,88% statements / 86,77% branches / 88,35% functions / 92,94% lines. Backend 77 tests qua, 22 SQL integration skip do chưa cấu hình SQLSERVER_TEST_ODBC_CONNECTION. Task coverage toàn backend đạt 52,08%, chưa đạt ngưỡng 80% trong môi trường thiếu SQL; task coverage-frontend chạy riêng và qua. Không hạ ngưỡng hoặc bỏ SQL tests.

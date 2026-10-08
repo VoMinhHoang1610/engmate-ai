@@ -3,7 +3,8 @@ import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
 import { useDuLieu } from '../demo/LuuTru';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { dungDoc } from '../demo/amThanh';
 
 export function Flashcard() {
   const { tuVung, onTu, ghiNhanHoc } = useDuLieu();
@@ -17,8 +18,9 @@ export function Flashcard() {
   const [ketQua, setKetQua] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
   const the = boThe[index];
   const xong = !the;
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
+  useEffect(() => () => dungDoc(), []);
   function batDau(all: boolean) {
+    dungDoc();
     setTatCa(all);
     setBoThe(
       all ? tuVung : tuVung.filter((tu) => !tu.henOn || new Date(tu.henOn).getTime() <= Date.now()),
@@ -29,6 +31,7 @@ export function Flashcard() {
   }
   function danhGia(muc: keyof typeof ketQua, ngay: number) {
     if (!the || !lat) return;
+    dungDoc();
     onTu(the.id, ngay);
     setKetQua((cu) => ({ ...cu, [muc]: cu[muc] + 1 }));
     setLat(false);
@@ -106,14 +109,9 @@ export function Flashcard() {
                 </span>
               </button>
               <div className="flash-audio">
-                <button
-                  className="text-button"
-                  onClick={() => {
-                    if (!docTiengAnh(the.tu)) setLoi('Trình duyệt chưa hỗ trợ giọng đọc.');
-                  }}
-                >
+                <NutDoc className="text-button" text={the.tu} preload onError={setLoi}>
                   <BieuTuong ten="volume" size={18} /> Nghe cách đọc
-                </button>
+                </NutDoc>
               </div>
               <div className="rating-buttons">
                 {[

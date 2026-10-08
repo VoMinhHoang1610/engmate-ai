@@ -15,7 +15,7 @@ from fastapi import (
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import text
+from sqlalchemy import func, select
 
 from app.api.dependencies import get_ai_service
 from app.db.database import Record
@@ -105,14 +105,17 @@ def ready(request: Request) -> Record:
     """Readiness requires the database, all tables/views and schema version one."""
     database = request.app.state.database
     with database.transaction() as connection:
-        version = connection.execute(
-            text("SELECT MAX(Version) FROM em.SchemaVersions")
-        ).scalar_one()
+        table = database.models.table("SchemaVersions", connection)
+        version = connection.execute(select(func.max(table.c.Version))).scalar_one()
         if version != 1:
             raise HTTPException(503, "Unsupported database schema version.")
         for name in database.models.table_names:
             database.models.table(name, connection)
-    return {"status": "ok", "database": "sqlserver", "schema_version": version}
+    return {
+        "status": "ok",
+        "database": "mysql" if database.mysql else "sqlserver",
+        "schema_version": version,
+    }
 
 
 @router.post("/auth/register", status_code=201, tags=["auth"])
@@ -212,7 +215,7 @@ def topics(service: Learning) -> list[Record]:
 @router.get("/lessons", tags=["catalogue"])
 def lessons(
     service: Learning,
-    skill: Literal["speaking", "listening", "writing"] | None = None,
+    skill: Literal["speaking", "listening", "reading", "writing"] | None = None,
     offset: Offset = 0,
     limit: Limit = 50,
 ) -> list[Record]:

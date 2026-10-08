@@ -265,7 +265,10 @@ class AuthService:
                 )
             updated = repo.update(
                 "Users",
-                {"UserId": user["UserId"], "Version": bytes.fromhex(data.version)},
+                {
+                    "UserId": user["UserId"],
+                    "Version": self.db.version_value(data.version),
+                },
                 values,
             )
             return self.user_public(updated)

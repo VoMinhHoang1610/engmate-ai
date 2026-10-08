@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { hoSoMau } from '../demo/duLieu';
@@ -39,17 +39,17 @@ describe('Trang đăng nhập độc lập', () => {
     },
   );
 
-  it('requires demo login before accessing learning and settings', () => {
+  it('requires login and then opens home even when starting from a settings link', async () => {
     window.history.replaceState(null, '', '#cai-dat');
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Đăng nhập', level: 1 })).toBeVisible();
     expect(document.title).toBe('Đăng nhập · EngMate-AI');
     expect(screen.queryByLabelText('Chế độ giao diện')).not.toBeInTheDocument();
     dangNhap();
-    expect(screen.getByRole('navigation', { name: 'Menu chính' })).toBeVisible();
-    expect(screen.getByLabelText('Chế độ giao diện')).toBeVisible();
+    expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
+    await waitFor(() => expect(document.querySelector('[data-page="tong-quan"]')).not.toBeNull());
     expect(screen.queryByLabelText('Mật khẩu')).not.toBeInTheDocument();
-    expect(document.title).toBe('Cài đặt · EngMate-AI');
+    expect(document.title).toBe('Tổng quan · EngMate-AI');
   });
 
   it('logs in then enters learning with the saved profile and preferences', async () => {
@@ -61,10 +61,8 @@ describe('Trang đăng nhập độc lập', () => {
     fireEvent.click(screen.getByRole('button', { name: /Đăng xuất/ }));
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
     dangNhap();
-    expect(screen.getByRole('heading', { name: 'Chào mừng, Minh Anh!' })).toBeVisible();
-    expect(screen.queryByRole('navigation', { name: 'Menu chính' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('link', { name: /Vào không gian học tập/ }));
     expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
+    expect(window.location.hash).toBe('#tong-quan');
     expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).hoSo.email).toBe(hoSoMau.email);
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
     expect(screen.queryByLabelText('Mật khẩu')).not.toBeInTheDocument();

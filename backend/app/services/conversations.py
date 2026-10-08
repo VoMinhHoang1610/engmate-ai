@@ -49,7 +49,16 @@ class ConversationService(LearningService):
                 if data.topic_code
                 else None
             )
-            levels = {"A2": 0, "B1": 1, "B2": 2}
+            if not self.db.mysql and data.level not in ("A2", "B1", "B2"):
+                raise HTTPException(
+                    422, "Level is unsupported by the SQL Server schema."
+                )
+            levels = {
+                level: i
+                for i, level in enumerate(
+                    ("Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2")
+                )
+            }
             if (
                 topic
                 and not levels[topic["MinLevel"]]

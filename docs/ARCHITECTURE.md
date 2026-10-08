@@ -1,15 +1,16 @@
 # Kiến trúc
 
-Cập nhật: 2026-10-08. Bản develop demo hợp nhất giao diện đa trang, backend nghiệp vụ và SQL Server. UI dùng localStorage và API mock reply; API nghiệp vụ thử qua Swagger, chưa nối UI.
+Cập nhật: 2026-10-09. Frontend MySQL gọi API nghiệp vụ/JWT; demo giữ localStorage. Backend chọn MySQL/PyMySQL hoặc SQL Server/pyodbc, không tự chạy DDL.
 
 ```mermaid
 flowchart LR
-  UI[React demo] --> Local[localStorage / browser audio]
-  UI --> MockRoute[API mock reply]
+  UI[React MySQL] --> API
+  Demo[React demo] --> Local[localStorage / browser audio]
+  Demo --> MockRoute[API mock reply]
   Client[Swagger / API client] --> API[FastAPI routes + Bearer authentication]
   API --> Service[Auth / Learning / Conversation / Practice / Media services]
   Service --> Repo[SQLAlchemy Core repository]
-  Repo --> DB[SQL Server schema em]
+  Repo --> DB[MySQL EngMateAI hoặc SQL Server em]
   Service --> Files[Private media directory]
   Service --> Mail[Optional SMTP STARTTLS]
   Service --> Port[LLMClient interface]
@@ -37,4 +38,22 @@ flowchart LR
 
 Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
 
-Chi tiết thiết kế: [SQL Server](DATABASE_SQLSERVER.md). Hợp đồng endpoint: [API](API.md). OAuth, email verification, STT, streaming và adapter LLM thật nằm trong [kế hoạch tiếp theo](IMPLEMENTATION_PLAN.md).
+Chi tiết thiết kế: [SQL Server](DATABASE_SQLSERVER.md). Hợp đồng endpoint: [API](API.md). OAuth, email verification, streaming và adapter LLM thật nằm trong [kế hoạch tiếp theo](IMPLEMENTATION_PLAN.md).
+
+## Adapter speech Blaze
+
+Speech routes → SpeechService → HTTPS Blaze. TTS tạo/poll/download job và trả MP3; STT gửi multipart rồi trả transcript. httpx là runtime dependency; key là SecretStr và chỉ ở backend. JWT mặc định, demo loopback opt-in; không thay đổi DB hoặc mock chat. [Chi tiết](BLAZE_SPEECH.md).
+
+Frontend: NutDoc → docTiengAnh → /api/speech/tts → Audio/Blob URL. useThuAm → MediaRecorder → chepLoi → /api/speech/stt → ô văn bản. Hủy request/phát audio, dừng track micro và revoke Blob URL khi rời trang. Speech dùng demo loopback hiện tại; frontend chưa quản lý JWT SQL nên cấu hình DB bật vẫn cần tích hợp auth UI riêng.
+
+Catalog giọng: Settings → GET /api/speech/voices → Blaze options. `caiDat.giongDoc` lưu localStorage, provider đồng bộ data-speech-voice; TTS helper đọc và gửi speaker_id. Đây là cài đặt local, chưa mở rộng schema UserSettings SQL.
+
+## Đồng bộ MySQL — 2026-10-09
+
+MySQL có 24 bảng/2 view/7 trigger, bảy mức, Reading, TuVungBaiHoc, SpeechVoiceId và OnboardingCompletedAt. ModelCatalog ánh xạ tên logic sang bảng/view tiếng Việt. Repository chuyển UUID sang chuỗi, lấy PK sau INSERT và đọc lại UPDATE sau trigger trong cùng transaction. Version BIGINT được mã hóa hex 16 ký tự. Pool dùng READ COMMITTED, UTC, pre-ping/recycle; khóa user SELECT FOR UPDATE bảo vệ retry/chuỗi tin/refresh. Adapter SQL Server giữ schema và OUTPUT/rowversion. [Hướng dẫn](../database/mysql/README.md).
+
+`VITE_DATA_SOURCE=mysql` chọn MysqlLuuTru: token pair chỉ trong bộ nhớ trang, refresh dùng chung và không hồi sinh phiên sau logout. Mở/tải lại trang yêu cầu đăng nhập; token sessionStorage của bản cũ được loại bỏ khi khởi tạo transport. Sau authenticate, form chờ `capNhat({daDangNhap:true})` tải dữ liệu server thành công rồi đổi hash sang Tổng quan; lỗi tải giữ form để thử lại. Context tải hồ sơ/cài đặt/stats/sổ từ từ server, tuần tự hóa ghi theo Version và tải lại sau ghi; không nhập localStorage demo. ThucHanhMySQL lấy revision bài từ catalog, lưu Attempt và nộp backend. Reading/Listening chấm ở server; dictation nghe MP3 không lộ text key. Chat lưu tin/evaluation và đọc lịch sử riêng; flashcard dùng một phiên cho deck, retry giữ UUID/rating. Dashboard dùng thời gian server và số lượt ôn, không cộng phút minh họa khi nhấn nút. AI chat/nói/viết vẫn mock có nhãn.
+
+MySQL gửi Bearer cho speech; local-demo bypass bị tắt khi cấu hình database. SpeechVoiceId lưu qua API, key Blaze chỉ ở backend. Các mô tả localStorage/Reading client và giới hạn SQL Server v1 phía trên áp dụng cho demo hoặc adapter cũ. Migration runner từ chối MySQL bootstrap tự động; dùng `/api/ready` để xác nhận schema đã tạo.
+
+Âm thanh: NutDoc chuẩn bị clip chính sau 250 ms hoặc khi hover/focus. amThanh giữ cache RAM LRU (32 clip/16 MiB, TTL 15 phút), key text/ngôn ngữ/giọng/tốc độ; dùng chung request giữa các caller và hủy độc lập. Cache hit gọi Audio.play ngay trong click handler. Không tự phát trước click; lỗi không cache, logout xóa audio/request. Chưa cache backend hoặc lưu audio lâu dài.

@@ -945,6 +945,12 @@ hr {
   width: 210px;
   font-size: 13px;
 }
+.voice-preview-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .settings-switch {
   appearance: none;
   -webkit-appearance: none;

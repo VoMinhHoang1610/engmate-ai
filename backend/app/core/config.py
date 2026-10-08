@@ -14,7 +14,12 @@ class Settings(BaseModel):
     app_name: str = "EngMate-AI"
     model_config = ConfigDict(hide_input_in_errors=True)
     llm_provider: Literal["mock"] = "mock"
+    blaze_api_key: SecretStr | None = None
+    blaze_tts_model: str = "v2.0_pro"
+    blaze_stt_model: Literal["stt-async-1.0", "stt-async-1.5"] = "stt-async-1.5"
+    blaze_local_demo: bool = False
     database_odbc_connection: SecretStr | None = None
+    database_mysql_url: SecretStr | None = None
     jwt_secret: SecretStr | None = None
     access_token_minutes: int = Field(default=15, ge=1, le=60)
     refresh_token_days: int = Field(default=30, ge=1, le=90)
@@ -33,13 +38,28 @@ class Settings(BaseModel):
     @model_validator(mode="after")
     def validate_database_auth(self) -> "Settings":
         """Require an explicit signing secret when private data is enabled."""
-        if self.database_odbc_connection and (
+        if self.database_mysql_url and self.database_odbc_connection:
+            raise ValueError("Configure only one database connection.")
+        if self.database_mysql_url:
+            from sqlalchemy.engine import make_url
+
+            url = make_url(self.database_mysql_url.get_secret_value())
+            if url.drivername != "mysql+pymysql" or not url.database:
+                raise ValueError(
+                    "DATABASE_MYSQL_URL requires mysql+pymysql and a database."
+                )
+        if self.database_configured and (
             not self.jwt_secret or len(self.jwt_secret.get_secret_value()) < 32
         ):
             raise ValueError(
                 "JWT_SECRET must contain at least 32 characters when DB is enabled."
             )
         return self
+
+    @property
+    def database_configured(self) -> bool:
+        """Private data requires authentication with either database driver."""
+        return bool(self.database_mysql_url or self.database_odbc_connection)
 
 
 def get_settings() -> Settings:
@@ -50,7 +70,12 @@ def get_settings() -> Settings:
         {
             "app_name": os.getenv("APP_NAME", "EngMate-AI"),
             "llm_provider": os.getenv("LLM_PROVIDER", "mock"),
+            "blaze_api_key": os.getenv("BLAZE_API_KEY") or None,
+            "blaze_tts_model": os.getenv("BLAZE_TTS_MODEL", "v2.0_pro"),
+            "blaze_stt_model": os.getenv("BLAZE_STT_MODEL", "stt-async-1.5"),
+            "blaze_local_demo": os.getenv("BLAZE_LOCAL_DEMO", "false"),
             "database_odbc_connection": os.getenv("DATABASE_ODBC_CONNECTION") or None,
+            "database_mysql_url": os.getenv("DATABASE_MYSQL_URL") or None,
             "jwt_secret": os.getenv("JWT_SECRET") or None,
             "access_token_minutes": os.getenv("ACCESS_TOKEN_MINUTES", "15"),
             "refresh_token_days": os.getenv("REFRESH_TOKEN_DAYS", "30"),

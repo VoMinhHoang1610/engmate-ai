@@ -1,14 +1,22 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
-import { docTiengAnh } from '../demo/amThanh';
+import { docTiengAnh, xoaBoNhoAmThanh } from '../demo/amThanh';
 import { luuPhienDemo } from '../../tests/demo';
 
+const voices = [
+  { id: 'UK-Nu-1-TM', name: 'Helen', language: 'en', gender: 'female' },
+  { id: 'UK-Nu-2-BL', name: 'Alice', language: 'en', gender: 'female' },
+  { id: 'UK-Nam-1-DT', name: 'Brian', language: 'en', gender: 'male' },
+];
+
 beforeEach(() => {
+  xoaBoNhoAmThanh();
   localStorage.clear();
   luuPhienDemo();
   window.history.replaceState(null, '', '#cai-dat');
   vi.stubGlobal('scrollTo', vi.fn());
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => voices }));
 });
 
 describe('Cài đặt', () => {
@@ -41,6 +49,7 @@ describe('Cài đặt', () => {
     expect(screen.getByLabelText('Chế độ giao diện')).toHaveValue('sang');
     expect(screen.getByRole('switch')).not.toBeChecked();
     expect(screen.getByLabelText('Tốc độ đọc tiếng Anh')).toHaveValue('1');
+    expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toHaveValue('UK-Nu-1-TM');
     expect(screen.getByRole('button', { name: 'Mở menu tài khoản' })).toHaveTextContent('L');
     expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).hoSo.ten).toBe('Lan Anh');
     restored.unmount();
@@ -76,24 +85,93 @@ describe('Cài đặt', () => {
     expect(remove).toHaveBeenCalledWith('change', expect.any(Function));
   });
 
-  it('applies the selected speech speed to English playback', () => {
-    const speak = vi.fn();
-    vi.stubGlobal('speechSynthesis', { cancel: vi.fn(), getVoices: () => [], speak });
+  it('applies the selected speech speed to Blaze playback', async () => {
+    const play = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal(
-      'SpeechSynthesisUtterance',
+      'Audio',
       class {
-        text: string;
-        lang = '';
-        rate = 1;
-        constructor(text: string) {
-          this.text = text;
-        }
+        load = vi.fn();
+        play = play;
+        pause = vi.fn();
+        removeAttribute = vi.fn();
       },
     );
-    render(<App />);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => voices,
+      blob: async () => new Blob(['audio'], { type: 'audio/mpeg' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:speech');
+    const revokeUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const view = render(<App />);
     fireEvent.change(screen.getByLabelText('Tốc độ đọc tiếng Anh'), { target: { value: '0.75' } });
-    expect(docTiengAnh('Hello', 0.85)).toBe(true);
-    expect(speak.mock.calls[0][0].rate).toBeCloseTo(0.6375);
-    expect(speak.mock.calls[0][0].lang).toBe('en-US');
+    await docTiengAnh('Hello', 0.85);
+    const body = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
+    expect(body.speed).toBeCloseTo(0.6375);
+    expect(body.language).toBe('en');
+    expect(play).toHaveBeenCalledOnce();
+    view.unmount();
+    createUrl.mockRestore();
+    revokeUrl.mockRestore();
+  });
+  it('loads voices, saves the selected voice and previews it after reload', async () => {
+    const play = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal(
+      'Audio',
+      class {
+        load = vi.fn();
+        play = play;
+        pause = vi.fn();
+        removeAttribute = vi.fn();
+      },
+    );
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => voices,
+      blob: async () => new Blob(['audio'], { type: 'audio/mpeg' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:speech');
+    const revokeUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const view = render(<App />);
+    await waitFor(() => expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toBeEnabled());
+    expect(screen.getByRole('option', { name: 'Brian' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Giọng đọc tiếng Anh'), {
+      target: { value: 'UK-Nu-2-BL' },
+    });
+    expect(document.documentElement).toHaveAttribute('data-speech-voice', 'UK-Nu-2-BL');
+    await waitFor(() =>
+      expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).caiDat.giongDoc).toBe(
+        'UK-Nu-2-BL',
+      ),
+    );
+    view.unmount();
+    expect(document.documentElement).not.toHaveAttribute('data-speech-voice');
+    const restored = render(<App />);
+    await waitFor(() => expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toBeEnabled());
+    expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toHaveValue('UK-Nu-2-BL');
+    fireEvent.click(screen.getByRole('button', { name: 'Nghe thử' }));
+    await waitFor(() => expect(play).toHaveBeenCalledOnce());
+    const tts = fetchMock.mock.calls.find(([url]) => url === '/api/speech/tts')!;
+    expect(JSON.parse(tts[1].body).speaker_id).toBe('UK-Nu-2-BL');
+    restored.unmount();
+    createUrl.mockRestore();
+    revokeUrl.mockRestore();
+  });
+  it('lets the user retry a failed catalog request', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockRejectedValueOnce(new TypeError('Offline'))
+        .mockResolvedValue({ ok: true, json: async () => voices }),
+    );
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Offline');
+    expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Tải lại danh sách' }));
+    await waitFor(() => expect(screen.getByLabelText('Giọng đọc tiếng Anh')).toBeEnabled());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { useThuAm } from '../hooks/useThuAm';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { dungDoc } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
 import { ChonTrinhDo } from '../components/ChonTrinhDo';
 import { cauNoiTheoTrinhDo, layTrinhDoHoc } from '../demo/trinhDo';
@@ -12,95 +14,22 @@ export function LuyenNoi() {
   const [trinhDo, setTrinhDo] = useState(() => layTrinhDoHoc(hoSo.trinhDo));
   const cauMau = cauNoiTheoTrinhDo[trinhDo];
   const [bai, setBai] = useState(0);
-  const [dangGhi, setDangGhi] = useState(false);
-  const [dangDung, setDangDung] = useState(false);
-  const [audio, setAudio] = useState('');
   const [vanBan, setVanBan] = useState('');
   const [ketQua, setKetQua] = useState(false);
   const [loi, setLoi] = useState('');
-  const [dangXin, setDangXin] = useState(false);
-  const recorder = useRef<MediaRecorder | null>(null);
-  const stream = useRef<MediaStream | null>(null);
-  const url = useRef('');
-  const mounted = useRef(true);
-  const gioiHan = useRef<number | null>(null);
-  function boBanGhi() {
-    if (url.current) URL.revokeObjectURL(url.current);
-    url.current = '';
-    setAudio('');
-  }
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      if (gioiHan.current !== null) window.clearTimeout(gioiHan.current);
-      if (recorder.current?.state === 'recording') recorder.current.stop();
-      stream.current?.getTracks().forEach((track) => track.stop());
-      if (url.current) URL.revokeObjectURL(url.current);
-      window.speechSynthesis?.cancel();
-    };
-  }, []);
-  async function ghiAm() {
-    if (dangGhi) {
-      setDangDung(true);
-      recorder.current?.stop();
-      return;
-    }
-    setLoi('');
-    if (!navigator.mediaDevices?.getUserMedia || !('MediaRecorder' in window)) {
-      setLoi('Trình duyệt chưa hỗ trợ ghi âm. Bạn vẫn có thể nhập câu để thử phân tích mẫu.');
-      return;
-    }
-    setDangXin(true);
-    try {
-      const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!mounted.current) {
-        mic.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      stream.current = mic;
-      const media = new MediaRecorder(mic);
-      recorder.current = media;
-      const chunks: Blob[] = [];
-      media.ondataavailable = (event) => {
-        if (event.data.size) chunks.push(event.data);
-      };
-      media.onstop = () => {
-        if (gioiHan.current !== null) window.clearTimeout(gioiHan.current);
-        mic.getTracks().forEach((track) => track.stop());
-        if (!mounted.current || recorder.current !== media) return;
-        if (url.current) URL.revokeObjectURL(url.current);
-        url.current = URL.createObjectURL(new Blob(chunks, { type: media.mimeType }));
-        setAudio(url.current);
-        setDangGhi(false);
-        setDangDung(false);
-      };
-      media.start();
-      gioiHan.current = window.setTimeout(() => {
-        if (media.state === 'recording') {
-          setDangDung(true);
-          media.stop();
-        }
-      }, 60_000);
-      setDangGhi(true);
-      setKetQua(false);
-    } catch {
-      stream.current?.getTracks().forEach((track) => track.stop());
-      if (mounted.current)
-        setLoi('Không truy cập được micro. Hãy cho phép micro trong trình duyệt và thử lại.');
-    } finally {
-      if (mounted.current) setDangXin(false);
-    }
-  }
+  const thuAm = useThuAm((text) => {
+    setVanBan(text);
+    setKetQua(false);
+  }, setLoi);
   return (
     <>
       <TieuDeTrang ten="Speaking" />
       <ChonTrinhDo
         value={trinhDo}
-        disabled={dangGhi || dangXin || dangDung}
+        disabled={thuAm.active}
         onChange={(value) => {
-          window.speechSynthesis?.cancel();
-          boBanGhi();
+          dungDoc();
+          thuAm.clear();
           setTrinhDo(value);
           setBai(0);
           setVanBan('');
@@ -119,21 +48,25 @@ export function LuyenNoi() {
           <div className="speaking-prompt">
             <span className="eyebrow">LẮNG NGHE VÀ LẶP LẠI</span>
             <h2>“{cauMau[bai]}”</h2>
-            <button
+            <NutDoc
               className="btn secondary"
-              onClick={() => {
-                if (!docTiengAnh(cauMau[bai], 0.85)) setLoi('Trình duyệt chưa hỗ trợ đọc câu mẫu.');
-              }}
+              text={cauMau[bai]}
+              rate={0.85}
+              preload
+              onError={setLoi}
+              disabled={thuAm.active}
             >
               <BieuTuong ten="volume" /> Nghe câu mẫu
-            </button>
+            </NutDoc>
           </div>
-          <div className={`record-zone ${dangGhi ? 'recording' : ''}`}>
+          <div className={`record-zone ${thuAm.recording ? 'recording' : ''}`}>
             <div className="record-visual">
               <div className="record-mate">
                 <LinhThu
                   size={110}
-                  camXuc={dangGhi ? 'listening' : dangXin || dangDung ? 'thinking' : 'encouraging'}
+                  camXuc={
+                    thuAm.recording ? 'listening' : thuAm.processing ? 'thinking' : 'encouraging'
+                  }
                 />
               </div>
               <div className="sound-wave" aria-hidden="true">
@@ -150,27 +83,22 @@ export function LuyenNoi() {
             </div>
             <button
               className="record-button"
-              disabled={dangXin || dangDung}
-              aria-label={dangGhi ? 'Dừng ghi âm' : 'Bắt đầu ghi âm'}
-              onClick={() => void ghiAm()}
+              disabled={thuAm.processing}
+              aria-label={thuAm.recording ? 'Dừng ghi âm' : 'Bắt đầu ghi âm'}
+              onClick={() => {
+                setKetQua(false);
+                void thuAm.toggle();
+              }}
             >
-              <BieuTuong ten={dangGhi ? 'pause' : 'mic'} size={32} />
+              <BieuTuong ten={thuAm.recording ? 'pause' : 'mic'} size={32} />
             </button>
-            <strong role="status">
-              {dangXin
-                ? 'Đang xin quyền micro...'
-                : dangDung
-                  ? 'Đang hoàn tất bản ghi...'
-                  : dangGhi
-                    ? 'Đang ghi âm... Nhấn để dừng'
-                    : 'Nhấn micro để bắt đầu'}
-            </strong>
+            <strong role="status">{thuAm.status}</strong>
             <span>Tối đa 60 giây</span>
           </div>
-          {audio && (
+          {thuAm.audio && (
             <div className="audio-preview">
               <span>Bản ghi của bạn</span>
-              <audio controls src={audio} />
+              <audio controls src={thuAm.audio} />
             </div>
           )}
           {loi && (
@@ -182,8 +110,9 @@ export function LuyenNoi() {
             Bản chép lời / câu bạn muốn phân tích
             <textarea
               rows={3}
-              placeholder="Nhập câu bạn vừa nói để xem phân tích AI..."
+              placeholder="Thu âm để tự chép lời, hoặc nhập câu bạn vừa nói..."
               value={vanBan}
+              disabled={thuAm.active}
               onChange={(e) => {
                 setVanBan(e.target.value);
                 setKetQua(false);
@@ -195,10 +124,10 @@ export function LuyenNoi() {
           <div className="form-footer">
             <button
               className="btn secondary"
-              disabled={dangGhi || dangXin || dangDung}
+              disabled={thuAm.active}
               onClick={() => {
-                window.speechSynthesis?.cancel();
-                boBanGhi();
+                dungDoc();
+                thuAm.clear();
                 setBai((bai + 1) % cauMau.length);
                 setVanBan('');
                 setKetQua(false);
@@ -208,7 +137,7 @@ export function LuyenNoi() {
             </button>
             <button
               className="btn primary"
-              disabled={!vanBan.trim() || ketQua}
+              disabled={!vanBan.trim() || ketQua || thuAm.active}
               onClick={() => {
                 setKetQua(true);
                 ghiNhanHoc(2);

@@ -1,3 +1,4 @@
+import { mysqlEnabled, authenticate, api } from '../api/database';
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
@@ -33,6 +34,8 @@ export function TaiKhoan() {
   const [matKhau, setMatKhau] = useState('');
   const [xacNhan, setXacNhan] = useState('');
   const [thongBao, setThongBao] = useState('');
+  const [pending, setPending] = useState(false);
+  const submitting = useRef(false);
   const [provider, setProvider] = useState('');
   const [lanChuyen, setLanChuyen] = useState(0);
   const [soKyTu, setSoKyTu] = useState(0);
@@ -80,7 +83,7 @@ export function TaiKhoan() {
   }, [intro]);
 
   function doiCheDo(next: CheDoTaiKhoan) {
-    if (next === cheDo || intro !== 'ready') return;
+    if (next === cheDo || intro !== 'ready' || submitting.current) return;
     chieuCao.current = khung.current?.getBoundingClientRect().height ?? 0;
     setHuong(next === 'dang-nhap' ? 'backward' : 'forward');
     setCheDo(next);
@@ -131,8 +134,39 @@ export function TaiKhoan() {
     };
   }, [intro]);
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
+    if (mysqlEnabled) {
+      if (submitting.current) return;
+      if (cheDo === 'dang-ky' && matKhau !== xacNhan) {
+        setThongBao('Mật khẩu nhập lại không khớp.');
+        return;
+      }
+      submitting.current = true;
+      setPending(true);
+      try {
+        if (cheDo === 'quen-mat-khau') {
+          await api('/auth/forgot-password', 'POST', { email });
+          setThongBao('Nếu tài khoản tồn tại, yêu cầu đặt lại mật khẩu đã được ghi nhận.');
+        } else {
+          await authenticate(
+            cheDo === 'dang-ky',
+            cheDo === 'dang-ky'
+              ? { username: taiKhoan, email, password: matKhau, display_name: ten }
+              : { identifier: taiKhoan, password: matKhau },
+          );
+          // Wait for the provider's account data before leaving the login form.
+          if ((await capNhat({ daDangNhap: true })) === false) return;
+          window.location.hash = 'tong-quan';
+        }
+      } catch (error) {
+        setThongBao(error instanceof Error ? error.message : 'Chưa đăng nhập được.');
+      } finally {
+        submitting.current = false;
+        setPending(false);
+      }
+      return;
+    }
     if (cheDo === 'quen-mat-khau') {
       setThongBao('Yêu cầu đã được ghi nhận trên trình duyệt này.');
       return;
@@ -158,6 +192,7 @@ export function TaiKhoan() {
       },
     });
     setThongBao('Đã vào tài khoản.');
+    window.location.hash = 'tong-quan';
   }
 
   const dangKy = cheDo === 'dang-ky';
@@ -234,7 +269,11 @@ export function TaiKhoan() {
             >
               <BieuTuong ten="logout" size={18} /> Đăng xuất
             </button>
-            <p className="auth-storage-note">Thông tin học tập được lưu trên trình duyệt này.</p>
+            <p className="auth-storage-note">
+              {mysqlEnabled
+                ? 'Thông tin học tập được lưu theo tài khoản.'
+                : 'Thông tin học tập được lưu trên trình duyệt này.'}
+            </p>
             <p role="status" className="feedback">
               {thongBao}
             </p>
@@ -314,8 +353,8 @@ export function TaiKhoan() {
                         Mật khẩu
                         <input
                           type="password"
-                          placeholder="Tối thiểu 8 ký tự"
-                          minLength={1}
+                          placeholder={mysqlEnabled ? 'Tối thiểu 10 ký tự' : 'Tối thiểu 8 ký tự'}
+                          minLength={mysqlEnabled && dangKy ? 10 : 1}
                           required
                           value={matKhau}
                           onChange={(e) => setMatKhau(e.target.value)}
@@ -328,8 +367,8 @@ export function TaiKhoan() {
                         Nhập lại mật khẩu
                         <input
                           type="password"
-                          placeholder="Tối thiểu 8 ký tự"
-                          minLength={1}
+                          placeholder={mysqlEnabled ? 'Tối thiểu 10 ký tự' : 'Tối thiểu 8 ký tự'}
+                          minLength={mysqlEnabled && dangKy ? 10 : 1}
                           required
                           value={xacNhan}
                           onChange={(e) => setXacNhan(e.target.value)}
@@ -346,8 +385,14 @@ export function TaiKhoan() {
                         Quên mật khẩu?
                       </button>
                     )}
-                    <button className="btn primary full-width" type="submit">
-                      {khoiPhuc ? 'Gửi yêu cầu' : dangKy ? 'Tạo tài khoản' : 'Đăng nhập'}
+                    <button className="btn primary full-width" type="submit" disabled={pending}>
+                      {pending
+                        ? 'Đang xử lý…'
+                        : khoiPhuc
+                          ? 'Gửi yêu cầu'
+                          : dangKy
+                            ? 'Tạo tài khoản'
+                            : 'Đăng nhập'}
                       <BieuTuong ten="arrow" size={18} />
                     </button>
                   </form>
@@ -380,7 +425,9 @@ export function TaiKhoan() {
                     </button>
                   )}
                   <p className="auth-storage-note">
-                    Thông tin học tập được lưu trên trình duyệt này.
+                    {mysqlEnabled
+                      ? 'Thông tin học tập được lưu theo tài khoản.'
+                      : 'Thông tin học tập được lưu trên trình duyệt này.'}
                   </p>
                   <p role="status" className="feedback">
                     {thongBao}

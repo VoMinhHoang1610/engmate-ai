@@ -59,12 +59,25 @@ class LearningService:
                 )
                 if asset["Purpose"] != "avatar":
                     raise HTTPException(422, "Asset is not an avatar.")
-            values = database_fields(data.model_dump(exclude={"version"}))
+            values = database_fields(
+                data.model_dump(exclude={"version", "onboarding_completed"})
+            )
+            if not self.db.mysql and data.cefr_level not in ("A2", "B1", "B2"):
+                raise HTTPException(
+                    422, "Level is unsupported by the SQL Server schema."
+                )
+            if self.db.mysql and data.onboarding_completed is not None:
+                previous = repo.one("LearnerProfiles", UserId=user_id)
+                values["OnboardingCompletedAt"] = (
+                    previous["OnboardingCompletedAt"] or now()
+                    if data.onboarding_completed
+                    else None
+                )
             values["UpdatedAt"] = now()
             return public(
                 repo.update(
                     "LearnerProfiles",
-                    {"UserId": user_id, "Version": bytes.fromhex(data.version)},
+                    {"UserId": user_id, "Version": self.db.version_value(data.version)},
                     values,
                 )
             )
@@ -77,12 +90,16 @@ class LearningService:
     def update_settings(self, user_id: int, data: SettingsUpdate) -> Record:
         """Persist only the supported preferences with lost-update protection."""
         with self.transaction(user_id) as repo:
-            values = database_fields(data.model_dump(exclude={"version"}))
+            values = database_fields(
+                data.model_dump(exclude={"version"}, exclude_none=True)
+            )
+            if "SpeechVoiceId" in values and not self.db.mysql:
+                raise HTTPException(422, "Voice preference requires the MySQL schema.")
             values["UpdatedAt"] = now()
             return public(
                 repo.update(
                     "UserSettings",
-                    {"UserId": user_id, "Version": bytes.fromhex(data.version)},
+                    {"UserId": user_id, "Version": self.db.version_value(data.version)},
                     values,
                 )
             )
@@ -114,14 +131,33 @@ class LearningService:
                 "LessonQuestions", "Position", 0, 100, LessonId=lesson_id
             )
             lesson["questions"] = [self.question(repo, row) for row in questions]
+            lesson["vocabulary"] = (
+                [
+                    public(row)
+                    for row in repo.page(
+                        "LessonVocabulary", "Position", 0, 100, LessonId=lesson_id
+                    )
+                ]
+                if self.db.mysql
+                else []
+            )
             return lesson
+
+    def dictation_text(self, question_id: int) -> str:
+        """Resolve only a published dictation prompt for audio synthesis."""
+        with self.transaction() as repo:
+            question = repo.one(
+                "LessonQuestions", QuestionId=question_id, QuestionType="dictation"
+            )
+            repo.one("Lessons", LessonId=question["LessonId"], IsPublished=True)
+            return str(question["ExpectedText"])
 
     @staticmethod
     def question(repo: Repository, row: Record) -> Record:
         """Hide expected text, explanations and correct-option flags until graded."""
         result = public(row, ("ExpectedText", "Explanation"))
         result["options"] = [
-            public(option, ("IsCorrect",))
+            public(option, ("IsCorrect", "CorrectQuestionId"))
             for option in repo.page(
                 "QuestionOptions", "Position", 0, 100, QuestionId=row["QuestionId"]
             )
@@ -199,7 +235,7 @@ class LearningService:
                         "UserVocabularyId": identity,
                         "UserId": user_id,
                         "ArchivedAt": None,
-                        "Version": bytes.fromhex(data.version),
+                        "Version": self.db.version_value(data.version),
                     },
                     values,
                 )
@@ -216,7 +252,7 @@ class LearningService:
                 {
                     "UserVocabularyId": identity,
                     "UserId": user_id,
-                    "Version": bytes.fromhex(version),
+                    "Version": self.db.version_value(version),
                 },
                 {"ArchivedAt": now(), "UpdatedAt": now()},
             )
@@ -262,7 +298,7 @@ class LearningService:
                         "UserVocabularyId": identity,
                         "UserId": user_id,
                         "ArchivedAt": None,
-                        "Version": bytes.fromhex(data.version),
+                        "Version": self.db.version_value(data.version),
                     },
                     {"IsMastered": data.is_mastered, "UpdatedAt": now()},
                 )
@@ -366,6 +402,7 @@ class LearningService:
             ).mappings()
             totals["daily"] = [public(dict(row)) for row in rows]
             totals["daily_goal_minutes"] = profile["DailyGoalMinutes"]
+            totals["today"] = today.isoformat()
             return totals
 
     def evaluation(self, user_id: int, identity: int) -> Record:

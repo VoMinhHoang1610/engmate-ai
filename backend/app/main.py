@@ -11,6 +11,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError, NoSuchTableError
 
 from app.api.learning_routes import router as learning_router
 from app.api.routes import router
+from app.api.speech_routes import router as speech_router
 from app.core.config import Settings, get_settings
 from app.core.request_limits import RequestLimits
 from app.db.database import Database
@@ -47,6 +48,7 @@ def create_app(
     )
     application.include_router(router)
     application.include_router(learning_router)
+    application.include_router(speech_router)
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(
@@ -66,7 +68,11 @@ def create_app(
     @application.exception_handler(IntegrityError)
     async def integrity_error(request: Request, exc: IntegrityError) -> JSONResponse:
         """Translate SQL constraints without exposing statements or parameter values."""
-        duplicate = "2601" in str(exc.orig) or "2627" in str(exc.orig)
+        duplicate = (
+            "2601" in str(exc.orig)
+            or "2627" in str(exc.orig)
+            or getattr(exc.orig, "args", (None,))[0] == 1062
+        )
         return JSONResponse(
             status_code=409 if duplicate else 422,
             content={

@@ -1,3 +1,8 @@
+import { FlashcardMySQL } from './pages/FlashcardMySQL';
+import { HoiThoaiMySQL } from './pages/HoiThoaiMySQL';
+import { mysqlEnabled } from './api/database';
+import { ThucHanhMySQL } from './pages/ThucHanhMySQL';
+import { dungDoc } from './demo/amThanh';
 import { useEffect, useState } from 'react';
 import { BieuTuong } from './components/BieuTuong';
 import { Logo } from './components/Logo';
@@ -55,7 +60,7 @@ function KhungTrang() {
       setTrang(layTrang());
       setHash(window.location.hash);
       setMenu(false);
-      window.speechSynthesis?.cancel();
+      dungDoc();
       window.scrollTo?.({ top: 0, behavior: 'auto' });
     };
     window.addEventListener('hashchange', change);
@@ -76,14 +81,14 @@ function KhungTrang() {
   const pages = {
     'tong-quan': <TongQuan />,
     'lo-trinh': <LoTrinhHoc />,
-    'hoi-thoai-ai': <HoiThoaiAI key={hash} />,
-    'luyen-noi': <LuyenNoi />,
+    'hoi-thoai-ai': mysqlEnabled ? <HoiThoaiMySQL key={hash} /> : <HoiThoaiAI key={hash} />,
+    'luyen-noi': mysqlEnabled ? <ThucHanhMySQL key={hash} skill="speaking" /> : <LuyenNoi />,
     'chu-de-nhap-vai': <ChuDeNhapVai />,
-    'luyen-nghe': <LuyenNghe />,
-    'luyen-viet': <LuyenViet />,
-    'luyen-doc': <LuyenDoc />,
+    'luyen-nghe': mysqlEnabled ? <ThucHanhMySQL key={hash} skill="listening" /> : <LuyenNghe />,
+    'luyen-viet': mysqlEnabled ? <ThucHanhMySQL key={hash} skill="writing" /> : <LuyenViet />,
+    'luyen-doc': mysqlEnabled ? <ThucHanhMySQL key={hash} skill="reading" /> : <LuyenDoc />,
     'so-tu-vung': <SoTuVung />,
-    flashcard: <Flashcard />,
+    flashcard: mysqlEnabled ? <FlashcardMySQL /> : <Flashcard />,
     'ho-so': <HoSo />,
     'cai-dat': <CaiDat key={hash} />,
   };

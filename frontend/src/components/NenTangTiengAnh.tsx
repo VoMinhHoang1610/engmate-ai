@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BieuTuong } from './BieuTuong';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { dungDoc } from '../demo/amThanh';
 
 const nenTang: Record<string, { text: string; nghia: string }[]> = {
   'Chữ cái': Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ', (text) => ({ text, nghia: '' })),
@@ -30,7 +31,7 @@ const nenTang: Record<string, { text: string; nghia: string }[]> = {
 export function NenTangTiengAnh() {
   const [muc, setMuc] = useState('Chữ cái');
   const [loi, setLoi] = useState('');
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
+  useEffect(() => () => dungDoc(), []);
   return (
     <section className="panel beginner-basics" aria-label="Bài học đầu tiên">
       <h2>Làm quen tiếng Anh</h2>
@@ -47,7 +48,7 @@ export function NenTangTiengAnh() {
             aria-controls="basics-content"
             className={muc === item ? 'active' : ''}
             onClick={() => {
-              window.speechSynthesis?.cancel();
+              dungDoc();
               setMuc(item);
               setLoi('');
             }}
@@ -63,22 +64,18 @@ export function NenTangTiengAnh() {
         className={`basics-grid ${muc === 'Lời chào' ? 'phrases' : ''}`}
       >
         {nenTang[muc].map((item) => (
-          <button
+          <NutDoc
             key={item.text}
             className="basics-word"
             aria-label={`Nghe ${item.text}`}
-            onClick={() => {
-              setLoi(
-                docTiengAnh(item.text, 0.7)
-                  ? ''
-                  : 'Trình duyệt chưa hỗ trợ giọng đọc. Bạn vẫn có thể đọc mẫu trên các ô.',
-              );
-            }}
+            text={item.text}
+            rate={0.7}
+            onError={setLoi}
           >
             <strong lang="en">{item.text}</strong>
             {item.nghia && <span>{item.nghia}</span>}
             <BieuTuong ten="volume" size={16} />
-          </button>
+          </NutDoc>
         ))}
       </div>
       {loi && (

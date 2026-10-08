@@ -16,7 +16,7 @@ from pydantic import (
 )
 
 # Schema v1 CHECK constraints only permit these persisted levels.
-DatabaseLevel = Literal["A2", "B1", "B2"]
+DatabaseLevel = Literal["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"]
 
 MAX_ID = 9223372036854775807
 
@@ -122,6 +122,7 @@ class ProfileUpdate(Versioned):
     cefr_level: DatabaseLevel = "A2"
     learning_goal: str = Field(default="Giao tiếp tự tin", min_length=1, max_length=200)
     daily_goal_minutes: int = Field(default=20, ge=10, le=60)
+    onboarding_completed: bool | None = None
     time_zone_id: str = Field(default="Asia/Ho_Chi_Minh", max_length=64)
 
     @field_validator("birth_date")
@@ -149,6 +150,9 @@ class SettingsUpdate(Versioned):
     theme: Literal["light", "dark", "system"]
     reduced_motion: bool
     speech_rate: float
+    speech_voice_id: str | None = Field(
+        default=None, max_length=120, pattern=r"^[A-Za-z0-9_-]+$"
+    )
 
     @field_validator("speech_rate")
     @classmethod

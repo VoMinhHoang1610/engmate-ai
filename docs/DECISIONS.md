@@ -1,5 +1,13 @@
 # Quyết định kỹ thuật
 
+2026-10-09 — Luồng mở ứng dụng/đăng nhập: theo yêu cầu hiện đăng nhập trước mỗi lần mở trang MySQL, giữ token trong bộ nhớ thay vì khôi phục sessionStorage; không thay tài khoản/dữ liệu hay chính sách JWT của backend. Form chờ thao tác tải context sau authenticate rồi điều hướng Tổng quan. Chọn chờ Promise của context thay sự kiện `engmate-login` không có kết quả trả về để nút xử lý/lỗi gắn với toàn bộ quá trình. Demo cũng chuyển Tổng quan sau đăng nhập; các fixture demo đã đăng nhập vẫn kiểm tra trang học riêng. Assertion cũ chờ bấm thêm liên kết vào học/chuyển về trang Cài đặt được thay bằng kiểm tra vào Tổng quan tự động vì đây là hành vi người dùng yêu cầu.
+
+2026-10-09 — Kết nối MySQL và frontend: sau khi người dùng cung cấp connection và yêu cầu đồng bộ, chọn SQLAlchemy Core/PyMySQL, giữ service/hợp đồng API và ánh xạ bảng tiếng Việt thay vì đổi DDL hoặc tạo ORM mới. PyMySQL[rsa] hỗ trợ xác thực caching_sha2_password của MySQL 8; dependencies được khóa trong requirements. Theo [SQLAlchemy MySQL dialect](https://docs.sqlalchemy.org/en/20/dialects/mysql.html), dùng INSERT + PK/SELECT và UPDATE + SELECT trong transaction, không dùng OUTPUT/RETURNING của SQL Server. READ COMMITTED + SELECT FOR UPDATE theo user bảo vệ retry; mỗi kết nối đặt UTC. Token Version giữ hex 16 ký tự để UI dùng cùng hợp đồng.
+
+Frontend chọn `VITE_DATA_SOURCE=mysql`, lấy dữ liệu có xác thực từ server; demo vẫn có thể chạy độc lập. Không nhập tự động localStorage vì dữ liệu demo không có ownership đáng tin cậy. Chỉ token phiên ở sessionStorage; secrets DB/Blaze ở backend. MySQL lưu đủ bảy mức, onboarding và giọng; AI nói/viết/chat vẫn mock. Bộ test dùng schema riêng, rollback API workflows; browser E2E dùng schema riêng khác và mock speech để không ghi tài khoản thử vào database người dùng hoặc phát sinh phí.
+
+2026-10-09: theo yêu cầu chuyển sang MySQL, chuẩn bị bootstrap riêng trong file SQL người dùng cung cấp trước khi sửa backend. Giữ tên bảng tiếng Việt của file; thêm TrinhDoCEFR/TuVungBaiHoc, mở Reading qua các bảng bài học hiện có, giữ ràng buộc ownership. Chọn OnboardingCompletedAt thay cờ lặp và SpeechVoiceId lấy catalog từ provider; không hard-code danh sách giọng/key. Seed đủ nội dung frontend và không sửa revision đã xuất bản khi chạy lại. Backend SQL Server chưa thay đổi; đổi adapter là bước sau khi người dùng chạy schema.
+
 ## 2026-10-08 — Hợp nhất UI mới với backend SQL v1
 
 - Giữ luồng làm quen, Reading/lộ trình bảy mức, hỗ trợ Mate mới và toàn bộ backend đã có trên develop. Giữ sửa lỗi phiên intro, username và storage jsdom của develop.
@@ -109,3 +117,13 @@
 - Lockfile backend/npm được giữ đồng bộ với manifest. Vitest/coverage dùng 4.1.11; nguồn phiên bản vá: [advisory của Vitest](https://github.com/vitest-dev/vitest/security/advisories/GHSA-82fw-gwwq-j7x9).
 - DB/auth/chat streaming được làm theo backlog khi bắt đầu nghiệp vụ; scaffold không tạo database hoặc giả lập đăng nhập.
 - Bản nguồn cũ được sao lưu trong `.artifacts/before-reset-*`; Git history và môi trường cài dependency hiện có tiếp tục dùng cho checkout này.
+
+## 2026-10-08 — Blaze speech adapter
+
+Theo yêu cầu nối key TTS/STT, dùng httpx async (đã có pin 0.28.1 trong dev lock) làm runtime dependency thay vì SDK mới. TTS poll trong timeout và trả MP3 vì payload Blaze thực tế là MP3; không tin URL audio từ provider. STT synchronous, không lưu DB; mặc định JWT, local demo opt-in. Không nối UI hoặc biến speech thành LLM/chấm phát âm.
+
+2026-10-08: theo yêu cầu tiếp nối, đổi toàn bộ nút Nghe sang NutDoc gọi backend; chia sẻ useThuAm cho Speaking/Hội thoại. Văn bản STT là bản nháp sửa được, không tự gửi chat, không biến feedback mẫu thành chấm phát âm. Không giữ key ở frontend và không dùng browser speech synthesis để thay thế kết quả Blaze khi lỗi.
+
+2026-10-08: lấy danh sách giọng qua endpoint backend thay vì hard-code 27 giọng vào UI. Giọng người dùng chọn là cài đặt trình duyệt, dùng cùng vòng đời localStorage hiện có; không mở rộng SQL ngoài phạm vi. Preview dùng TTS cùng giọng/tốc độ để phản ánh cách đọc trong bài học.
+
+2026-10-08: giảm độ trễ bằng preload có chọn lọc và cache RAM theo text/voice/speed. Dùng chung generation giữa preload/click, mỗi caller hủy độc lập; cache bị chặn bởi số clip/bytes/TTL và xóa khi logout. Chưa thêm streaming, lưu audio lâu dài hoặc thay giọng người dùng bằng browser synthesis. Lần tạo đầu vẫn phụ thuộc Blaze; preload có thể tốn credit, nên danh sách nhiều nút không tải hàng loạt.

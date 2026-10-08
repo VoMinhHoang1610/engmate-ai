@@ -53,6 +53,7 @@ class PracticeService(LearningService):
                 "speaking": {"shadowing"},
                 "listening": {"multiple_choice", "dictation"},
                 "writing": {"writing"},
+                "reading": {"multiple_choice"},
             }
             if data.mode not in valid[lesson["Skill"]]:
                 raise HTTPException(422, "Mode does not match lesson skill.")
@@ -131,7 +132,10 @@ class PracticeService(LearningService):
             )
         ]
         result["answer_key"] = []
-        if attempt["Skill"] == "listening" and attempt["SubmittedAt"] is not None:
+        if (
+            attempt["Skill"] in ("listening", "reading")
+            and attempt["SubmittedAt"] is not None
+        ):
             for question in repo.rows(
                 "LessonQuestions",
                 LessonId=attempt["LessonId"],
@@ -220,7 +224,7 @@ class PracticeService(LearningService):
     ) -> None:
         """Enforce the UI's skill-specific inputs and media ownership."""
         skill = attempt["Skill"]
-        if skill == "listening":
+        if skill in ("listening", "reading"):
             if data.submitted_text is not None or data.recording_asset_id is not None:
                 raise HTTPException(422, "Listening accepts answers only.")
         elif skill == "writing":
@@ -280,7 +284,7 @@ class PracticeService(LearningService):
             self.validate_submission(repo, attempt, data)
             score = (
                 self.grade(repo, attempt, data)
-                if attempt["Skill"] == "listening"
+                if attempt["Skill"] in ("listening", "reading")
                 else None
             )
             attempt = repo.update(
@@ -288,7 +292,7 @@ class PracticeService(LearningService):
                 {
                     "AttemptId": identity,
                     "UserId": user_id,
-                    "Version": bytes.fromhex(data.version),
+                    "Version": self.db.version_value(data.version),
                 },
                 {
                     "SubmittedAt": now(),
@@ -298,7 +302,7 @@ class PracticeService(LearningService):
                 },
             )
             finish_session(repo, session)
-            if attempt["Skill"] == "listening":
+            if attempt["Skill"] in ("listening", "reading"):
                 return self.result(repo, attempt)
             evaluation = repo.insert(
                 "AIEvaluations",

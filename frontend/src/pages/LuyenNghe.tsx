@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { LinhThu } from '../components/LinhThu';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { dungDoc } from '../demo/amThanh';
 import { useDuLieu } from '../demo/LuuTru';
 import { baiNghe } from '../demo/baiNghe';
 import { layTrinhDoHoc } from '../demo/trinhDo';
@@ -24,7 +25,7 @@ export function LuyenNghe() {
   const [loi, setLoi] = useState('');
   const [daTinhPhut, setDaTinhPhut] = useState<Set<string>>(() => new Set());
   const bai = baiNghe[index];
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
+  useEffect(() => () => dungDoc(), []);
   const normalize = (text: string) =>
     text
       .toLowerCase()
@@ -54,7 +55,7 @@ export function LuyenNghe() {
               aria-label="Chọn bài nghe"
               value={index}
               onChange={(e) => {
-                window.speechSynthesis?.cancel();
+                dungDoc();
                 setLoi('');
                 setIndex(Number(e.target.value));
                 setDapAn(null);
@@ -73,20 +74,19 @@ export function LuyenNghe() {
           <div className="listening-art">
             <LinhThu size={140} camXuc="listening" />
             <h2>{bai.ten}</h2>
-            <span className="pill outline">Giọng đọc trình duyệt</span>
+            <span className="pill outline">Giọng đọc Blaze</span>
             <div className="player-controls">
-              <button
+              <NutDoc
                 className="play-button"
                 aria-label="Phát bài nghe"
-                onClick={() => {
-                  setLoi('');
-                  if (!docTiengAnh(bai.text, tocDo))
-                    setLoi('Trình duyệt chưa hỗ trợ giọng đọc. Bạn có thể xem bản chép lời.');
-                }}
+                text={bai.text}
+                rate={tocDo}
+                preload={tab === 'Trắc nghiệm'}
+                onError={setLoi}
               >
                 <BieuTuong ten="play" size={23} />
-              </button>
-              <button className="btn secondary" onClick={() => window.speechSynthesis?.cancel()}>
+              </NutDoc>
+              <button className="btn secondary" onClick={() => dungDoc()}>
                 <BieuTuong ten="pause" size={18} /> Dừng
               </button>
               <label>
@@ -155,15 +155,15 @@ export function LuyenNghe() {
             ) : (
               <div className="dictation">
                 <h3>Nghe và viết lại câu ngắn</h3>
-                <button
+                <NutDoc
                   className="text-button"
-                  onClick={() => {
-                    if (!docTiengAnh(bai.chinhTa, tocDo))
-                      setLoi('Trình duyệt chưa hỗ trợ giọng đọc.');
-                  }}
+                  text={bai.chinhTa}
+                  rate={tocDo}
+                  preload
+                  onError={setLoi}
                 >
                   <BieuTuong ten="volume" size={18} /> Nghe câu chính tả
-                </button>
+                </NutDoc>
                 <textarea
                   aria-label="Câu chính tả"
                   rows={3}

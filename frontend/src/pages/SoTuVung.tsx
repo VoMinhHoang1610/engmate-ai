@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { useDuLieu } from '../demo/LuuTru';
-import { docTiengAnh } from '../demo/amThanh';
+import { NutDoc } from '../components/NutDoc';
+import { mysqlEnabled } from '../api/database';
 
 export function SoTuVung() {
   const { tuVung, capNhat, luuTu } = useDuLieu();
@@ -28,7 +29,7 @@ export function SoTuVung() {
       setThongBao('Từ này đã có trong sổ từ của bạn.');
       return;
     }
-    luuTu({
+    const save = luuTu({
       ...form,
       tu: tuMoi,
       nghia: nghiaMoi,
@@ -36,6 +37,18 @@ export function SoTuVung() {
       daThuoc: false,
       henOn: '',
     });
+    if (mysqlEnabled) {
+      void Promise.resolve(save).then((ok) => {
+        if (!ok) {
+          setThongBao('Chưa lưu được từ. Hãy thử lại.');
+          return;
+        }
+        setThem(false);
+        setForm({ tu: '', nghia: '', phienAm: '', loai: 'Danh từ', viDu: '' });
+        setThongBao('Đã thêm từ mới vào sổ.');
+      });
+      return;
+    }
     setThem(false);
     setForm({ tu: '', nghia: '', phienAm: '', loai: 'Danh từ', viDu: '' });
     setThongBao('Đã thêm từ mới vào sổ.');
@@ -153,15 +166,14 @@ export function SoTuVung() {
           <article className="panel vocab-card" key={tu.id}>
             <div className="section-title">
               <span className="pill outline">{tu.loai}</span>
-              <button
+              <NutDoc
                 className="icon-button"
                 aria-label={`Nghe ${tu.tu}`}
-                onClick={() => {
-                  if (!docTiengAnh(tu.tu)) setThongBao('Trình duyệt chưa hỗ trợ đọc từ.');
-                }}
+                text={tu.tu}
+                onError={setThongBao}
               >
                 <BieuTuong ten="volume" size={19} />
-              </button>
+              </NutDoc>
             </div>
             <h2>{tu.tu}</h2>
             {tu.phienAm && <span className="phonetic">{tu.phienAm}</span>}

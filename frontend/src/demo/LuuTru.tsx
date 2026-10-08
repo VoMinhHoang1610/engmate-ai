@@ -1,18 +1,24 @@
+/* eslint-disable react-refresh/only-export-components -- shared context and defaults for both storage providers */
+import { mysqlEnabled } from '../api/database';
+import { MysqlLuuTru } from './MysqlLuuTru';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { hoSoMau, tuVungMau, type HoSo, type TuVung } from './duLieu';
 import { laTrinhDo } from './trinhDo';
+import { xoaBoNhoAmThanh } from './amThanh';
 
 export interface CaiDatNguoiDung {
   giaoDien: 'sang' | 'toi' | 'he-thong';
   giamChuyenDong: boolean;
   tocDoDoc: number;
+  giongDoc: string;
 }
 const caiDatMacDinh: CaiDatNguoiDung = {
   giaoDien: 'sang',
   giamChuyenDong: false,
   tocDoDoc: 1,
+  giongDoc: 'UK-Nu-1-TM',
 };
-interface DuLieu {
+export interface DuLieu {
   caiDat: CaiDatNguoiDung;
   hoSo: HoSo;
   tuVung: TuVung[];
@@ -24,9 +30,9 @@ interface DuLieu {
   phutHomNay: number;
   luotOnHomNay: number;
 }
-interface GiaTri extends DuLieu {
-  capNhat: (thayDoi: Partial<DuLieu>) => void;
-  luuTu: (tu: TuVung) => void;
+export interface GiaTri extends DuLieu {
+  capNhat: (thayDoi: Partial<DuLieu>) => void | Promise<boolean>;
+  luuTu: (tu: TuVung) => void | Promise<boolean>;
   onTu: (id: string, ngay: number) => void;
   ghiNhanHoc: (phut: number) => void;
   loiLuu: string;
@@ -38,7 +44,7 @@ function homNay(): string {
   const day = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${month}-${day}`;
 }
-const macDinh: DuLieu = {
+export const macDinh: DuLieu = {
   caiDat: caiDatMacDinh,
   hoSo: hoSoMau,
   tuVung: tuVungMau,
@@ -50,7 +56,7 @@ const macDinh: DuLieu = {
   phutHomNay: 0,
   luotOnHomNay: 0,
 };
-const NguCanh = createContext<GiaTri | null>(null);
+export const NguCanh = createContext<GiaTri | null>(null);
 function docDuLieu(): DuLieu {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(khoa) ?? 'null');
@@ -98,6 +104,11 @@ function docDuLieu(): DuLieu {
         ...data.hoSo,
       },
       caiDat: {
+        giongDoc:
+          typeof data.caiDat?.giongDoc === 'string' &&
+          /^[A-Za-z0-9_-]{1,120}$/.test(data.caiDat.giongDoc)
+            ? data.caiDat.giongDoc
+            : caiDatMacDinh.giongDoc,
         giaoDien: ['sang', 'toi', 'he-thong'].includes(data.caiDat?.giaoDien ?? '')
           ? data.caiDat!.giaoDien
           : caiDatMacDinh.giaoDien,
@@ -123,9 +134,12 @@ function docDuLieu(): DuLieu {
     return macDinh;
   }
 }
-export function LuuTru({ children }: { children: ReactNode }) {
+function DemoLuuTru({ children }: { children: ReactNode }) {
   const [data, setData] = useState(docDuLieu);
   const [loiLuu, setLoiLuu] = useState('');
+  useEffect(() => {
+    if (!data.daDangNhap) xoaBoNhoAmThanh();
+  }, [data.daDangNhap]);
   useEffect(() => {
     const media = window.matchMedia?.('(prefers-color-scheme: dark)');
     const apply = () => {
@@ -135,6 +149,7 @@ export function LuuTru({ children }: { children: ReactNode }) {
           : 'light';
       document.documentElement.dataset.reducedMotion = String(data.caiDat.giamChuyenDong);
       document.documentElement.dataset.speechRate = String(data.caiDat.tocDoDoc);
+      document.documentElement.dataset.speechVoice = data.caiDat.giongDoc;
     };
     apply();
     media?.addEventListener('change', apply);
@@ -143,6 +158,7 @@ export function LuuTru({ children }: { children: ReactNode }) {
       delete document.documentElement.dataset.theme;
       delete document.documentElement.dataset.reducedMotion;
       delete document.documentElement.dataset.speechRate;
+      delete document.documentElement.dataset.speechVoice;
     };
   }, [data.caiDat]);
   useEffect(() => {
@@ -192,9 +208,12 @@ export function LuuTru({ children }: { children: ReactNode }) {
   );
 }
 // Shared by page components; keeping the provider and hook together avoids a second context instance.
-// eslint-disable-next-line react-refresh/only-export-components
 export function useDuLieu() {
   const context = useContext(NguCanh);
   if (!context) throw new Error('Missing demo data provider');
   return context;
+}
+
+export function LuuTru({ children }: { children: ReactNode }) {
+  return mysqlEnabled ? <MysqlLuuTru>{children}</MysqlLuuTru> : <DemoLuuTru>{children}</DemoLuuTru>;
 }

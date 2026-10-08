@@ -26,6 +26,22 @@ def public(row: Record, exclude: tuple[str, ...] = ()) -> Record:
             continue
         if key == "ResultJson" and isinstance(value, str):
             value = json.loads(value)
+        elif key == "Version" and isinstance(value, int):
+            value = f"{value:016x}"
+        elif (
+            key
+            in {
+                "ReducedMotion",
+                "IsActive",
+                "IsPublished",
+                "IsCorrect",
+                "IsMock",
+                "IsMastered",
+                "ReviewAll",
+            }
+            and value is not None
+        ):
+            value = bool(value)
         elif isinstance(value, bytes):
             value = value.hex()
         elif isinstance(value, UUID):

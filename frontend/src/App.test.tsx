@@ -316,6 +316,10 @@ describe('EngMate demo', () => {
   });
 
   it('records and releases a local speaking sample when browser APIs are available', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ text: 'Hello from my microphone.' }) });
+    vi.stubGlobal('fetch', fetchMock);
     const stopTrack = vi.fn();
     const stream = { getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream;
     vi.stubGlobal('navigator', {
@@ -346,6 +350,15 @@ describe('EngMate demo', () => {
     await waitFor(() => expect(document.querySelector('audio')).not.toBeNull());
     expect(createUrl).toHaveBeenCalledOnce();
     expect(stopTrack).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.getByLabelText('Bản chép lời / câu bạn muốn phân tích')).toHaveValue(
+        'Hello from my microphone.',
+      ),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/speech/stt?language=en',
+      expect.objectContaining({ method: 'POST', body: expect.any(FormData) }),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /Câu tiếp theo/ }));
     expect(revokeUrl).toHaveBeenCalledWith('blob:recording');

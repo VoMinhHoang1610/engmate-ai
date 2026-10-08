@@ -5,7 +5,12 @@ services:
     environment:
       APP_NAME: ${APP_NAME:-EngMate-AI}
       LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      BLAZE_API_KEY: ${BLAZE_API_KEY:-}
+      BLAZE_TTS_MODEL: ${BLAZE_TTS_MODEL:-v2.0_pro}
+      BLAZE_STT_MODEL: ${BLAZE_STT_MODEL:-stt-async-1.5}
+      BLAZE_LOCAL_DEMO: "false"
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5174,http://127.0.0.1:5174}
+      DATABASE_MYSQL_URL: ${DATABASE_MYSQL_URL:-}
       DATABASE_ODBC_CONNECTION: ${DATABASE_ODBC_CONNECTION:-}
       JWT_SECRET: ${JWT_SECRET:-}
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-15}
@@ -27,6 +32,7 @@ services:
     build: ./frontend
     environment:
       BACKEND_URL: http://backend:8000
+      VITE_DATA_SOURCE: ${VITE_DATA_SOURCE:-demo}
     ports: ["127.0.0.1:${FRONTEND_PORT:-5174}:5174"]
     volumes: ["./frontend/src:/app/src:ro"]
     depends_on:

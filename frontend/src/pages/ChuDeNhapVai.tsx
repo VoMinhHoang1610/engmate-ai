@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { mysqlEnabled, api, type Topic } from '../api/database';
+import { useEffect, useState } from 'react';
 import { TieuDeTrang } from '../components/TieuDeTrang';
 import { BieuTuong } from '../components/BieuTuong';
 import { chuDeMau } from '../demo/duLieu';
@@ -6,6 +7,37 @@ import { danhSachTrinhDo } from '../demo/trinhDo';
 
 export function ChuDeNhapVai() {
   const [loc, setLoc] = useState('Tất cả');
+  const [catalog, setCatalog] = useState(mysqlEnabled ? ([] as typeof chuDeMau) : chuDeMau);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (!mysqlEnabled) return;
+    let cancelled = false;
+    void api<Topic[]>('/topics')
+      .then((rows) => {
+        if (!cancelled)
+          setCatalog(
+            rows.map((row) => ({
+              id: row.code,
+              ten: row.name,
+              moTa: row.description,
+              vai: row.ai_role,
+              mau: row.opening_message,
+              mauSac: row.color_key,
+              bieuTuong: row.icon_key,
+              trinhDo:
+                row.min_level === row.max_level
+                  ? row.min_level
+                  : `${row.min_level} – ${row.max_level}`,
+            })),
+          );
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Chưa tải được chủ đề.');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   return (
     <>
       <TieuDeTrang ten="Chủ đề & nhập vai" />
@@ -20,8 +52,9 @@ export function ChuDeNhapVai() {
           </button>
         ))}
       </div>
+      {error && <p role="alert">{error}</p>}
       <div className="topics-grid">
-        {chuDeMau
+        {catalog
           .filter((item) => loc === 'Tất cả' || item.trinhDo.split(' – ').includes(loc))
           .map((topic) => (
             <article className="topic-card" key={topic.id}>

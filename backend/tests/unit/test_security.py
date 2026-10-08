@@ -116,11 +116,5 @@ def test_persisted_levels_match_sql_schema(level: str) -> None:
     """Expanded mock levels must not bypass the SQL v1 CHECK/column limits."""
     profile = {"version": "0" * 16, "display_name": "Name", "cefr_level": level}
     conversation = {"client_request_id": uuid4(), "level": level}
-    if level in ("A2", "B1", "B2"):
-        assert ProfileUpdate.model_validate(profile).cefr_level == level
-        assert ConversationCreate.model_validate(conversation).level == level
-    else:
-        with pytest.raises(ValidationError):
-            ProfileUpdate.model_validate(profile)
-        with pytest.raises(ValidationError):
-            ConversationCreate.model_validate(conversation)
+    assert ProfileUpdate.model_validate(profile).cefr_level == level
+    assert ConversationCreate.model_validate(conversation).level == level

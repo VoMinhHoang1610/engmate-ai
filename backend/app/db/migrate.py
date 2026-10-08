@@ -13,6 +13,10 @@ SQL_ROOT = Path(__file__).resolve().parents[3] / "database" / "sqlserver"
 
 def apply_scripts(connection: Connection, root: Path = SQL_ROOT) -> None:
     """Apply schema, idempotent seed and views atomically to the selected database."""
+    if connection.dialect.name == "mysql":
+        raise ValueError(
+            "MySQL bootstrap must be run explicitly from the reviewed SQL file."
+        )
     version = connection.execute(
         text(
             "IF OBJECT_ID(N'em.SchemaVersions', N'U') IS NULL SELECT 0 "

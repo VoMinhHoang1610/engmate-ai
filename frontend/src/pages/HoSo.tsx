@@ -5,6 +5,7 @@ import { Select } from '../components/Select';
 import { useDuLieu } from '../demo/LuuTru';
 import type { HoSo as HoSoData, TrinhDo } from '../demo/duLieu';
 import { danhSachTrinhDo } from '../demo/trinhDo';
+import { mysqlEnabled } from '../api/database';
 
 export function HoSo() {
   const { hoSo, capNhat, phutHoc, luotOn, tuVung } = useDuLieu();
@@ -19,7 +20,13 @@ export function HoSo() {
       setDaLuu(false);
       return;
     }
-    capNhat({ hoSo: { ...form, ten } });
+    const save = capNhat({ hoSo: { ...form, ten } });
+    if (mysqlEnabled) {
+      void Promise.resolve(save).then((ok) => {
+        setDaLuu(ok === true);
+      });
+      return;
+    }
     setLoi('');
     setDaLuu(true);
   }
@@ -53,8 +60,10 @@ export function HoSo() {
                     if (ev.target?.result) {
                       const newAvatar = ev.target.result as string;
                       setForm({ ...form, anhDaiDien: newAvatar });
-                      capNhat({ hoSo: { ...hoSo, anhDaiDien: newAvatar } });
-                      setDaLuu(true);
+                      const saved = capNhat({ hoSo: { ...hoSo, anhDaiDien: newAvatar } });
+                      if (mysqlEnabled)
+                        void Promise.resolve(saved).then((ok) => setDaLuu(ok === true));
+                      else setDaLuu(true);
                     }
                   };
                   reader.readAsDataURL(file);
@@ -136,6 +145,7 @@ export function HoSo() {
               Email
               <input
                 type="email"
+                disabled={mysqlEnabled}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />

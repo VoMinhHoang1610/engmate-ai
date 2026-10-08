@@ -1,5 +1,13 @@
 # Changelog
 
+2026-10-09: bỏ trạng thái “Đang tạo giọng nói…” và giữ biểu tượng nút Nghe. Nạp sẵn bộ phát/tái dùng clip, bỏ chờ preload 250 ms; khi Blaze chưa có âm thanh, dùng giọng tiếng Anh cục bộ để phát nhanh. Nghe thử giọng luôn giữ đúng lựa chọn Blaze. Dừng/đổi trang/logout dừng cả hai loại tiếng, không phát MP3 muộn chồng lên giọng máy.
+
+2026-10-09: mở/tải lại ứng dụng MySQL hiện đăng nhập trước; đăng nhập chờ tải dữ liệu rồi vào Tổng quan ngay, không cần tải lại hay bấm thêm liên kết. Nút giữ trạng thái xử lý trong khi tải; lỗi tải cho thử lại. Tài khoản mới vẫn qua bước làm quen, dữ liệu MySQL giữ nguyên sau đăng nhập lại.
+
+2026-10-09: kết nối backend và giao diện với MySQL EngMateAI. Đăng ký/đăng nhập thật; lưu onboarding/bảy mức, hồ sơ, giọng/cài đặt, từ/flashcard, bài làm, hội thoại và thống kê theo tài khoản. Reading/Listening chấm server, dictation nghe MP3 không lộ text key. Tải lại/đăng nhập lại giữ dữ liệu; retry flashcard giữ request ID. AI chat/nói/viết vẫn mock có nhãn.
+
+2026-10-09: hoàn thiện gemini-code-1791478978574.sql cho MySQL: bảy mức học, Reading, lựa chọn giọng, trạng thái làm quen, timestamp và seed khớp frontend. Đã thực thi thử schema với 45 kiểm tra trên MySQL 8.0.45; chưa chuyển backend.
+
 ## [Unreleased]
 
 ### Hợp nhất giao diện mới vào develop — 2026-10-08
@@ -76,3 +84,11 @@
 - Loại bỏ phụ thuộc GNU Make trong wrapper Windows và các cấu hình thừa của khung cũ.
 
 Kết quả chạy thật và các giới hạn ghi trong `PROGRESS.md`.
+
+## 2026-10-08 — Blaze speech
+
+Thêm POST /api/speech/tts (MP3) và /api/speech/stt (transcript), cấu hình server-only và test. UI đã dùng giọng đọc Blaze, tự chép lời Speaking và có micro nhập bản nháp Hội thoại.
+
+Cài đặt có mục Giọng nói: chọn giọng tiếng Anh theo nhóm nam/nữ, nghe thử/dừng; tự lưu và áp dụng cho toàn bộ nút Nghe.
+
+Giảm độ trễ nút Nghe: chuẩn bị clip hiện tại trước click, cache RAM có giới hạn, chia sẻ lượt tải và phát lại không gọi TTS lần nữa. Đổi giọng/tốc độ không dùng nhầm clip; logout xóa âm thanh đã lưu. Lần chưa chuẩn bị vẫn chờ provider.

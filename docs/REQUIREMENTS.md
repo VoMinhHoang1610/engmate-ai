@@ -1,6 +1,6 @@
 # Yêu cầu và backlog
 
-Cập nhật: 2026-10-08. Bản develop hợp nhất UI demo đa trang, backend và schema SQL Server. UI nghiệp vụ dùng localStorage, chưa nối API SQL/JWT; hội thoại dùng mock reply.
+Cập nhật: 2026-10-09. Frontend có chế độ MySQL dùng API/JWT và dữ liệu theo tài khoản; demo giữ localStorage. Hội thoại và đánh giá nói/viết vẫn dùng mock AI có nhãn.
 
 | ID | Yêu cầu khung | Kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
@@ -9,6 +9,8 @@ Cập nhật: 2026-10-08. Bản develop hợp nhất UI demo đa trang, backend 
 | S-03 | AI qua interface; mock miễn phí và prompt tách file | Unit service, integration mock | Đã test |
 | S-04 | Unit/integration test backend; test API client/component/hook frontend | pytest/Vitest và coverage ≥80% | Đã test |
 | S-05 | Web kết nối backend với trạng thái tải/lỗi | UI tests, HTTP proxy smoke | Đã test |
+| S-08 | Khởi chạy MySQL hiện đăng nhập trước; đăng nhập vào Tổng quan ngay, không cần reload | Mysql.test.tsx, database.test.ts, TaiKhoan.test.tsx và Chrome E2E | Đã test |
+| S-09 | Nút Nghe giữ biểu tượng, một lần bấm phát nhanh; ưu tiên clip chuẩn bị/giọng English cục bộ khi chưa có clip; preview đúng giọng | NutDoc/amThanh/CaiDat tests, Chrome slow-audio E2E | Đã test |
 | S-06 | Documentation để cập nhật tiến độ, quyết định và yêu cầu | Rà soát docs/PROGRESS | Đã rà soát |
 | S-07 | Setup nhất quán, lockfile, Docker, pre-commit và CI | Setup, Docker smoke, hook local, [GitHub Actions](https://github.com/VoMinhHoang1610/engmate-ai/actions/runs/37506823374) | Đã test local và GitHub Actions |
 
@@ -76,6 +78,28 @@ S-07 ở trên là kết quả CI lịch sử của scaffold. Workflow SQL Serve
 | D-19 | Lộ trình Pre-A1 → C2; người mới có chữ cái/số đếm/lời chào; lưu và khôi phục mức học, bốn kỹ năng/nhập vai/API mock không lưu hỗ trợ bảy mức; SQL v1 A2/B1/B2 | 15 Vitest mới; 21 backend tests; Chrome 232 tổ hợp và API cả bảy mức | Đã test nội dung thực hành; chưa phải khóa học/bài thi chứng nhận CEFR |
 | D-20 | Mate hỏi khả năng tiếng Anh ngay sau đăng nhập đầu tiên bằng mô tả dễ hiểu, không hiện mã CEFR trong lựa chọn; tự đặt mức học và nhớ đã làm quen; đăng ký mới được hỏi lại | 13 Vitest luồng đăng nhập/lưu/migration/bảy câu trả lời; Chrome 8 tổ hợp sáng/tối/viewport và đăng nhập lại | Đã test |
 
-Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
+MySQL lưu đủ bảy mức, Reading, giọng/tốc độ và làm quen qua API. Schema SQL Server v1 giữ giới hạn A2/B1/B2. Hai chế độ frontend tách dữ liệu: MySQL không nhập tự động localStorage demo.
 
 Các kết quả Chrome trong bảng là QA lịch sử của nhánh giao diện; không coi đó là browser E2E mới của bản tích hợp. API backend đã có auth/SMTP reset, nhưng UI tài khoản hiện vẫn cục bộ. UI hiện yêu cầu đăng nhập demo abc/123 trước khi vào học tập; liên kết vào không gian học tập chỉ dùng sau khi đăng nhập. Lint/test/coverage/build của bản tích hợp đều qua; không còn lỗi assertion Việt hóa cản kiểm chứng. Chi tiết ở PROGRESS và DEMO_DEVELOP.
+
+## Speech server — 2026-10-08
+
+| Yêu cầu | Trạng thái | Kiểm chứng |
+| --- | --- | --- |
+| B-SPEECH: Blaze TTS/STT trong backend | Đã test | tests/unit/test_speech.py; HTTP smoke thật en |
+| Nối frontend với speech API | Đã test | Vitest speech/microphone; Chrome TTS, Speaking và Hội thoại với audio đầu vào mẫu |
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| F-VOICE | Chọn giọng en, nghe thử, lưu lựa chọn và dùng khi học | Đã test: CaiDat/amThanh tests, Chrome desktop/mobile |
+| F-SPEECH-LATENCY | Chuẩn bị clip hiện tại, cache có giới hạn, phát lại không tạo job mới, giữ đúng giọng/tốc độ và hủy an toàn | Đã test: amThanh/NutDoc tests; Chrome/Blaze đo phát clip đã chuẩn bị dưới 100 ms ở local |
+
+## Chuyển MySQL — 2026-10-09
+
+| Yêu cầu | Trạng thái |
+| --- | --- |
+| Chuẩn bị SQL MySQL đầy đủ bảy mức, Reading, giọng nói và làm quen; seed khớp UI | Đã test: tạo schema trên MySQL 8.0.45, 45 assertion CLI |
+| Chuyển driver, ánh xạ bảng/view, UUID, UTC, Version và khóa giao dịch MySQL | Đã test trên MySQL 8.0.45 |
+| Nối đăng ký/đăng nhập, hồ sơ/làm quen, giọng/cài đặt, từ, bài làm, hội thoại, flashcard và dashboard vào MySQL | Đã test API và frontend; kiểm tra trình duyệt với schema riêng |
+| Chấm Reading/Listening theo revision trên server, ẩn answer key trước nộp | Đã test: trắc nghiệm và dictation; replay không ghi trùng |
+| Đánh giá Speaking/Writing và phản hồi hội thoại bằng AI thật | Chưa làm; vẫn mock có nhãn |

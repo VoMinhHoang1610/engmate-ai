@@ -1,12 +1,12 @@
-# API EngMate-AI — SQL Server
+# API EngMate-AI — MySQL / SQL Server
 
-Base URL: `http://127.0.0.1:8010`; Swagger `/docs`, OpenAPI `/openapi.json`. Có 42 thao tác HTTP trên 35 đường dẫn. Schema đầu vào, kiểu, giới hạn và field bắt buộc ở Swagger là nguồn hợp đồng thực thi. `python scripts/manage.py export-api` xuất `.artifacts/api/openapi.json` để import Postman hoặc sinh client.
+Base URL mặc định: `http://127.0.0.1:8010`; local hiện tại `http://127.0.0.1:8011`. Swagger `/docs`, OpenAPI `/openapi.json` là nguồn hợp đồng thực thi. `python scripts/manage.py export-api` xuất `.artifacts/api/openapi.json` để import Postman hoặc sinh client.
 
-API nghiệp vụ dùng schema `em` v1 trên SQL Server. `/api/health` và `/api/ai/reply` vẫn chạy khi chưa cấu hình DB; API cần lưu dữ liệu trả 503. Backend không tự tạo database/schema khi khởi động.
+API nghiệp vụ dùng database EngMateAI/MySQL v1 khi cấu hình DATABASE_MYSQL_URL, hoặc schema `em` v1 khi cấu hình DATABASE_ODBC_CONNECTION. Chỉ bật một driver. `/api/health` và `/api/ai/reply` vẫn chạy khi chưa cấu hình DB; API cần lưu dữ liệu trả 503. Backend không tự tạo database/schema khi khởi động.
 
 ## Quy ước chung
 
-- JSON dùng `snake_case`, ID SQL là số dương, request ID là UUID; ngày `YYYY-MM-DD`, thời điểm ISO 8601 UTC. `version` là rowversion SQL Server dạng 16 ký tự hex.
+- JSON dùng `snake_case`, ID SQL là số dương, request ID là UUID; ngày `YYYY-MM-DD`, thời điểm ISO 8601 UTC. `version` là token hex 16 ký tự: BIGINT của trigger MySQL hoặc rowversion SQL Server. Client giữ nguyên token, không tự tăng.
 - Dữ liệu riêng cần `Authorization: Bearer <access_token>`; không nhận UserId/role/score/time/review_count/next_review_at từ client. Tài nguyên của người khác trả 404. `is_mastered` chỉ được tự đánh dấu qua endpoint mastery có version, hoặc cập nhật theo lượt flashcard thực tế.
 - List trả mảng, phân trang `offset=0&limit=50`, tối đa 100. Client tăng offset để lấy trang tiếp; mảng ngắn hơn limit là hết trang. Dashboard có `days=30`, từ 1 đến 365.
 - Yêu cầu có field ngoài schema bị từ chối. Chuỗi được trim (mật khẩu giữ nguyên); giới hạn chuỗi tương thích số đơn vị UTF-16 của SQL Server.
@@ -29,10 +29,12 @@ Lỗi có `detail`, không trả input mật khẩu/token, SQL statement, tham s
 | Method | Path | Hành vi |
 | --- | --- | --- |
 | GET | `/api/health` | Liveness: `{"status":"ok","service":"engmate-ai"}`, không gọi DB/AI |
-| GET | `/api/ready` | Kiểm tra kết nối, schema v1 và 22 bảng/2 view; thành công có `database=sqlserver`, `schema_version=1` |
+| GET | `/api/ready` | Kiểm tra kết nối/schema/bảng/view; MySQL: 24 bảng/2 view, `database=mysql`; SQL Server: 22 bảng/2 view, `database=sqlserver`; `schema_version=1` |
 | POST | `/api/ai/reply` | Body `message` 1–2000, `level` Pre-A1/A1/A2/B1/B2/C1/C2 (mặc định A2); response `reply`, `provider=mock`, `level`; không lưu |
 
-Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
+MySQL lưu đủ Pre-A1/A1/A2/B1/B2/C1/C2. PUT `/api/me/profile` nhận `onboarding_completed` và trả `onboarding_completed_at`; PUT `/api/me/settings` nhận `speech_voice_id` dạng slug cùng theme/reduced_motion/speech_rate/version. GET `/api/lessons?skill=reading` hỗ trợ Reading; chi tiết bài trả `vocabulary`, không trả ExpectedText hoặc CorrectQuestionId trước khi nộp. Reading sử dụng mode `multiple_choice` và chấm trên backend. GET `/api/dashboard` thêm `today` theo TimeZoneId hồ sơ. SQL Server v1 giữ giới hạn A2/B1/B2, chưa lưu voice/onboarding và Reading.
+
+GET `/api/speech/dictation/{question_id}/audio` yêu cầu Bearer, chỉ cho câu dictation thuộc bài đã xuất bản; trả MP3 theo giọng/tốc độ đã lưu, không trả chuỗi đáp án. Speech local-demo bypass bị tắt khi cấu hình database; frontend MySQL gửi Bearer và tự refresh token cho speech cùng API nghiệp vụ.
 
 ## Tài khoản, hồ sơ, cài đặt
 
@@ -68,7 +70,7 @@ SMTP chưa cấu hình đủ host/sender trả 503 cho mọi email. Khi đã c�
 | GET | `/api/lessons` | Bài published, query skill speaking/listening/writing và offset/limit; seed 9 bài |
 | GET | `/api/lessons/{identity}` | Bài revision cụ thể, instruction/content/audio_url/levels, questions và options |
 
-Questions trước nộp không trả ExpectedText, Explanation hoặc IsCorrect của option. Content của bài nghe vẫn có transcript để phù hợp cách giao diện dùng browser TTS; đây là bài luyện demo, không phải cơ chế giấu đáp án cho kỳ thi. Sau nộp, attempt trả answer_key và điểm server. Không có API sửa bài published, tạo revision/admin ngoài phạm vi hiện tại.
+Questions trước nộp không trả ExpectedText, Explanation hoặc IsCorrect của option. Content của bài nghe vẫn có transcript để phù hợp cách giao diện dùng TTS; đây là bài luyện demo, không phải cơ chế giấu đáp án cho kỳ thi. Sau nộp, attempt trả answer_key và điểm server. Không có API sửa bài published, tạo revision/admin ngoài phạm vi hiện tại.
 
 ## Hội thoại và kết quả AI
 
@@ -154,4 +156,10 @@ View tổng hợp StudySessions và FlashcardReviews độc lập để không n
 | Flashcard / bộ đến hạn, again/hard/good/easy | vocabulary due; flashcards sessions/reviews/close |
 | TongQuan / tổng phút, từ, lượt ôn, số liệu ngày | dashboard và daily_goal_minutes |
 
-Giao diện đa trang, backend và SQL schema đã được hợp nhất trong bản develop demo. UI vẫn dùng localStorage và endpoint mock `/api/ai/reply`; API nghiệp vụ SQL/JWT thử riêng qua Swagger, chưa nối UI. Hợp đồng trên sẵn để tích hợp tiếp; chưa tự nhập localStorage, chưa có OAuth/STT/AI thật. Counters cũ không có lịch sử đầy đủ nên không tự chuyển vào StudySessions. Xem [hướng dẫn demo](DEMO_DEVELOP.md).
+Giao diện đa trang, backend và SQL schema đã được hợp nhất trong bản develop demo. UI vẫn dùng localStorage và endpoint mock `/api/ai/reply`; API nghiệp vụ SQL/JWT thử riêng qua Swagger, chưa nối UI. Hợp đồng trên sẵn để tích hợp tiếp; chưa tự nhập localStorage, chưa có OAuth/AI hội thoại thật; STT/TTS Blaze đã nối UI Speaking/Hội thoại và các nút Nghe. Counters cũ không có lịch sử đầy đủ nên không tự chuyển vào StudySessions. Xem [hướng dẫn demo](DEMO_DEVELOP.md).
+
+## Speech Blaze
+
+POST `/api/speech/tts` trả MP3; POST `/api/speech/stt` nhận multipart file và trả transcript. Chi tiết cấu hình, quyền truy cập và giới hạn: [BLAZE_SPEECH.md](BLAZE_SPEECH.md). UI gọi TTS để phát MP3; Speaking và Hội thoại gửi bản ghi để lấy transcript. Dữ liệu học tập/auth UI còn dùng localStorage.
+
+GET `/api/speech/voices?language=en` trả danh sách giọng hiện tại (id/name/language/gender), cùng quyền truy cập như TTS/STT. Cài đặt UI chọn giọng, nghe thử và lưu speaker_id cục bộ; các request TTS gửi giọng đã chọn.

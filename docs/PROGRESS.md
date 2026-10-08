@@ -1,5 +1,63 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-09 — Mở đăng nhập trước và vào home ngay
+
+- **Yêu cầu:** mở ứng dụng hiện đăng nhập trước; sửa tình trạng phải tải lại sau đăng nhập mới vào home. Nhánh fix/login-startup; giữ thay đổi MySQL/giọng có sẵn, chưa commit/push.
+- **Thay đổi:** api/database.ts giữ token trong bộ nhớ trang, không khôi phục token sessionStorage cũ khi mở/reload. TaiKhoan.tsx chờ context tải dữ liệu sau authenticate rồi chuyển Tổng quan; nút giữ trạng thái xử lý và lỗi tải cho thử lại. Demo cũng chuyển Tổng quan ngay sau đăng nhập; tài khoản mới vẫn làm quen trước. Không thay backend, DDL hoặc dữ liệu người dùng.
+- **Tests:** thêm kiểm tra token cũ, App/MySQL trong StrictMode, tải chậm/chống gửi trùng, lỗi tải/thử lại và đăng ký làm quen. Cập nhật assertion demo từ bước bấm liên kết/trở về Cài đặt sang tự mở Tổng quan theo hành vi mới được yêu cầu; giữ kiểm tra hồ sơ/cài đặt và credential sai.
+- **Kiểm chứng:** `scripts/manage.py lint`, `test`, `coverage`, `build` đều qua với MYSQL_TEST_URL trỏ schema riêng. Frontend **161 qua**, coverage **88,01% statements / 82,58% branches / 85,82% functions / 90,63% lines**. Backend **97 qua / 22 SQL Server skip**, coverage **89,16%**; SQL Server chưa được kiểm chứng lại. Build JS 316,24 kB / gzip 99,06 kB.
+- **Chrome E2E:** MySQL EngMateAI_browser_test riêng: startup từ link Cài đặt/token cũ → đăng ký/làm quen/home → lưu từ → logout/login vào home không reload → reload hiện login → mật khẩu sai bị chặn → login/home/từ còn → mobile 390 px. Không pageerror/tràn ngang; artifact `.artifacts/browser-check/login-startup.cjs`, login-home-mobile.png. Không tạo tài khoản thử trên EngMateAI của người dùng, không gọi speech trả phí.
+- **Tài liệu/giới hạn:** README, ARCHITECTURE/REQUIREMENTS/TESTING/DECISIONS/CHANGELOG cập nhật chính sách phiên. Mở hoặc F5 trang MySQL cần đăng nhập lại; dữ liệu bền vững trong DB. Web thực tế vẫn 5175/backend 8011. Script E2E mysql.cjs cũ thuộc chính sách khôi phục phiên trước đó, không chạy nguyên trạng với luồng mới.
+
+## 2026-10-09 — Backend và giao diện đồng bộ MySQL
+
+- **Yêu cầu:** tiếp tục kết nối dữ liệu với MySQL localhost:3307/EngMateAI do người dùng cung cấp. Cấu hình credentials chỉ trong `.env` bị ignore; frontend chỉ đặt lựa chọn `VITE_DATA_SOURCE=mysql` trong `.env.local`. Nhánh feat/mysql-backend, giữ toàn bộ thay đổi có sẵn, chưa commit/push.
+- **Backend:** driver PyMySQL[rsa]/SQLAlchemy Core, ánh xạ 24 bảng/2 view tiếng Việt, UUID chuỗi, Version trigger hex, refresh sau INSERT/UPDATE, UTC và READ COMMITTED/FOR UPDATE. Auth/JWT, ownership, retry và transaction rollback giữ hợp đồng API. Hỗ trợ bảy mức/onboarding/voice/glossary/Reading; giấu CorrectQuestionId; dictation MP3 có xác thực dùng voice/rate đã lưu. Không chạy lại DDL trên database người dùng.
+- **Frontend:** transport Bearer/refresh, không hồi sinh phiên sau logout; MysqlLuuTru tải server và tuần tự hóa cập nhật Version. Nối đăng ký/đăng nhập, làm quen, hồ sơ/avatar/cài đặt, từ, chat/history, bốn kỹ năng, flashcard và dashboard. Reading/Listening dùng điểm server; thời gian dựa trên phiên server. Không nhập demo localStorage. Email hồ sơ MySQL hiển thị chỉ đọc; API sửa account cần mật khẩu riêng.
+- **Kiểm chứng:** MySQL 8.0.45 riêng cổng 13429; 20 integration cases MySQL qua, API workflows rollback. Toàn backend **97 qua, 22 SQL Server skip**, coverage **89,16%**; SQL Server chưa kiểm chứng lại trong lượt này. Frontend **157 qua**, coverage **87,85% statements / 81,08% branches / 85,82% functions / 90,58% lines**. Lint/type-check/format và build qua; ngưỡng coverage 80% giữ nguyên. Coverage frontend giảm so với bản demo vì thêm các luồng MySQL/HTTP mới; toàn bộ tiêu chí vẫn đạt ngưỡng và E2E bổ sung kiểm chứng lưu thực tế. Route lộ trình chọn đúng bài ở mức yêu cầu và chuyển kỹ năng tạo đúng mode.
+- **Chrome E2E:** trên EngMateAI_browser_test riêng: đăng ký → A1/onboarding → voice/rate/theme → hồ sơ/từ → reload → Reading 100% → Writing → chat → flashcard → logout/login; dữ liệu giữ, pageerror=0, mobile 390 px không tràn. Speech mock, không gọi trả phí; không seed tài khoản vào database ứng dụng. Script/screenshot nằm trong `.artifacts/browser-check` bị ignore.
+- **Tài liệu:** README, database/mysql/README, API/ARCHITECTURE/REQUIREMENTS/TESTING/DECISIONS/CHANGELOG cập nhật; root SQL chỉ sửa ghi chú backend, không thay DDL ở lượt này. Driver requirements và frontend env example cập nhật.
+- **Giới hạn:** chat và đánh giá Speaking/Writing vẫn mock; SMTP/OAuth/email verification chưa triển khai UI hoàn chỉnh. Demo và adapter SQL Server cũ giữ phạm vi riêng. Chưa thử trực tiếp MySQL 8.4 hoặc Docker với MySQL host. Local web 5175/backend 8011; database hiện có đã xác nhận ready schema v1, catalog đủ 63 bài.
+
+## 2026-10-09 — Hoàn thiện file schema MySQL trước khi chuyển backend
+
+- **Yêu cầu:** sửa gemini-code-1791478978574.sql để người dùng tự chạy; chưa chuyển backend hoặc chạy vào database hiện có của người dùng.
+- **Thay đổi:** danh mục bảy mức CEFR/khóa ngoại/thứ tự; Reading trong bài học/câu hỏi/phiên học/lượt thực hành; OnboardingCompletedAt, SpeechVoiceId, UpdatedAt tự cập nhật; sửa seed phiên bản để chạy lại catalog không trùng. Thêm từ gợi ý bài học, giữ sổ từ riêng theo chủ sở hữu. Seed khớp frontend: 63 bài, 35 câu hỏi, 84 lựa chọn, 22 từ gợi ý. Tổng 24 bảng, 2 view, 7 trigger. Không tạo tài khoản hoặc lưu key.
+- **MySQL thật:** dùng binary MySQL 8.0.45 có sẵn với datadir riêng .artifacts/mysql-schema-check/data và cổng 13429; không dùng dịch vụ/database đang có. File cuối tạo schema thành công; 45 kiểm tra CLI qua, gồm dữ liệu đầy đủ/Unicode/đáp án, rerun seed/version marker, constraint Reading, ownership, giọng/tốc độ, bảy mức, version/timestamp và view thống kê. Các dữ liệu thử người dùng rollback; verify_catalog.sql chạy qua, đã dừng server thử. Chưa thực thi bằng MySQL 8.4.
+- **QA ứng dụng:** lint/type-check/format/build qua; backend 77 qua, 22 SQL Server skip; frontend 128 qua. Đã chạy coverage toàn repo nhưng backend chỉ đạt 52,08% vì chưa cấu hình SQLSERVER_TEST_ODBC_CONNECTION, không đạt ngưỡng 80%; không hạ ngưỡng. Frontend coverage chạy riêng qua: statements 90,88%, branches 86,79%, functions 88,35%, lines 92,94%.
+- **Tài liệu/test:** database/mysql/README.md và tests/verify_catalog.sql; cập nhật kiến trúc/yêu cầu/kiểm thử/quyết định/changelog. Script assertion và snapshot nguồn local trong .artifacts bị ignore.
+- **Giới hạn/tiếp theo:** đây là bootstrap database mới, không phải migration trên schema cũ. Backend vẫn SQL Server; chờ người dùng chạy file rồi mới chuyển driver, tên bảng/view, khóa giao dịch, Version, INSERT/UPDATE và API tương ứng. Nhánh feat/mysql-schema, chưa commit/push.
+
+## 2026-10-08 — Chọn giọng Blaze trong Cài đặt
+
+- **Yêu cầu:** cho người dùng chọn giọng yêu thích thay giọng mặc định.
+- **Thay đổi:** GET /api/speech/voices lọc catalog Blaze theo en/vi và trả field an toàn. Cài đặt thêm selector giọng nam/nữ, trạng thái tải/lỗi/retry và nghe thử/dừng; lưu giongDoc cục bộ, giữ tương thích dữ liệu cũ và gửi speaker_id cho tất cả TTS. Không thay SQL schema.
+- **Kiểm chứng:** backend 77/77 tests qua, 22 SQL skip do chưa cấu hình test DB; lint/type-check backend qua. Frontend 111/111 tests qua; coverage 90,09% statements / 86,19% branches / 88,04% functions / 92,09% lines. Build và ESLint/TypeScript qua. OpenAPI export có 45 thao tác/38 đường dẫn.
+- **Chrome:** catalog thực tế 27 giọng en; chọn Alice, reload giữ giọng, preview phát được và Speaking gửi cùng speaker_id. Selector hiện trên desktop và mobile; không có pageerror. Screenshot/script trong .artifacts/browser-check bị ignore.
+- **Tài liệu:** README/API/BLAZE_SPEECH/kiến trúc/yêu cầu/kiểm thử/quyết định/changelog đã cập nhật. Key chỉ ở .env, không commit/push.
+- **Giới hạn:** lựa chọn lưu theo trình duyệt; chưa đồng bộ tài khoản SQL. Tiếng Việt vẫn dùng mặc định nếu gọi TTS trực tiếp với language=vi; UI học tiếng Anh chỉ chọn catalog en.
+
+
+## 2026-10-08 — Nối giọng Blaze vào trình duyệt
+
+- **Yêu cầu:** dùng TTS/STT backend trên giao diện.
+- **Thay đổi:** docTiengAnh gọi TTS/phát MP3; NutDoc dùng ở nhập môn, Listening, Speaking, Hội thoại, sổ từ và flashcard; dừng audio/request/revoke URL khi đổi trang hoặc bài. useThuAm dùng chung Speaking/Hội thoại, xin quyền micro, giới hạn 60 giây, dừng tracks rồi gửi STT; văn bản nhận dạng sửa được, chat không tự gửi. Giữ chat và chấm phát âm ở trạng thái mock.
+- **Kiểm chứng:** frontend 108/108 tests qua; coverage 90,22% statements / 85,97% branches / 87,81% functions / 92,18% lines, vượt ngưỡng 80%; ESLint/TypeScript và build qua. Backend không đổi trong tác vụ UI; kết quả 72/72 và 22 SQL skip thuộc tác vụ ngay trước.
+- **Trình duyệt:** Chrome headless phát TTS thật qua frontend 5175 → backend 8011; MP3 51.840 bytes giải mã/phát bình thường. Audio mẫu được cấp qua fake microphone Chrome, MediaRecorder tạo bản ghi, STT thật trả transcript và điền Speaking/Hội thoại; không tự gửi chat. Screenshot và script thử ở .artifacts/browser-check bị ignore.
+- **Tài liệu:** cập nhật README/API/BLAZE_SPEECH/kiến trúc/yêu cầu/kiểm thử/quyết định/changelog. Key vẫn chỉ ở .env backend. Không commit/push.
+- **Giới hạn:** chưa kiểm chứng micro vật lý, Safari/Firefox hoặc browser mobile; quyền micro cần người dùng cho phép. Không nối UI auth SQL, không lưu lịch sử thu âm vào DB, không chấm phát âm/LLM thật.
+
+
+## 2026-10-08 — Tích hợp Blaze TTS/STT vào backend
+
+- **Yêu cầu:** nối key TTS/STT của Blaze vào backend; không nối UI hoặc đổi provider chat.
+- **Thay đổi:** thêm schema/service/routes speech; cấu hình SecretStr từ .env; runtime httpx 0.28.1 và lockfiles; Compose chuyển key từ môi trường và tắt local demo. Cập nhật API/README/kiến trúc/yêu cầu/kiểm thử/quyết định/changelog và hướng dẫn BLAZE_SPEECH.md. Key thực tế chỉ ở .env bị Git ignore.
+- **Hành vi:** POST /api/speech/tts tạo/poll/download và trả MP3, POST /api/speech/stt nhận multipart file và trả transcript. Mặc định JWT; demo loopback opt-in khi chưa có DB, kiểm tra Origin. Timeout/giới hạn dữ liệu/lỗi provider không lộ token; không tự retry job tốn credit.
+- **Kiểm chứng:** lint toàn repo, build và frontend 92/92 qua; backend 72/72 qua, 22 SQL integration skip vì chưa cấu hình SQLSERVER_TEST_ODBC_CONNECTION. Riêng 24 test speech qua, coverage branch+statement ba module speech 96,79%; không coi đây là coverage toàn backend/SQL. OpenAPI export qua.
+- **HTTP thật:** Blaze key lấy options 200. Backend tại 8011: TTS Hello. → 200 audio/mpeg, 19.200 bytes; STT từ MP3 đó → 200 text Hello. Blaze trả payload MP3 dù request WAV; đã đổi adapter yêu cầu/trả MP3 đúng định dạng. Artifact thử trong .artifacts bị ignore.
+- **Giới hạn:** UI vẫn browser TTS; chưa tự lưu transcript vào bài luyện/SQL, chưa chấm phát âm, chưa phục hồi job nếu client ngắt hoặc process restart, chưa thử mọi giọng/định dạng. API chat vẫn mock. Không commit/push.
+
+
 ## 2026-10-08 — Đưa tài liệu README vào develop
 
 - **Yêu cầu:** merge tài liệu vừa hoàn thiện vào `develop`.
