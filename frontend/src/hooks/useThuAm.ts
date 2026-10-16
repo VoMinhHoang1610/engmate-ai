@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { chepLoi, dungDoc } from '../demo/amThanh';
+import { chepLoi, dungDoc } from '../speech/audio';
 
 type TrangThai = 'idle' | 'requesting' | 'recording' | 'stopping' | 'transcribing';
 
@@ -93,6 +93,9 @@ export function useThuAm(onText: (text: string) => void, onError: (message: stri
       };
       media.onerror = () => {
         failed = true;
+        if (limit.current !== null) window.clearTimeout(limit.current);
+        if (media.state === 'recording') media.stop();
+        if (recorder.current === media) recorder.current = null;
         mic.getTracks().forEach((track) => track.stop());
         busy.current = false;
         if (mounted.current) {

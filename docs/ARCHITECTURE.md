@@ -1,59 +1,26 @@
-# Kiến trúc
+# Kiến trúc hội thoại EngMate-AI
 
-Cập nhật: 2026-10-09. Frontend MySQL gọi API nghiệp vụ/JWT; demo giữ localStorage. Backend chọn MySQL/PyMySQL hoặc SQL Server/pyodbc, không tự chạy DDL.
+React/TypeScript → Vite proxy `/api` → FastAPI routers → services → SQLAlchemy Core → MySQL. Adapter SQL Server giữ tương thích dữ liệu cũ. Giao diện không có nhánh demo/localStorage và không nhận secret provider/database.
 
-```mermaid
-flowchart LR
-  UI[React MySQL] --> API
-  Demo[React demo] --> Local[localStorage / browser audio]
-  Demo --> MockRoute[API mock reply]
-  Client[Swagger / API client] --> API[FastAPI routes + Bearer authentication]
-  API --> Service[Auth / Learning / Conversation / Practice / Media services]
-  Service --> Repo[SQLAlchemy Core repository]
-  Repo --> DB[MySQL EngMateAI hoặc SQL Server em]
-  Service --> Files[Private media directory]
-  Service --> Mail[Optional SMTP STARTTLS]
-  Service --> Port[LLMClient interface]
-  Port --> Mock[MockLLMClient]
-  Prompt[Versioned prompt files] --> Service
-```
+- `App.tsx`: theo dõi phiên trong bộ nhớ, tải tài khoản/lịch sử, phân trang, tạo và chọn hội thoại.
+- `AuthForm.tsx`: đăng ký/đăng nhập bằng API, chặn gửi trùng, xóa password khi đổi form.
+- `components/Logo`, `LinhThu`, `BieuTuong`, `TieuDeTrang` và CSS: tái sử dụng bản gốc; shell chỉ còn điều hướng hội thoại. `MenuNguoiDung` giữ menu avatar gốc và gọi callback thu hồi phiên qua REST. AuthForm giữ pane trượt/intro Mate và kiểm tra xác nhận mật khẩu.
+- `Chat.tsx` + `api/chatStream.ts`: tải lịch sử, draft/UUID, start/delta/done/error SSE, cập nhật một assistant MessageId, bỏ phản hồi muộn và hủy body stream khi đổi hội thoại/dừng.
+- Scope `conversation-shell` giới hạn workspace theo 100dvh; grid/flex min-height:0 giữ panel trong viewport. Messages/history cuộn riêng; controls thoại cuộn giới hạn để form nhập luôn ở cuối. Chat chỉ scrollTo trên message pane, không cuộn ancestor của trang. Lịch sử là drawer ở chiều rộng <=1050px; màn hình thấp thu gọn heading/footer/khoảng đệm.
+- `api/database.ts`: bearer, refresh dùng chung cho request đồng thời, epoch chống hồi sinh phiên cũ, deadline và hủy request. Refresh có hạn 15 giây, request thường 45 giây, TTS 95 giây; body/provider được giới hạn ở backend.
+- `speech/audio.ts`, `hooks/useThuAm.ts`: Blaze STT/TTS từng lượt, cache/controller/microphone cleanup; không tự preload trả phí. `voice/gemini.ts` và `capture.worklet.js` quản lý PCM/AudioWorklet, queue, mute/reconnect/cleanup cho Gemini; `voice/session.ts` giữ WebRTC tùy chọn OpenAI. `VoiceChat.tsx` chọn transport theo capabilities và giữ style gốc.
+- `api/chat_routes.py`: tài khoản và conversation resources; `schemas/responses.py` giới hạn trường trả về và mô tả OpenAPI.
+- `ConversationService`: short transaction/khóa user để reserve turn, commit trước provider, finalize atomic; JSON API giữ tương thích. Context role-typed tối đa 20 tin/32000 ký tự, tách khỏi prompt `persona.v3.txt`, chung text/voice. JSON provider timeout 30 giây, SSE 40 giây. Pending quá 90 giây chuyển failed; cancel chặn kết quả muộn. Reply thoại bị truncate chuyển cancelled và bỏ phần chưa nghe khỏi context.
+- `llm/gemini.py`, `llm/gemini_live.py`: transport mặc định cho Gemini text/Live; khóa chỉ backend và wire DEBUG bị tắt. `llm/openai.py`, `llm/realtime.py` giữ transport OpenAI tùy chọn cho cấu hình cũ.
+- `services/gemini_voice.py`: relay/PCM/ticket và transcript Gemini; tái sử dụng owner/session/SQL lifecycle từ `services/realtime.py`. `api/voice_routes.py` xác thực REST/Origin/ticket và gọi manager. Backend không tin assistant text do browser gửi.
+- `SpeechService`: adapter Blaze STT/TTS, origin cố định, không theo URL trả về từ provider, quota/timeout/response size validation.
 
-- Pydantic kiểm tra dữ liệu và giới hạn theo cột SQL, kể cả độ dài UTF-16. Router xác thực JWT và chuyển lỗi thành response không chứa SQL, mật khẩu hoặc token. Middleware giới hạn body 10 MiB, request auth và đặt `no-store` cho API.
-- SQLAlchemy Core reflect danh sách bảng/view được phép từ schema hiện có; không dựng một bộ schema ORM thứ hai. Engine khởi tạo lazy, dùng pyodbc và connection pool. Không có DDL tự chạy khi khởi động.
-- `python scripts/manage.py migrate-backend` chạy các script 001–003 trong database người vận hành đã tạo; kiểm tra schema version, seed chạy lại được và cập nhật views. Version không hỗ trợ bị từ chối.
-- Auth dùng Argon2, JWT access và refresh token chỉ lưu hash. Mỗi request kiểm tra phiên trong DB để logout/reset/đổi mật khẩu thu hồi access token ngay. Media nằm ngoài web root, DB lưu metadata; tải file yêu cầu Bearer và đúng owner.
-- Ghi dữ liệu học tập trong transaction; khóa user phối hợp thao tác và dùng rowversion cho sửa dữ liệu. Request UUID bảo đảm retry không ghi trùng; dùng lại UUID với payload khác trả 409. Khóa ghép SQL bảo vệ ownership và quan hệ bài/câu hỏi/lựa chọn.
-- Pyodbc là driver đồng bộ. Các pha SQL của chat/luyện tập và xử lý media chạy trong worker thread; gọi LLM async ngoài transaction và có timeout. Tin nhắn/evaluation giữ trạng thái pending/completed/failed/cancelled; kết quả đến muộn không hồi sinh evaluation đã hủy.
-- StudySessions cung cấp thời lượng server tính; FlashcardReviews cung cấp lượt ôn. View tổng/ngày không join nhân dữ liệu. Ngày thống kê là ngày địa phương lúc hoàn thành phiên, chưa chia thời lượng qua nửa đêm; phiên bỏ dở không được cộng thời gian.
-- AI hiện là mock. Kết quả ghi `provider=mock`, không tạo điểm/phân tích AI thật. Listening chấm bằng đáp án SQL; answer key chỉ trả sau nộp, nhưng nội dung bài nghe vẫn có transcript phục vụ browser TTS của UI demo.
-- Docker dev gồm backend/frontend và volume media; database SQL Server là dịch vụ ngoài stack. Backend image có ODBC Driver 18 và ffmpeg. Frontend có 12 trang học tập và đăng nhập độc lập, Mate, theme/motion và dữ liệu trình duyệt; production static hosting chưa cấu hình.
-- `scripts/manage.py` tập trung các lệnh local/CI; Makefile và `make.cmd` là wrapper. OpenAPI xuất bằng `export-api` để nhập Postman.
+Readiness/capabilities chỉ phản ánh database/cấu hình local, không xác minh quota hoặc quyền model; health chỉ kiểm tra process. Runtime get_settings từ chối mock; factory AI mặc định tạo GeminiLLMClient, chỉ tạo OpenAI client khi được chọn rõ. Không fallback provider. Doubles tồn tại trong tests và được inject trực tiếp, không import từ application.
 
-## Giao diện mới
+Schema MySQL mới gồm 9 bảng, 4 trigger, tương thích các bảng hội thoại v1. Danh mục CEFR và cột phiên học/profile tối thiểu là chi tiết tương thích nội bộ, không phải chức năng bài tập hoặc dashboard. Database cũ không bị DROP/migration; code chỉ phản chiếu phần cần dùng. Tài khoản mới tạo profile tối thiểu cho khóa ngoại phiên hội thoại.
 
-- Prompt bảy mức nằm ở `persona.v2.txt`, service và hội thoại mới dùng cùng phiên bản; giữ nguyên v1 và snapshot các hội thoại cũ.
-- `demo/trinhDo.ts` định nghĩa bảy mức Pre-A1 đến C2, mục tiêu và đề Speaking/Writing. `LoTrinhHoc` lưu chặng tự chọn vào hồ sơ; `NenTangTiengAnh` dạy chữ cái/số/lời chào qua Web Speech. Bài kỹ năng đọc tham số `trinh-do` hợp lệ, sau đó fallback trình độ hồ sơ; query không đổi hồ sơ trừ khi bấm liên kết từ lộ trình. `baiNghe.ts` và `baiDocBoSung.ts` bổ sung nội dung theo cả bảy mức. LocalStorage cũ giữ tương thích; hồ sơ mới mặc định Pre-A1. Schema/prompt của API mock không lưu chấp nhận bảy mức; API SQL v1 có kiểu mức riêng A2/B1/B2 để giữ ràng buộc database.
-- Reading dùng `demo/baiDoc.ts` chứa bài đọc, câu hỏi, đáp án, giải thích và từ vựng. `pages/LuyenDoc.tsx` quản lý lựa chọn và kết quả tại trang; đổi bài/làm lại xóa đáp án. Chấm trực tiếp từ đáp án biên soạn, không gọi AI. Lưu từ và ghi nhận 5 phút qua Context hiện có; Set ở trang ngăn cộng phút lặp cùng bài trong một lần mở trang, không phải bộ đo thời gian thực. Không thêm endpoint hoặc dependency.
-- Khi `daDangNhap && !daLamQuen`, `KhungTrang` hiển thị `LamQuenCungMate` trước mọi route học tập/tài khoản và đặt tiêu đề trang tương ứng. `demo/lamQuen.ts` ánh xạ bảy mô tả gần gũi sang `TrinhDo`; xem trước chỉ đổi state tại trang, xác nhận mới cập nhật hồ sơ/`daLamQuen` và chuyển tổng quan. Radio native, focus heading và live status hỗ trợ bàn phím/trình đọc màn hình. Cờ được lưu cùng khóa `engmate-demo-v1`; dữ liệu thiếu cờ được hiểu là chưa làm quen, giữ nguyên hồ sơ/thống kê/từ vựng. Đăng xuất giữ cờ, đăng ký mới đặt lại false. Không thêm API hoặc dependency.
+Gemini mặc định: `llm/gemini.py` dùng GenerateContent SSE, x-goog-api-key ở header backend, systemInstruction tách history user/model, bỏ thought và chỉ hoàn tất khi finishReason=STOP. `llm/gemini_live.py` mở Live WebSocket, đợi setupComplete, nạp history bằng historyConfig/clientContent, cấu hình server VAD ngắt lời và input/output transcription. Không thêm SDK/dependency.
 
-Giao diện và `/api/ai/reply` hỗ trợ Pre-A1/A1/A2/B1/B2/C1/C2. Schema SQL Server v1 và API lưu hồ sơ/hội thoại chỉ nhận A2/B1/B2; mức ngoài phạm vi trả 422 trước khi ghi DB. Reading, nhập môn và cờ làm quen hiện lưu cục bộ, chưa có API SQL tương ứng. Muốn lưu đủ bảy mức cần migration được review trước khi nối UI với SQL.
+Voice Gemini: AudioWorklet microphone→PCM16 16 kHz→WebSocket cùng origin→GeminiVoiceManager→Gemini Live; đầu ra PCM16 24 kHz→hàng đợi AudioBufferSourceNode có giới hạn 8 giây. Ticket SHA-256 chỉ dùng một lần, 10 giây, cấp qua REST bearer; kiểm tra Origin trên WS. Chỉ relay audio, không chấp nhận client transcript/config. GeminiVoiceManager tái sử dụng ownership, ConversationService và lifecycle turn của RealtimeManager; ghi transcript provider vào MySQL. interrupted xóa audio chờ và hủy/discard reply bị ngắt; thiếu input transcript khi hoàn tất thì fail closed. Cleanup đóng sockets, worklet/AudioContext/tracks/timers; reconnect tối đa ba lần, không phát lại audio cũ. OpenAI adapter/WebRTC cũ vẫn có tests riêng và chỉ được chọn qua cấu hình.
 
-Chi tiết thiết kế: [SQL Server](DATABASE_SQLSERVER.md). Hợp đồng endpoint: [API](API.md). OAuth, email verification, streaming và adapter LLM thật nằm trong [kế hoạch tiếp theo](IMPLEMENTATION_PLAN.md).
-
-## Adapter speech Blaze
-
-Speech routes → SpeechService → HTTPS Blaze. TTS tạo/poll/download job và trả MP3; STT gửi multipart rồi trả transcript. httpx là runtime dependency; key là SecretStr và chỉ ở backend. JWT mặc định, demo loopback opt-in; không thay đổi DB hoặc mock chat. [Chi tiết](BLAZE_SPEECH.md).
-
-Frontend: NutDoc → docTiengAnh → /api/speech/tts → Audio/Blob URL. useThuAm → MediaRecorder → chepLoi → /api/speech/stt → ô văn bản. Hủy request/phát audio, dừng track micro và revoke Blob URL khi rời trang. Speech dùng demo loopback hiện tại; frontend chưa quản lý JWT SQL nên cấu hình DB bật vẫn cần tích hợp auth UI riêng.
-
-Catalog giọng: Settings → GET /api/speech/voices → Blaze options. `caiDat.giongDoc` lưu localStorage, provider đồng bộ data-speech-voice; TTS helper đọc và gửi speaker_id. Đây là cài đặt local, chưa mở rộng schema UserSettings SQL.
-
-## Đồng bộ MySQL — 2026-10-09
-
-MySQL có 24 bảng/2 view/7 trigger, bảy mức, Reading, TuVungBaiHoc, SpeechVoiceId và OnboardingCompletedAt. ModelCatalog ánh xạ tên logic sang bảng/view tiếng Việt. Repository chuyển UUID sang chuỗi, lấy PK sau INSERT và đọc lại UPDATE sau trigger trong cùng transaction. Version BIGINT được mã hóa hex 16 ký tự. Pool dùng READ COMMITTED, UTC, pre-ping/recycle; khóa user SELECT FOR UPDATE bảo vệ retry/chuỗi tin/refresh. Adapter SQL Server giữ schema và OUTPUT/rowversion. [Hướng dẫn](../database/mysql/README.md).
-
-`VITE_DATA_SOURCE=mysql` chọn MysqlLuuTru: token pair chỉ trong bộ nhớ trang, refresh dùng chung và không hồi sinh phiên sau logout. Mở/tải lại trang yêu cầu đăng nhập; token sessionStorage của bản cũ được loại bỏ khi khởi tạo transport. Sau authenticate, form chờ `capNhat({daDangNhap:true})` tải dữ liệu server thành công rồi đổi hash sang Tổng quan; lỗi tải giữ form để thử lại. Context tải hồ sơ/cài đặt/stats/sổ từ từ server, tuần tự hóa ghi theo Version và tải lại sau ghi; không nhập localStorage demo. ThucHanhMySQL lấy revision bài từ catalog, lưu Attempt và nộp backend. Reading/Listening chấm ở server; dictation nghe MP3 không lộ text key. Chat lưu tin/evaluation và đọc lịch sử riêng; flashcard dùng một phiên cho deck, retry giữ UUID/rating. Dashboard dùng thời gian server và số lượt ôn, không cộng phút minh họa khi nhấn nút. AI chat/nói/viết vẫn mock có nhãn.
-
-MySQL gửi Bearer cho speech; local-demo bypass bị tắt khi cấu hình database. SpeechVoiceId lưu qua API, key Blaze chỉ ở backend. Các mô tả localStorage/Reading client và giới hạn SQL Server v1 phía trên áp dụng cho demo hoặc adapter cũ. Migration runner từ chối MySQL bootstrap tự động; dùng `/api/ready` để xác nhận schema đã tạo.
-
-Âm thanh: NutDoc chuẩn bị clip chính sau 250 ms hoặc khi hover/focus. amThanh giữ cache RAM LRU (32 clip/16 MiB, TTL 15 phút), key text/ngôn ngữ/giọng/tốc độ; dùng chung request giữa các caller và hủy độc lập. Cache hit gọi Audio.play ngay trong click handler. Không tự phát trước click; lỗi không cache, logout xóa audio/request. Chưa cache backend hoặc lưu audio lâu dài.
+Giới hạn hiện tại: một backend worker; registry/session state chưa phân tán. Một call/account, tối đa 32/process, 600 giây mặc định, heartbeat hết hạn 35 giây. Reconnect tạo transport mới từ history đã lưu. Gemini Live đã tạo audio thật từ text trong probe; chưa xác minh microphone/echo/ngắt lời bằng thiết bị thật. Trạng thái OpenAI hết credit là kết quả lịch sử, không còn chặn cấu hình Gemini.

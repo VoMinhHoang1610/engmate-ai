@@ -1,74 +1,53 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import App from '../App';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { MenuNguoiDung } from './MenuNguoiDung';
-import { LuuTru } from '../demo/LuuTru';
 
-beforeEach(() => {
-  localStorage.clear();
-  window.history.replaceState(null, '', '#tong-quan');
-  vi.stubGlobal('scrollTo', vi.fn());
-});
-
-describe('Menu avatar', () => {
-  it('offers only login to guests and opens the separate login page', async () => {
-    const view = render(
-      <LuuTru>
-        <MenuNguoiDung />
-      </LuuTru>,
+describe('Menu avatar gốc', () => {
+  it('opens on hover and closes outside or on Escape while restoring keyboard focus', () => {
+    render(
+      <MenuNguoiDung
+        account={{ username: 'learner', email: 'learner@example.test' }}
+        busy={false}
+        onLogout={vi.fn()}
+      />,
     );
-    const avatar = screen.getByRole('button', { name: 'Mở menu tài khoản' });
-    fireEvent.mouseEnter(avatar.closest('.user-menu')!);
-    expect(avatar).toHaveAttribute('aria-expanded', 'true');
-    const menu = screen.getByRole('group', { name: 'Tùy chọn tài khoản' });
-    expect(within(menu).getAllByRole('link')).toHaveLength(1);
-    expect(within(menu).queryByRole('button')).not.toBeInTheDocument();
-    const login = within(menu).getByRole('link', { name: 'Đăng nhập' });
-    expect(login).toHaveAttribute('href', '#dang-nhap');
-    fireEvent.mouseLeave(avatar.closest('.user-menu')!);
-    expect(screen.queryByRole('group', { name: 'Tùy chọn tài khoản' })).not.toBeInTheDocument();
-    fireEvent.mouseEnter(avatar.closest('.user-menu')!);
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(avatar).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(avatar);
-    fireEvent.click(screen.getByRole('link', { name: 'Đăng nhập' }));
-    view.unmount();
-    render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Đăng nhập', level: 1 })).toBeVisible();
-    expect(screen.queryByRole('navigation', { name: 'Menu chính' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Tài khoản')).toBeVisible();
-    expect(screen.queryByRole('group', { name: 'Tùy chọn tài khoản' })).not.toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: 'Mở menu tài khoản' });
+    fireEvent.mouseEnter(trigger.parentElement!);
+    expect(screen.getByRole('group', { name: 'Tùy chọn tài khoản' })).toBeInTheDocument();
+    fireEvent.mouseLeave(trigger.parentElement!);
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(trigger);
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.pointerDown(document.body);
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(trigger);
+    fireEvent.pointerDown(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Đăng xuất' }), { key: 'Escape' });
+    expect(trigger).toHaveFocus();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('provides profile and logout after login and supports keyboard and outside dismissal', async () => {
-    window.history.replaceState(null, '', '#dang-nhap');
-    render(<App />);
-    fireEvent.change(screen.getByLabelText('Tài khoản'), { target: { value: 'abc' } });
-    fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: '123' } });
-    fireEvent.submit(screen.getByLabelText('Tài khoản').closest('form')!);
-    expect(screen.getByRole('heading', { name: 'Tiếng Anh của bạn đang ở đâu?' })).toBeVisible();
-    fireEvent.click(screen.getByRole('radio', { name: /Mình bắt đầu từ con số 0/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu học cùng Mate' }));
-    expect(await screen.findByRole('navigation', { name: 'Menu chính' })).toBeVisible();
-    let avatar = screen.getByRole('button', { name: 'Mở menu tài khoản' });
-    fireEvent.mouseEnter(avatar.closest('.user-menu')!);
-    let menu = screen.getByRole('group', { name: 'Tùy chọn tài khoản' });
-    expect(within(menu).queryByRole('link', { name: 'Đăng nhập' })).not.toBeInTheDocument();
-    fireEvent.click(within(menu).getByRole('link', { name: 'Hồ sơ học tập' }));
-    expect(await screen.findByRole('heading', { name: 'Hồ sơ học tập', level: 1 })).toBeVisible();
-    avatar = screen.getByRole('button', { name: 'Mở menu tài khoản' });
-    fireEvent.click(avatar);
-    fireEvent.keyDown(avatar, { key: 'Escape' });
-    expect(avatar).toHaveAttribute('aria-expanded', 'false');
-    expect(avatar).toHaveFocus();
-    fireEvent.click(avatar);
-    fireEvent.pointerDown(screen.getByRole('main'));
-    expect(avatar).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(avatar);
-    menu = screen.getByRole('group', { name: 'Tùy chọn tài khoản' });
-    fireEvent.click(within(menu).getByRole('button', { name: 'Đăng xuất' }));
-    expect(JSON.parse(localStorage.getItem('engmate-demo-v1')!).daDangNhap).toBe(false);
-    expect(screen.getByLabelText('Tài khoản')).toBeVisible();
-    expect(screen.queryByRole('navigation', { name: 'Menu chính' })).not.toBeInTheDocument();
+  it('keeps the menu while keyboard focus is inside and disables logout while busy', () => {
+    const logout = vi.fn().mockResolvedValue(undefined);
+    const props = {
+      account: { username: 'learner', email: 'learner@example.test' },
+      busy: true,
+      onLogout: logout,
+    };
+    const { rerender } = render(<MenuNguoiDung {...props} />);
+    const trigger = screen.getByRole('button', { name: 'Mở menu tài khoản' });
+    fireEvent.click(trigger);
+    trigger.focus();
+    fireEvent.mouseLeave(trigger.parentElement!);
+    expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeDisabled();
+    fireEvent.blur(trigger, { relatedTarget: screen.getByRole('button', { name: 'Đăng xuất' }) });
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    rerender(<MenuNguoiDung {...props} busy={false} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Đăng xuất' }));
+    expect(logout).toHaveBeenCalledOnce();
+    fireEvent.blur(trigger, { relatedTarget: document.body });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 });

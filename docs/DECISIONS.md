@@ -1,5 +1,39 @@
 # Quyết định kỹ thuật
 
+## 2026-10-16 — Chuyển provider mặc định sang Gemini
+
+Người dùng yêu cầu thay OpenAI bằng Gemini và đã cấp khóa. Chọn Gemini GenerateContent SSE (HTTPX sẵn có) và Gemini Live WebSocket (websockets sẵn có); không dùng khóa Gemini gửi đến endpoint OpenAI. Mặc định chat `gemini-3.5-flash-lite`, thoại `gemini-3.8-live`, voice Kore; đã xác nhận các model qua models API và tài liệu Google. Trong probe, 3.8 Flash trả 503, còn Flash-Lite trả SSE với STOP; không tự đổi model/provider khi lỗi runtime.
+
+Chọn relay backend thay phát standard key hoặc để browser tự báo assistant transcript. REST bearer cấp ticket một lần, WS kiểm tra Origin, chỉ nhận PCM có giới hạn; history và transcript provider giữ ở server. Gemini Live dùng PCM16 input 16 kHz/output 24 kHz và server VAD. AudioWorklet xử lý sample rate thiết bị; hàng đợi phát có giới hạn và xóa khi ngắt lời. Không đổi schema/login/giao diện, không thêm dependency hoặc coordination phân tán. Adapter OpenAI cũ được giữ để tương thích và test; `.env` local chuyển Gemini và xóa giá trị OPENAI_API_KEY.
+
+Nguồn chính thức: [GenerateContent API](https://ai.google.dev/api/generate-content), [Live WebSocket](https://ai.google.dev/api/live), [Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities), [danh mục model](https://ai.google.dev/gemini-api/docs/models). Không coi test doubles hoặc Live phát audio từ text là bằng chứng microphone/echo/barge-in trên thiết bị thật đã đạt.
+
+## 2026-10-16 — OpenAI Responses và Realtime theo lựa chọn người dùng
+
+Người dùng chọn OpenAI cho Chat/Realtime và giữ Blaze cho giọng đọc; đã cung cấp key riêng để cấu hình backend. Giữ React/FastAPI/MySQL/auth/layout cũ, JSON API tương thích. Responses dùng HTTPX có sẵn, SSE có typed lifecycle và assistant MessageId bền vững; history là role-typed input, không ghép dữ liệu người dùng vào system prompt. Prompt persona.v3 chung cho Chat/Voice.
+
+Voice chọn WebRTC thay upload audio theo lượt: provider quản lý media/jitter/VAD và truncate khi ngắt lời. Backend tạo call bằng key bí mật và attach sideband để nạp lịch sử/lưu transcript authoritative; browser không được tự ghi assistant text. Tất cả wire contract/provider calls nằm trong app/llm. Registry hiện in-process, một worker, heartbeat/TTL/session limit; không thêm Redis hoặc thay schema trong lượt này. Multi-worker cần coordination bền vững và kiểm thử riêng trước khi bật.
+
+Runtime không import model double; get_settings từ chối mock. Doubles chuyển vào tests/fakes.py và inject trong tests. Giữ assertions auth/retry/ownership/speech, bổ sung stream/voice tests; smoke đổi từ “realtime luôn false” sang kiểm tra cấu hình OpenAI/streaming và không mock, phù hợp chức năng mới.
+
+Thêm websockets==15.0.1 (client sideband, BSD license), đã cài và ghim cùng hai requirements lock. Giữ nguyên các dependency đã khóa; pip-compile offline không resolve được bộ package hiện có nên bổ sung dependency không có transitive này vào lockfiles, không tự nâng phiên bản cả môi trường. Docker nhận biến OpenAI chỉ ở backend; không đưa secret sang frontend.
+
+Kiểm chứng OpenAI live bị chặn bởi credit_balance_exhausted, không phải bằng chứng model đã trả lời. Người dùng hiện chưa thể bổ sung credit. Dừng các probe tính phí và không đổi sang provider/mock khác. Tài liệu OpenAI chính thức làm cơ sở hợp đồng: [Responses streaming](https://developers.openai.com/api/docs/guides/streaming-responses), [WebRTC](https://developers.openai.com/api/docs/guides/voice-webrtc), [sideband](https://developers.openai.com/api/docs/guides/voice-server-controls?api=realtime&voice-api=realtime), [interruption/truncation](https://developers.openai.com/api/docs/guides/realtime-conversations).
+
+## 2026-10-16 — Giữ giao diện gốc khi thu gọn tính năng
+
+Người dùng yêu cầu sửa việc tự thiết kế lại giao diện: giữ thiết kế cũ, kể cả đăng nhập/đăng ký. Khôi phục trực tiếp CSS và các component hình ảnh từ HEAD; App/AuthForm/Chat dùng lại cấu trúc/class gốc, ghép với transport REST và state đã kiểm thử. Không khôi phục demo/context cũ, OAuth giả hay trang học tập phụ. Menu avatar được giữ với callback logout gọi backend. Bổ sung xác nhận mật khẩu cùng kiểm tra mismatch, không thay đổi chính sách xác thực backend.
+
+Khóa do người dùng cung cấp được lưu duy nhất trong `.env` root bị Git bỏ qua. Chỉ kiểm tra có cấu hình, không ghi giá trị vào tài liệu/log và không gọi dịch vụ tính phí. Có khóa speech chưa cung cấp hợp đồng sinh phản hồi Chat/Voice Agent; tiếp tục công khai giới hạn này.
+
+## 2026-10-16 — Thu gọn về hội thoại
+
+Người dùng duyệt loại toàn bộ chức năng học tập phụ, giữ tài khoản/lịch sử/chat chữ/speech và yêu cầu voice realtime bằng Blaze. Chọn tái sử dụng các bảng chat v1 và cơ chế JWT/ownership/idempotency, thu gọn schema bootstrap mới, bảo toàn database cũ. Một frontend luôn dùng REST, bỏ localStorage/demo switch để dev/build thống nhất. Lịch sử JOIN trạng thái phiên để tránh N+1.
+
+Tài liệu https://blaze.vn/#api và https://app.blaze.vn/api/documentation/realTimeTts xác minh speech/TTS WebSocket nhưng chưa có hợp đồng Chat/Voice Agent. Chọn fail closed cho Blaze Chat và công khai realtime=false, không đoán endpoint hoặc âm thầm thay bằng mock. Mock chỉ hoạt động khi cấu hình rõ, có nhãn. Không chọn LLM khác thay yêu cầu Blaze khi chưa được người dùng cho phép.
+
+CI đổi sang MySQL 8.0 với schema test riêng để kiểm chứng driver chính; giữ ngưỡng coverage. Tên nhánh dùng tiếng Việt không dấu `tai-cau-truc/chi-giu-hoi-thoai-ai`; nội dung commit/PR bằng tiếng Việt và tiền tố Conventional Commits. Chưa tự commit/push.
+
 2026-10-09 — Luồng mở ứng dụng/đăng nhập: theo yêu cầu hiện đăng nhập trước mỗi lần mở trang MySQL, giữ token trong bộ nhớ thay vì khôi phục sessionStorage; không thay tài khoản/dữ liệu hay chính sách JWT của backend. Form chờ thao tác tải context sau authenticate rồi điều hướng Tổng quan. Chọn chờ Promise của context thay sự kiện `engmate-login` không có kết quả trả về để nút xử lý/lỗi gắn với toàn bộ quá trình. Demo cũng chuyển Tổng quan sau đăng nhập; các fixture demo đã đăng nhập vẫn kiểm tra trang học riêng. Assertion cũ chờ bấm thêm liên kết vào học/chuyển về trang Cài đặt được thay bằng kiểm tra vào Tổng quan tự động vì đây là hành vi người dùng yêu cầu.
 
 2026-10-09 — Kết nối MySQL và frontend: sau khi người dùng cung cấp connection và yêu cầu đồng bộ, chọn SQLAlchemy Core/PyMySQL, giữ service/hợp đồng API và ánh xạ bảng tiếng Việt thay vì đổi DDL hoặc tạo ORM mới. PyMySQL[rsa] hỗ trợ xác thực caching_sha2_password của MySQL 8; dependencies được khóa trong requirements. Theo [SQLAlchemy MySQL dialect](https://docs.sqlalchemy.org/en/20/dialects/mysql.html), dùng INSERT + PK/SELECT và UPDATE + SELECT trong transaction, không dùng OUTPUT/RETURNING của SQL Server. READ COMMITTED + SELECT FOR UPDATE theo user bảo vệ retry; mỗi kết nối đặt UTC. Token Version giữ hex 16 ký tự để UI dùng cùng hợp đồng.

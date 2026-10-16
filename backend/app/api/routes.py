@@ -1,29 +1,33 @@
-"""Small, testable HTTP surface for the scaffold."""
+"""Liveness and honest provider capabilities, independent of paid requests."""
 
-from typing import Annotated
+from fastapi import APIRouter, Request
 
-from fastapi import APIRouter, Depends, HTTPException
+from app.db.database import Record
 
-from app.api.dependencies import get_ai_service
-from app.schemas.ai import ReplyRequest, ReplyResponse
-from app.services.ai_service import AIService
-
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["health"])
 
 
-@router.get("/health", tags=["health"])
-async def health() -> dict[str, str]:
-    """Check process liveness without making a DB or model call."""
+@router.get("/health")
+def health() -> dict[str, str]:
+    """Check process liveness without a database or provider call."""
     return {"status": "ok", "service": "engmate-ai"}
 
 
-@router.post("/ai/reply", response_model=ReplyResponse, tags=["ai-demo"])
-async def reply(
-    request: ReplyRequest,
-    service: Annotated[AIService, Depends(get_ai_service)],
-) -> ReplyResponse:
-    """Expose the mock adapter and translate provider timeouts to HTTP errors."""
-    try:
-        return await service.reply(request)
-    except TimeoutError as exc:
-        raise HTTPException(status_code=504, detail="AI provider timed out.") from exc
+@router.get("/capabilities")
+def capabilities(request: Request) -> Record:
+    """Expose configuration status without secret values or paid probes."""
+    settings = request.app.state.settings
+    mock = settings.llm_provider == "mock"
+    return {
+        "provider": settings.llm_provider,
+        "is_mock": mock,
+        "chat": settings.chat_configured,
+        "streaming": settings.chat_configured,
+        "speech": bool(settings.blaze_api_key),
+        "realtime": settings.chat_configured,
+        "reason": (
+            None
+            if settings.chat_configured
+            else "Cần cấu hình khóa API của provider đã chọn để chat và thoại."
+        ),
+    }

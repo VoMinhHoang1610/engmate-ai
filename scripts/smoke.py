@@ -1,38 +1,45 @@
-"""Verify backend, frontend and Vite proxy over real HTTP."""
+"""Check liveness, provider capabilities, HTML, proxy and the chat REST surface."""
 
 import json
 import os
-from urllib.request import Request, urlopen
+from urllib.request import urlopen
 
 
 def main() -> None:
-    """Fail immediately when any part of the starter stack is unavailable."""
+    """Never spend provider credit or create real accounts during a smoke probe."""
     backend = os.getenv("SMOKE_BACKEND_URL", "http://127.0.0.1:8010")
     frontend = os.getenv("SMOKE_FRONTEND_URL", "http://127.0.0.1:5174")
     for base in (backend, frontend):
         with urlopen(f"{base}/api/health", timeout=10) as response:
-            if response.status != 200 or json.load(response) != {
+            assert response.status == 200 and json.load(response) == {
                 "status": "ok",
                 "service": "engmate-ai",
-            }:
-                raise SystemExit("Health/proxy contract failed.")
+            }
+        with urlopen(f"{base}/api/capabilities", timeout=10) as response:
+            capabilities = json.load(response)
+            assert capabilities["provider"] in ("gemini", "openai", "blaze")
+            assert capabilities["is_mock"] is False
+            assert isinstance(capabilities["realtime"], bool)
+            if capabilities["realtime"]:
+                assert capabilities["provider"] in ("gemini", "openai")
+                assert capabilities["streaming"] is True
     with urlopen(frontend, timeout=10) as response:
-        if response.status != 200 or "EngMate-AI" not in response.read().decode():
-            raise SystemExit("Frontend HTML contract failed.")
-    request = Request(
-        f"{frontend}/api/ai/reply",
-        data=json.dumps({"message": "Hello", "level": "B1"}).encode(),
-        headers={"Content-Type": "application/json"},
+        assert response.status == 200 and "EngMate-AI" in response.read().decode()
+    with urlopen(f"{backend}/openapi.json", timeout=10) as response:
+        paths = json.load(response)["paths"]
+        assert "/api/conversations/{identity}/messages" in paths
+        assert "/api/conversations/{identity}/messages/stream" in paths
+        assert "/api/conversations/{identity}/voice" in paths
+        assert not any(
+            p.startswith(
+                ("/api/practice", "/api/lessons", "/api/vocabulary", "/api/flashcards")
+            )
+            for p in paths
+        )
+    print(
+        "PASS: health, frontend, proxy, capabilities and chat-only OpenAPI. "
+        "This is not a paid provider/readiness test."
     )
-    with urlopen(request, timeout=10) as response:
-        data = json.load(response)
-        if (
-            response.status != 200
-            or data.get("provider") != "mock"
-            or data.get("level") != "B1"
-        ):
-            raise SystemExit("Mock AI/proxy contract failed.")
-    print("PASS: backend health, frontend HTML, API proxy and mock AI reply.")
 
 
 if __name__ == "__main__":

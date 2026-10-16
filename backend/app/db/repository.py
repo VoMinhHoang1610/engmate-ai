@@ -35,14 +35,22 @@ class Repository:
         return [dict(row) for row in self.connection.execute(query).mappings()]
 
     def page(
-        self, name: str, order: str, offset: int, limit: int, **filters: Any
+        self,
+        name: str,
+        order: str,
+        offset: int,
+        limit: int,
+        *,
+        descending: bool = False,
+        **filters: Any,
     ) -> list[Record]:
         """Bound list reads and use a deterministic SQL Server ordering."""
         table = self.database.models.table(name, self.connection)
         query = select(table)
         for key, value in self.values(filters).items():
             query = query.where(table.c[key] == value)
-        query = query.order_by(table.c[order]).offset(offset).limit(limit)
+        ordering = table.c[order].desc() if descending else table.c[order]
+        query = query.order_by(ordering).offset(offset).limit(limit)
         return [dict(row) for row in self.connection.execute(query).mappings()]
 
     def one(self, name: str, **filters: Any) -> Record:

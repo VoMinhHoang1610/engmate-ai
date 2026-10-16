@@ -101,8 +101,6 @@ pathspec==1.1.1
     #   black
     #   hatchling
     #   mypy
-pillow==12.3.0
-    # via engmate-ai-backend (backend/pyproject.toml)
 pip-tools==7.6.1
     # via engmate-ai-backend (backend/pyproject.toml)
 platformdirs==4.12.3
@@ -181,6 +179,8 @@ typing-inspection==0.4.4
 tzdata==2026.5
     # via engmate-ai-backend (backend/pyproject.toml)
 uvicorn==0.54.0
+    # via engmate-ai-backend (backend/pyproject.toml)
+websockets==15.0.1
     # via engmate-ai-backend (backend/pyproject.toml)
 virtualenv==21.14.5
     # via pre-commit

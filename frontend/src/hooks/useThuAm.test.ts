@@ -8,6 +8,7 @@ class RecorderMock {
   mimeType = 'audio/webm;codecs=opus';
   ondataavailable: ((event: BlobEvent) => void) | null = null;
   onstop: (() => void) | null = null;
+  onerror: (() => void) | null = null;
   constructor() {
     recorders.push(this);
   }
@@ -38,6 +39,91 @@ afterEach(() => {
 });
 
 describe('microphone lifecycle', () => {
+  it('reports unsupported browsers without starting a recording', async () => {
+    vi.stubGlobal('navigator', {});
+    const onError = vi.fn();
+    const hook = renderHook(() => useThuAm(vi.fn(), onError));
+    await act(async () => {
+      await hook.result.current.toggle();
+    });
+    expect(onError).toHaveBeenLastCalledWith(expect.stringContaining('chưa hỗ trợ'));
+    expect(getUserMedia).not.toHaveBeenCalled();
+    expect(hook.result.current.active).toBe(false);
+  });
+
+  it('releases a microphone permission result arriving after page exit', async () => {
+    let deliver!: (stream: { getTracks: () => { stop: () => void }[] }) => void;
+    getUserMedia.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          deliver = resolve;
+        }),
+    );
+    const hook = renderHook(() => useThuAm(vi.fn(), vi.fn()));
+    let pending!: Promise<void>;
+    act(() => {
+      pending = hook.result.current.toggle();
+    });
+    expect(hook.result.current.processing).toBe(true);
+    hook.unmount();
+    await act(async () => {
+      deliver({ getTracks: () => [{ stop: stopTrack }] });
+      await pending;
+    });
+    expect(stopTrack).toHaveBeenCalled();
+    expect(recorders).toHaveLength(0);
+  });
+
+  it('stops a failed recorder and permits a fresh recording', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const onError = vi.fn();
+    const hook = renderHook(() => useThuAm(vi.fn(), onError));
+    await act(async () => {
+      await hook.result.current.toggle();
+    });
+    act(() => recorders[0].onerror?.());
+    expect(recorders[0].state).toBe('inactive');
+    expect(hook.result.current.active).toBe(false);
+    expect(onError).toHaveBeenLastCalledWith(expect.stringContaining('gián đoạn'));
+    expect(fetchMock).not.toHaveBeenCalled();
+    await act(async () => {
+      await hook.result.current.toggle();
+    });
+    expect(hook.result.current.recording).toBe(true);
+    hook.unmount();
+  });
+
+  it('bounds a stalled transcription and returns control to the user', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_path: string, options: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            const signal = options.signal as AbortSignal;
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+          }),
+      ),
+    );
+    const onError = vi.fn();
+    const hook = renderHook(() => useThuAm(vi.fn(), onError));
+    await act(async () => {
+      await hook.result.current.toggle();
+    });
+    await act(async () => {
+      await hook.result.current.toggle();
+    });
+    expect(hook.result.current.processing).toBe(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(40100);
+    });
+    expect(onError).toHaveBeenLastCalledWith(expect.stringContaining('quá lâu'));
+    expect(hook.result.current.active).toBe(false);
+    expect(stopTrack).toHaveBeenCalled();
+    hook.unmount();
+  });
+
   it('fills a transcript and releases tracks before STT completes', async () => {
     const onText = vi.fn();
     const onError = vi.fn();

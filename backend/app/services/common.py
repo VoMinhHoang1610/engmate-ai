@@ -10,7 +10,7 @@ from fastapi import HTTPException
 
 from app.db.database import Record
 from app.db.repository import Repository
-from app.schemas.learning import snake_name
+from app.schemas.chat import snake_name
 
 
 def now() -> datetime:

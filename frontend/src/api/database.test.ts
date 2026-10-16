@@ -89,7 +89,55 @@ describe('authenticated database transport', () => {
     const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal('fetch', fetch);
     expect(await api('/auth/logout', 'POST')).toBeUndefined();
-    await apiFetch('/api/topics');
-    expect(fetch.mock.calls.at(-1)?.[1]).toEqual({});
+    await apiFetch('/api/capabilities');
+    expect(fetch.mock.calls.at(-1)?.[1]).toEqual({ signal: expect.any(AbortSignal) });
+  });
+
+  it('propagates caller cancellation to the bounded network request', async () => {
+    const caller = new AbortController();
+    let networkSignal: AbortSignal | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_path: string, options: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            networkSignal = options.signal as AbortSignal;
+            networkSignal.addEventListener('abort', () => reject(networkSignal!.reason), {
+              once: true,
+            });
+          }),
+      ),
+    );
+    const request = api('/me', 'GET', undefined, caller.signal);
+    const assertion = expect(request).rejects.toThrow();
+    caller.abort();
+    await assertion;
+    expect(networkSignal?.aborted).toBe(true);
+  });
+
+  it('aborts a stalled API request at its deadline', async () => {
+    vi.useFakeTimers();
+    try {
+      let networkSignal: AbortSignal | undefined;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          (_path: string, options: RequestInit) =>
+            new Promise((_resolve, reject) => {
+              networkSignal = options.signal as AbortSignal;
+              networkSignal.addEventListener('abort', () => reject(networkSignal!.reason), {
+                once: true,
+              });
+            }),
+        ),
+      );
+      const request = api('/me');
+      const assertion = expect(request).rejects.toThrow();
+      await vi.advanceTimersByTimeAsync(45000);
+      await assertion;
+      expect(networkSignal?.aborted).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

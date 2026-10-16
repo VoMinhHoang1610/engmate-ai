@@ -9,11 +9,28 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 
 
 class Settings(BaseModel):
-    """Only the mock provider is enabled until a real adapter is implemented."""
+    """Validate credentials privately; mock is an explicit test configuration."""
 
     app_name: str = "EngMate-AI"
     model_config = ConfigDict(hide_input_in_errors=True)
-    llm_provider: Literal["mock"] = "mock"
+    llm_provider: Literal["mock", "blaze", "openai", "gemini"] = "gemini"
+    gemini_api_key: SecretStr | None = None
+    gemini_chat_model: str = Field(
+        default="gemini-3.5-flash-lite", pattern=r"^gemini-[a-zA-Z0-9._-]+$"
+    )
+    gemini_live_model: str = Field(
+        default="gemini-3.8-live", pattern=r"^gemini-[a-zA-Z0-9._-]+$"
+    )
+    gemini_voice: str = Field(default="Kore", pattern=r"^[a-zA-Z0-9_-]{1,64}$")
+    gemini_max_output_tokens: int = Field(default=2048, ge=64, le=8192)
+    openai_api_key: SecretStr | None = None
+    openai_chat_model: str = "gpt-4.1-mini"
+    openai_realtime_model: str = "gpt-realtime"
+    openai_voice: str = "marin"
+    openai_max_output_tokens: int = Field(default=800, ge=64, le=4096)
+    voice_max_session_seconds: int = Field(default=600, ge=30, le=1800)
+    voice_vad_silence_ms: int = Field(default=900, ge=500, le=2000)
+    voice_vad_threshold: float = Field(default=0.5, ge=0.1, le=0.9)
     blaze_api_key: SecretStr | None = None
     blaze_tts_model: str = "v2.0_pro"
     blaze_stt_model: Literal["stt-async-1.0", "stt-async-1.5"] = "stt-async-1.5"
@@ -24,13 +41,6 @@ class Settings(BaseModel):
     access_token_minutes: int = Field(default=15, ge=1, le=60)
     refresh_token_days: int = Field(default=30, ge=1, le=90)
     auth_requests_per_minute: int = Field(default=30, ge=1, le=1000)
-    media_directory: Path = Path(__file__).resolve().parents[3] / ".artifacts" / "media"
-    smtp_host: str | None = None
-    smtp_port: int = 587
-    smtp_username: str | None = None
-    smtp_password: SecretStr | None = None
-    smtp_sender: str | None = None
-    frontend_url: str = "http://127.0.0.1:5174"
     cors_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:5174", "http://127.0.0.1:5174"]
     )
@@ -42,8 +52,14 @@ class Settings(BaseModel):
             raise ValueError("Configure only one database connection.")
         if self.database_mysql_url:
             from sqlalchemy.engine import make_url
+            from sqlalchemy.exc import ArgumentError
 
-            url = make_url(self.database_mysql_url.get_secret_value())
+            try:
+                url = make_url(self.database_mysql_url.get_secret_value())
+            except ArgumentError:
+                raise ValueError(
+                    "DATABASE_MYSQL_URL is not a valid database URL."
+                ) from None
             if url.drivername != "mysql+pymysql" or not url.database:
                 raise ValueError(
                     "DATABASE_MYSQL_URL requires mysql+pymysql and a database."
@@ -61,15 +77,39 @@ class Settings(BaseModel):
         """Private data requires authentication with either database driver."""
         return bool(self.database_mysql_url or self.database_odbc_connection)
 
+    @property
+    def chat_configured(self) -> bool:
+        """Describe local configuration, without claiming upstream account access."""
+        return (self.llm_provider == "gemini" and bool(self.gemini_api_key)) or (
+            self.llm_provider == "openai" and bool(self.openai_api_key)
+        )
+
 
 def get_settings() -> Settings:
     """Read process environment without caching state across tests."""
     load_dotenv(Path(__file__).resolve().parents[3] / ".env", override=False)
     origins = os.getenv("CORS_ORIGINS", "http://localhost:5174,http://127.0.0.1:5174")
+    if os.getenv("LLM_PROVIDER", "gemini") == "mock":
+        raise ValueError("Mock is test-only; configure LLM_PROVIDER=gemini.")
     return Settings.model_validate(
         {
             "app_name": os.getenv("APP_NAME", "EngMate-AI"),
-            "llm_provider": os.getenv("LLM_PROVIDER", "mock"),
+            "llm_provider": os.getenv("LLM_PROVIDER", "gemini"),
+            "gemini_api_key": os.getenv("GEMINI_API_KEY") or None,
+            "gemini_chat_model": os.getenv(
+                "GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite"
+            ),
+            "gemini_live_model": os.getenv("GEMINI_LIVE_MODEL", "gemini-3.8-live"),
+            "gemini_voice": os.getenv("GEMINI_VOICE", "Kore"),
+            "gemini_max_output_tokens": os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "2048"),
+            "openai_api_key": os.getenv("OPENAI_API_KEY") or None,
+            "openai_chat_model": os.getenv("OPENAI_CHAT_MODEL", "gpt-4.1-mini"),
+            "openai_realtime_model": os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime"),
+            "openai_voice": os.getenv("OPENAI_VOICE", "marin"),
+            "openai_max_output_tokens": os.getenv("OPENAI_MAX_OUTPUT_TOKENS", "800"),
+            "voice_max_session_seconds": os.getenv("VOICE_MAX_SESSION_SECONDS", "600"),
+            "voice_vad_silence_ms": os.getenv("VOICE_VAD_SILENCE_MS", "900"),
+            "voice_vad_threshold": os.getenv("VOICE_VAD_THRESHOLD", "0.5"),
             "blaze_api_key": os.getenv("BLAZE_API_KEY") or None,
             "blaze_tts_model": os.getenv("BLAZE_TTS_MODEL", "v2.0_pro"),
             "blaze_stt_model": os.getenv("BLAZE_STT_MODEL", "stt-async-1.5"),
@@ -80,16 +120,6 @@ def get_settings() -> Settings:
             "access_token_minutes": os.getenv("ACCESS_TOKEN_MINUTES", "15"),
             "refresh_token_days": os.getenv("REFRESH_TOKEN_DAYS", "30"),
             "auth_requests_per_minute": os.getenv("AUTH_REQUESTS_PER_MINUTE", "30"),
-            "media_directory": (
-                Path(__file__).resolve().parents[3]
-                / os.getenv("MEDIA_DIRECTORY", ".artifacts/media")
-            ),
-            "smtp_host": os.getenv("SMTP_HOST") or None,
-            "smtp_port": os.getenv("SMTP_PORT", "587"),
-            "smtp_username": os.getenv("SMTP_USERNAME") or None,
-            "smtp_password": os.getenv("SMTP_PASSWORD") or None,
-            "smtp_sender": os.getenv("SMTP_SENDER") or None,
-            "frontend_url": os.getenv("FRONTEND_URL", "http://127.0.0.1:5174"),
             "cors_origins": [
                 origin.strip() for origin in origins.split(",") if origin.strip()
             ],

@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-16 — Cố định khung hội thoại
+
+- Khung chat vừa chiều cao màn hình; tin nhắn và lịch sử cuộn riêng, gửi/nhận tin không kéo cả trang.
+- Ô nhập giữ trong khung khi nội dung thoại dài; lịch sử chuyển sang drawer trên màn hình hẹp. Giữ giao diện gốc và thu gọn khoảng trống khi màn hình thấp.
+
+## 2026-10-16 — Hội thoại dùng Gemini thay OpenAI
+
+- Gemini là provider mặc định cho chat streaming và thoại trực tiếp Live; giữ giao diện cũ, tài khoản/lịch sử/MySQL và Blaze STT/TTS.
+- Khóa Gemini chỉ ở backend. Thoại dùng relay WebSocket, ticket một lần, PCM capture/playback có giới hạn, mute/cleanup/reconnect và xóa audio khi ngắt lời. Header hiển thị đúng GEMINI.
+- Không cần credit OpenAI cho cấu hình mới; lỗi Gemini vẫn được báo thật, không fallback. Chưa xác minh thoại bằng microphone/loa vật lý.
+
+## 2026-10-16 — Chat OpenAI streaming và Voice WebRTC
+
+- Chat dùng OpenAI Responses, hiển thị từng delta vào cùng assistant message; có Dừng phản hồi, giữ draft/retry UUID và lưu kết quả thật trong MySQL. Lỗi/quota không fallback câu trả lời giả.
+- Thêm Bắt đầu/Kết thúc thoại, Mute và trạng thái theo WebRTC/VAD; nói chen hủy/clear/truncate audio cũ. Backend sideband lưu transcript provider vào cùng lịch sử; cleanup/reconnect có hạn. Giữ phong cách giao diện cũ và Blaze STT/TTS từng lượt.
+- Key OpenAI chỉ backend/.env; runtime từ chối mock. Đã triển khai và test offline; kiểm chứng live chưa hoàn tất vì OpenAI trả credit_balance_exhausted. Chưa khẳng định giọng nói/echo/interrupt hoạt động trên thiết bị thật.
+
+## 2026-10-16 — Khôi phục giao diện gốc theo yêu cầu
+
+- Khôi phục màu sắc, CSS, logo, linh vật Mate, sidebar/topbar và bố cục hội thoại/lịch sử gốc. Đăng nhập/đăng ký trở lại pane trượt, nền/hiệu ứng Mate và xác nhận mật khẩu.
+- Menu avatar giữ tương tác hover/touch/bàn phím; đăng xuất vẫn thu hồi phiên qua REST. Giữ xử lý tài khoản/lịch sử/chat/speech đã sửa; không đưa lại các tính năng học tập phụ.
+- Cấu hình khóa Blaze riêng trong `.env` backend, không đưa vào source/frontend. Chưa gọi upstream tính phí; Blaze Chat/realtime vẫn phụ thuộc hợp đồng API.
+
+## 2026-10-16 — Bản hội thoại (breaking API)
+
+- Thay giao diện học tập nhiều trang bằng tài khoản và không gian hội thoại; giữ lịch sử riêng, tạo/mở/kết thúc, chat chữ và speech từng lượt.
+- Bỏ lộ trình/bài tập/chấm điểm/flashcard/sổ từ/dashboard/onboarding/hồ sơ mở rộng và API phụ. Bỏ tài khoản demo/OAuth giả/SMTP reset; xem API.md cho endpoint đã loại.
+- Lịch sử mới nhất trước, phân trang vượt 100; retry/draft/cancel/stale pending, response schema và lỗi mạng rõ ràng.
+- Schema cài mới chỉ có 9 bảng; database cũ được bảo toàn. Dev/build cùng gọi REST API.
+- Hiển thị rõ trạng thái mock và cấu hình Blaze chưa sẵn sàng. AI thật và realtime còn chờ contract upstream; không được công bố là đã hoạt động.
+
 2026-10-09: bỏ trạng thái “Đang tạo giọng nói…” và giữ biểu tượng nút Nghe. Nạp sẵn bộ phát/tái dùng clip, bỏ chờ preload 250 ms; khi Blaze chưa có âm thanh, dùng giọng tiếng Anh cục bộ để phát nhanh. Nghe thử giọng luôn giữ đúng lựa chọn Blaze. Dừng/đổi trang/logout dừng cả hai loại tiếng, không phát MP3 muộn chồng lên giọng máy.
 
 2026-10-09: mở/tải lại ứng dụng MySQL hiện đăng nhập trước; đăng nhập chờ tải dữ liệu rồi vào Tổng quan ngay, không cần tải lại hay bấm thêm liên kết. Nút giữ trạng thái xử lý trong khi tải; lỗi tải cho thử lại. Tài khoản mới vẫn qua bước làm quen, dữ liệu MySQL giữ nguyên sau đăng nhập lại.

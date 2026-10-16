@@ -1,9 +1,18 @@
-"""Dependency injection points for future provider implementations."""
+"""Choose the explicitly configured provider without silent mock fallback."""
 
-from app.llm.mock import MockLLMClient
-from app.services.ai_service import AIService
+from fastapi import HTTPException, Request
+
+from app.llm.base import LLMClient
+from app.llm.gemini import GeminiLLMClient
+from app.llm.openai import OpenAILLMClient
 
 
-def get_ai_service() -> AIService:
-    """Use the free mock until a real provider is deliberately implemented."""
-    return AIService(MockLLMClient())
+def get_llm_client(request: Request) -> LLMClient:
+    """Keep mock restricted to an explicit development/test configuration."""
+    if not request.app.state.settings.chat_configured:
+        raise HTTPException(
+            503, "Configure the selected AI provider credentials for chat."
+        )
+    if request.app.state.settings.llm_provider == "gemini":
+        return GeminiLLMClient(request.app.state.settings)
+    return OpenAILLMClient(request.app.state.settings)

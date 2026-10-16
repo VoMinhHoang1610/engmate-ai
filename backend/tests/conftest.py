@@ -6,14 +6,18 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from app.api.dependencies import get_llm_client
 from app.core.config import Settings
 from app.main import create_app
+from tests.fakes import MockLLMClient
 
 
 @pytest.fixture
 def application() -> FastAPI:
     """Isolate routes, settings and dependency overrides for each test."""
-    return create_app(Settings())
+    application = create_app(Settings())
+    application.dependency_overrides[get_llm_client] = MockLLMClient
+    return application
 
 
 @pytest.fixture

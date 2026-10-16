@@ -3,7 +3,9 @@
 from collections.abc import AsyncIterator
 
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 
 from app.core.config import Settings
 from app.core.request_limits import MAX_BODY, AuthLimiter
@@ -12,20 +14,19 @@ from app.main import create_app
 pytestmark = pytest.mark.anyio
 
 
-async def test_no_database_mode(client: AsyncClient) -> None:
+async def test_no_database_mode(client: AsyncClient, application: FastAPI) -> None:
     """The mock demo remains runnable; persisted routes report missing configuration."""
     assert (await client.get("/api/health")).status_code == 200
     assert (await client.get("/api/ready")).status_code == 503
-    assert (await client.get("/api/topics")).status_code == 503
-    assert (await client.get("/api/me")).status_code in (401, 403)
-    assert (await client.get("/api/lessons/0")).status_code == 422
-    assert (await client.get("/api/lessons/9223372036854775808")).status_code == 422
-    assert (await client.get("/api/lessons?offset=2147483648")).status_code == 422
+    assert (await client.get("/api/me")).status_code == 401
+    application.state.settings.jwt_secret = SecretStr(
+        "isolated-test-signing-secret-at-least-32-characters"
+    )
     assert (
-        await client.post(
-            "/api/auth/forgot-password", json={"email": "test@example.test"}
+        await client.get(
+            "/api/conversations/0/messages", headers={"Authorization": "Bearer invalid"}
         )
-    ).status_code == 503
+    ).status_code in (401, 422)
 
 
 async def test_rate_limit_and_private_validation() -> None:
@@ -54,7 +55,7 @@ async def test_rate_limit_and_private_validation() -> None:
 async def test_body_limit(client: AsyncClient) -> None:
     """Reject oversize declared and chunked bodies before creating any data."""
     declared = await client.post(
-        "/api/ai/reply", content=b"{}", headers={"Content-Length": str(MAX_BODY + 1)}
+        "/api/auth/login", content=b"{}", headers={"Content-Length": str(MAX_BODY + 1)}
     )
     assert declared.status_code == 413
 
@@ -63,7 +64,9 @@ async def test_body_limit(client: AsyncClient) -> None:
         yield b"x" * (MAX_BODY + 1)
 
     streamed = await client.post(
-        "/api/ai/reply", content=chunks(), headers={"Content-Type": "application/json"}
+        "/api/auth/login",
+        content=chunks(),
+        headers={"Content-Type": "application/json"},
     )
     assert streamed.status_code == 413
 

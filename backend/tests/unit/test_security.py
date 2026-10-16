@@ -17,12 +17,7 @@ from app.core.security import (
     token_hash,
     verify_password,
 )
-from app.schemas.learning import (
-    ConversationCreate,
-    ProfileUpdate,
-    Register,
-    SettingsUpdate,
-)
+from app.schemas.chat import ConversationCreate, MessageCreate, Register
 
 SECRET = "isolated-test-key-with-more-than-32-characters"
 
@@ -94,27 +89,19 @@ def test_password_bounds(password: str) -> None:
         )
 
 
-def test_profile_validation() -> None:
-    """Validate timezone, SQL UTF-16 capacity and future birth dates."""
-    base = {"version": "0" * 16, "display_name": "Name"}
-    for changes in (
-        {"time_zone_id": "missing"},
-        {"display_name": "😀" * 31},
-        {"display_name": "\ud800"},
-        {"birth_date": "2999-01-01"},
-    ):
+def test_message_validation() -> None:
+    """Reject oversized, invalid Unicode, empty and forged message fields."""
+    for value in (" ", "😀" * 1001, "\ud800"):
         with pytest.raises(ValidationError):
-            ProfileUpdate.model_validate({**base, **changes})
+            MessageCreate(client_request_id=uuid4(), message=value)
     with pytest.raises(ValidationError):
-        SettingsUpdate(
-            version="0" * 16, theme="light", reduced_motion=False, speech_rate=0.8
+        MessageCreate.model_validate(
+            {"client_request_id": str(uuid4()), "message": "Hello", "user_id": 1}
         )
 
 
 @pytest.mark.parametrize("level", ["Pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"])
 def test_persisted_levels_match_sql_schema(level: str) -> None:
     """Expanded mock levels must not bypass the SQL v1 CHECK/column limits."""
-    profile = {"version": "0" * 16, "display_name": "Name", "cefr_level": level}
     conversation = {"client_request_id": uuid4(), "level": level}
-    assert ProfileUpdate.model_validate(profile).cefr_level == level
     assert ConversationCreate.model_validate(conversation).level == level

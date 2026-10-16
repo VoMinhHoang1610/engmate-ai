@@ -1,50 +1,37 @@
-"""SQLAlchemy Core mappings reflected from the authoritative SQL Server schema."""
+"""Reflect only the legacy tables needed by account and conversation workflows."""
 
 from threading import Lock
 
 from sqlalchemy import Connection, MetaData, Table
 
-TABLE_NAMES = frozenset(
-    "SchemaVersions Users LearnerProfiles UserSettings MediaAssets OAuthIdentities "
-    "AuthSessions AccountTokens Topics Lessons LessonQuestions QuestionOptions "
-    "StudySessions Conversations Messages PracticeAttempts AttemptAnswers "
-    "AIEvaluations ErrorRecords UserVocabulary FlashcardSessions FlashcardReviews "
-    "vUserLearningStats vDailyLearningStats".split()
-)
-
 MYSQL_TABLES = dict(
     zip(
-        "SchemaVersions Users LearnerProfiles UserSettings MediaAssets OAuthIdentities "
-        "AuthSessions AccountTokens Topics Lessons LessonQuestions QuestionOptions "
-        "StudySessions Conversations Messages PracticeAttempts AttemptAnswers "
-        "AIEvaluations ErrorRecords UserVocabulary FlashcardSessions FlashcardReviews "
-        "vUserLearningStats vDailyLearningStats CefrLevels LessonVocabulary".split(),
-        "PhienBanCauTruc NguoiDung HoSoNguoiHoc CaiDatNguoiDung "
-        "TaiNguyenMedia DanhTinhOAuth "
-        "PhienDangNhap TokenTaiKhoan ChuDe BaiHoc CauHoiBaiHoc LuaChonCauHoi "
-        "PhienHoc HoiThoai TinNhan LuotThucHanh CauTraLoiThucHanh "
-        "DanhGiaAI BanGhiLoi TuVungNguoiDung PhienFlashcard OnTapFlashcard "
-        "vThongKeHocTapNguoiDung vThongKeHocTapHangNgay "
-        "TrinhDoCEFR TuVungBaiHoc".split(),
+        (
+            "SchemaVersions Users LearnerProfiles AuthSessions StudySessions "
+            "Conversations Messages AIEvaluations"
+        ).split(),
+        (
+            "PhienBanCauTruc NguoiDung HoSoNguoiHoc PhienDangNhap "
+            "PhienHoc HoiThoai TinNhan DanhGiaAI"
+        ).split(),
         strict=True,
     )
 )
+TABLE_NAMES = frozenset(MYSQL_TABLES)
 
 
 class ModelCatalog:
-    """Reuse reflected columns and SQL types without generating replacement DDL."""
-
-    table_names = TABLE_NAMES
+    """Reuse existing data without creating or dropping application tables."""
 
     def __init__(self, mysql: bool = False) -> None:
-        """Create a catalog scoped to one database instance."""
+        """Scope reflected metadata and its lock to one database instance."""
         self.mysql = mysql
-        self.table_names = frozenset(MYSQL_TABLES) if mysql else TABLE_NAMES
+        self.table_names = TABLE_NAMES
         self.metadata = MetaData(schema=None if mysql else "em")
         self.lock = Lock()
 
     def table(self, name: str, connection: Connection) -> Table:
-        """Resolve only known tables/views; clients never choose SQL identifiers."""
+        """Resolve server-owned identifiers; clients cannot select SQL names."""
         if name not in self.table_names:
             raise ValueError("Unknown application table")
         physical = MYSQL_TABLES[name] if self.mysql else name

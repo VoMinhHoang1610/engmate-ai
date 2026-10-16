@@ -12,7 +12,7 @@ from fastapi import (
     UploadFile,
 )
 
-from app.api.learning_routes import Auth, Identity, Learning, User
+from app.api.chat_routes import Auth
 from app.schemas.speech import SpeechLanguage, SpeechVoice, STTResponse, TTSRequest
 from app.services.speech import MAX_AUDIO, SpeechService
 
@@ -37,27 +37,6 @@ def speech_service(request: Request, auth: Auth) -> SpeechService:
 
 
 Speech = Annotated[SpeechService, Depends(speech_service)]
-
-
-@router.get("/dictation/{identity}/audio", response_class=Response)
-async def dictation(
-    identity: Identity, user: User, learning: Learning, service: Speech
-) -> Response:
-    """Synthesize the stored dictation sentence without exposing its text key."""
-    from fastapi.concurrency import run_in_threadpool
-
-    text = await run_in_threadpool(learning.dictation_text, identity)
-    preferences = await run_in_threadpool(learning.settings, user["UserId"])
-    return Response(
-        await service.synthesize(
-            TTSRequest(
-                text=text,
-                speaker_id=preferences.get("speech_voice_id"),
-                speed=preferences["speech_rate"],
-            )
-        ),
-        media_type="audio/mpeg",
-    )
 
 
 @router.get("/voices", response_model=list[SpeechVoice])
