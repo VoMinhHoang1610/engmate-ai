@@ -24,14 +24,15 @@ Input thừa bị từ chối; lỗi `detail` không chứa password/token/SQL/p
 | GET | `/api/conversations/{identity}/messages` | offset=0, limit=50 (1–100); sequence tăng dần; tải trang tiếp để đọc hết |
 | POST | `/api/conversations/{identity}/messages` | client_request_id UUID, message 1–2000; trả message, reply, evaluation (chỉ trạng thái/provider/is_mock) |
 | POST | `/api/conversations/{identity}/messages/stream` | Cùng payload; SSE start/delta/done/error, một response_id là MessageId assistant đã reserve |
-| POST | `/api/conversations/{identity}/voice` | Gemini: Bearer + `{}`, trả `{session_id,transport:"websocket",ticket}`. OpenAI tùy chọn: `{sdp}` <=64000, trả `{session_id,sdp}` |
+| GET | `/api/voice/voices` | Bearer; trả `{provider,default_voice,voices:[{id,name}]}` cho thoại trực tiếp, không gọi provider tính phí; tách khỏi Blaze TTS |
+| POST | `/api/conversations/{identity}/voice` | Gemini: Bearer + `{voice_id?}`, trả `{session_id,transport:"websocket",ticket}`. Bỏ voice_id dùng GEMINI_VOICE; ID ngoài catalog trả 422 trước kết nối provider. OpenAI tùy chọn: `{sdp,voice_id?}` <=64000, chỉ nhận giọng mặc định cấu hình, trả `{session_id,sdp}` |
 | WS | `/api/voice/{session_id}/audio` | Gemini: Origin trong CORS, message đầu `{ticket}` trong 5 giây; ticket dùng một lần, hết hạn 10 giây. Không truyền JWT/API key trong URL |
 | POST | `/api/voice/{session_id}/heartbeat` | Bearer của chủ phiên, UUID app; trả state, gia hạn liveness |
 | DELETE | `/api/voice/{session_id}` | Dừng phiên owned, chờ cleanup; 204/lặp an toàn, 404 nếu phiên thuộc user khác, 502 nếu chưa xác nhận đóng/lưu upstream |
 | POST | `/api/conversations/{identity}/cancel` | Hủy reply đang pending, không đóng chat; lặp an toàn |
 | POST | `/api/conversations/{identity}/close` | Đóng chat; lặp an toàn; pending cần hoàn tất hoặc hủy trước |
-| GET | `/api/speech/voices?language=en` | Catalog giọng Blaze có xác thực |
-| POST | `/api/speech/stt?language=en` | Multipart field file, <=8 MiB, định dạng audio được hỗ trợ; trả text/language/provider |
+| GET | `/api/speech/voices?language=en` | Catalog giọng Blaze có xác thực; language en/vi |
+| POST | `/api/speech/stt?language=en` | Multipart field file, <=8 MiB, language en/vi được chọn rõ; trả text/language/provider |
 | POST | `/api/speech/tts` | text 1–2000, language en/vi, speaker_id tùy chọn, speed 0.5–2; trả audio/mpeg |
 
 Mật khẩu mới 10–128 ký tự, Argon2; username 3–64 ASCII chữ/số/`_.-`, email <=254 và duy nhất. Access JWT 15 phút, refresh 30 ngày mặc định, refresh chỉ lưu SHA-256. Logout làm access token tương ứng mất hiệu lực ngay. Frontend bắt đầu ở login khi reload, không khôi phục token từ storage.

@@ -4,7 +4,11 @@ import { chepLoi, dungDoc } from '../speech/audio';
 type TrangThai = 'idle' | 'requesting' | 'recording' | 'stopping' | 'transcribing';
 
 /** Record locally, release the microphone, then transcribe through the backend. */
-export function useThuAm(onText: (text: string) => void, onError: (message: string) => void) {
+export function useThuAm(
+  onText: (text: string) => void,
+  onError: (message: string) => void,
+  language: 'en' | 'vi' = 'en',
+) {
   const [state, setState] = useState<TrangThai>('idle');
   const [audio, setAudio] = useState('');
   const mounted = useRef(true);
@@ -40,7 +44,7 @@ export function useThuAm(onText: (text: string) => void, onError: (message: stri
     setState('transcribing');
     const timer = window.setTimeout(() => request.abort(), 40_000);
     try {
-      const text = await chepLoi(blob, request.signal);
+      const text = await chepLoi(blob, request.signal, language);
       if (mounted.current && !request.signal.aborted) onText(text.slice(0, 2000));
     } catch (error) {
       if (mounted.current && controller.current === request)

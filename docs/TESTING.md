@@ -2,6 +2,8 @@
 
 Từ root: `python scripts/manage.py lint`, `test`, `coverage`, `build`, `smoke`. Lint gồm Ruff/Black/mypy, ESLint/TypeScript/Prettier. Coverage >=80% giữ nguyên. Frontend chạy 2 worker, giữ timeout/assertion.
 
+Chia sẻ HTTPS: build trước khi bật `docker-compose.share.yml`; kiểm tra Compose `config --quiet` và `exec -T share nginx -t`. Probe public tại `.artifacts/share/check.py` đọc HTML/assets/health/ready/capabilities, xác nhận source/`.env` trả 404, catalog cần auth trả 401, CORS đúng origin và WSS handshake 101 rồi đóng 4404 với ticket giả. Browser `.artifacts/check_share_browser.cjs` mở link thật, kiểm tra màn hình đăng nhập, secure context và API microphone, không đăng nhập hoặc gọi provider. Kết quả trong `.artifacts/share/`. Các probe này không thay thế thử chat trả phí/micro/loa thực.
+
 ## Database test
 
 Tạo database MySQL **mới**, tên kết thúc `_test`, bằng SQL root với tên database được đổi. Cấu hình `MYSQL_TEST_URL` trong terminal, không đưa URL secret vào Git hoặc dùng database EngMateAI thật. Fixture từ chối database không có hậu tố `_test` hoặc đã có tài khoản. Mỗi test dùng transaction/savepoint và rollback. Không tự bootstrap hoặc DROP database khi pytest chạy.
@@ -19,6 +21,7 @@ Suite API sử dụng MySQL thật khi có biến test. Nếu thiếu, các ca n
 | Body limits, throttle, redacted validation, JWT claims, cấu hình | unit/test_request_limits.py, test_security.py, test_config.py |
 | Blaze STT/TTS/job/voices, quota/network/errors/auth/origin | unit/test_speech.py, HTTP MockTransport |
 | Login/register → workspace không F5, history pagination, drafts/retry/cancel/close/logout, không có menu học tập | src/App.test.tsx |
+| URL đồng bộ login/register/logout/hết phiên; giữ query/history state/bản nháp khi sửa hash hoặc popstate; hash không vượt đăng nhập | src/App.test.tsx; browser local `.artifacts/check_auth_url.cjs` |
 | Bearer/refresh concurrent/logout late response/deadline | src/api/database.test.ts |
 | Âm thanh/cache/cancel và microphone cleanup/STT | src/speech/audio.test.ts, src/hooks/useThuAm.test.ts |
 | Giữ shell/logo/Mate gốc và chỉ một trang hội thoại; menu lịch sử/Escape | src/App.test.tsx |
@@ -37,6 +40,18 @@ Suite API sử dụng MySQL thật khi có biến test. Nếu thiếu, các ca n
 | PCM 16/24/44.1/48 kHz → 16 kHz, mute reset, chunk/clamp | src/voice/capture.test.ts |
 | Gemini capture/playback, interruption, ticket, deadline/reconnect/late permission/cleanup; chọn đúng UI provider | src/voice/gemini.test.ts; src/App.test.tsx |
 | Tự cuộn đúng pane thay vì ancestor của trang | src/App.test.tsx: scrolls new replies inside the message pane |
+| Prompt v4 Việt/Anh dùng trong cả chat và thoại; lịch sử giữ nguyên vai trò | integration/test_gemini_database.py, kiểm tra request systemInstruction và session.prompt thực |
+| Catalog live cần auth, voice_id sai trả 422 không mở provider, giọng theo phiên không đổi default chung | unit/test_gemini_live.py, integration/test_gemini_database.py |
+| Chọn/đổi giọng Live qua UI kể cả đang gọi, giữ khi kết thúc, retry catalog; REST offer mang đúng voice_id | src/App.test.tsx, src/voice/VoiceChat.test.tsx, src/voice/gemini.test.ts, src/voice/catalog.test.ts |
+| Đọc tiếng Việt/Anh với giọng riêng và gửi ngôn ngữ STT được chọn | src/speech/audio.test.ts |
+| CHAT-19: khung chào mặc định, không tự đọc tin cũ/tạo bản ghi, gửi đầu tiên/retry, kết quả tạo muộn, reload/đóng hội thoại vừa tạo | src/App.test.tsx |
+| CHAT-20: toolbar icon chung khung nhập, nhãn/tooltip, menu đóng ngoài/Escape/focus, tạo chat trước khi gọi, phục hồi lỗi tạo và ẩn phụ đề khi dừng | src/App.test.tsx |
+| Đổi giọng chờ stop xong mới start, cùng ID, giữ mute, bỏ callbacks cũ, stop/unmount khi đang đổi, đóng lỗi và đổi liên tiếp | src/voice/VoiceChat.test.tsx |
+| CHAT-21: sáng/tối, khôi phục preference/system, storage bị chặn, màu browser | src/components/ThemeToggle.test.tsx |
+
+Kiểm tra bản một hàng: `node .artifacts/check_inline_composer.cjs` dùng Edge thật với API, microphone/Web Audio và WebSocket giả lập hoàn toàn. Đo tâm icon/textarea cùng một hàng, chiều cao khung trống, ảnh sáng/tối và đổi giọng đang gọi giữ mute/cùng ID/stop trước start ở 6 viewport. Kết quả và ảnh trong `.artifacts/inline-composer/`. Các phép thử này không kiểm chứng chất lượng âm thanh provider thật.
+
+Kiểm tra khung chào/toolbar mới: `node .artifacts/check_welcome_composer.cjs` (artifact local) giả lập toàn bộ API trong browser, không ghi database hoặc gọi AI. Tại 1440×900, 1366×768, 768×1024, 390×844, 320×568 và 844×390, kiểm tra khung chào không fetch tin cũ/tạo bản ghi; icon nằm trong composer, không tràn màn hình; chọn giọng/menu, gửi tin đầu tiên tạo đúng một hội thoại; đọc lại lịch sử dài và quay về bản nháp. Ảnh và số đo trong `.artifacts/welcome-composer/`. Bài kiểm tra bố cục cũ bên dưới phản ánh phiên bản trước khi gom toolbar.
 
 Kiểm tra bố cục thủ công bằng Edge headless/Playwright có sẵn trong môi trường: `node .artifacts/check_chat_layout.cjs` (artifact local, không thuộc lệnh setup/CI). Script giả lập toàn bộ `/api/` trong browser, dùng giao diện React thật và 80 tin/50 hội thoại, không gọi backend/model hoặc ghi dữ liệu thật. Đo viewport/panel/composer/page scroll trước/sau gửi tin ở 1440×900, 1366×768, 900×768, 768×1024, 390×844, 390×667, 320×568, 844×390; thêm phụ đề thoại dài để kiểm tra form vẫn nhìn thấy. Ảnh và số đo tại `.artifacts/chat-layout/`. Không dùng jsdom để khẳng định kết quả hình học CSS; bàn phím ảo vẫn cần kiểm tra trên thiết bị thật.
 

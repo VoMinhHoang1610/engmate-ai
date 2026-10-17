@@ -19,6 +19,12 @@ Phạm vi này thay thế sản phẩm học tập nhiều trang trước đây,
 | CHAT-13 | Khóa provider private; quota/error không fake success | Gemini key backend/.env, giá trị OpenAI key local đã xóa; không log provider body, kiểm tra lỗi/quota/partial/blocked SSE |
 | CHAT-14 | Thay OpenAI bằng Gemini, giữ giao diện và Blaze | Đã tích hợp, cấu hình Gemini mặc định cho chat/live, header đúng provider; kiểm tra wire contract, PCM, ticket/Origin, lifecycle và MySQL riêng |
 | CHAT-15 | Khung chat cố định, ô nhập trong màn hình, tin nhắn/lịch sử cuộn riêng | Đã test: App regression và 72 kiểm tra hình học Edge tại 8 viewport, gồm phụ đề thoại dài/ngang thấp; bàn phím ảo thiết bị thật chưa kiểm chứng |
+| CHAT-16 | AI trả lời theo tiếng Việt/Anh của người dùng, chuyển ngôn ngữ theo lượt | Đã triển khai persona.v4 dùng chung chat/Live; test kiểm tra prompt thực đi qua hai đường, không coi transport double là kiểm chứng chất lượng ngôn ngữ model |
+| CHAT-17 | Chọn giọng AI đối thoại trực tiếp, tách khỏi giọng đọc tin nhắn | Catalog REST có xác thực/whitelist; đổi giọng cả khi gọi bằng stop/start tuần tự trên cùng hội thoại, giữ mute/lịch sử, chống kết quả muộn và hủy nối lại; tests API/SQL/transport/UI |
+| CHAT-18 | Cân đối diện tích giao diện, bỏ dòng thừa, giữ nhận diện và auth cũ | Sidebar lịch sử, chat rộng, thanh nhập gọn, tùy chọn âm thanh ẩn theo yêu cầu; kiểm tra bằng browser nhiều kích thước và hồi quy App/AuthForm |
+| CHAT-19 | Vào app mở lời chào mới, chỉ mở lịch sử theo lựa chọn, tạo hội thoại khi có tương tác | Tests App kiểm tra không tải tin cũ/tạo bản ghi trống, gửi đầu tiên và retry, bỏ kết quả tạo muộn; browser tại 6 viewport |
+| CHAT-20 | Gom ô chữ và nút âm thanh/thoại/gửi bằng icon trên cùng một hàng | Tests nhãn truy cập/tooltip, menu Escape/click ngoài; browser đo canh giữa các nút và textarea, chiều cao khi trống, cả khi đang thoại |
+| CHAT-21 | Chuyển sáng/tối ở topbar và nhớ lựa chọn | ThemeToggle/theme tests: hai chiều, preference/system, storage bị chặn và metadata; browser ảnh sáng/tối desktop/mobile |
 
 Đã loại khỏi phạm vi: bài tập Speaking/Listening/Reading/Writing, chấm điểm, lộ trình, onboarding, dashboard, vocabulary/flashcard, profile/avatar mở rộng, OAuth giả, reset qua SMTP và các trang demo. Tests chỉ phục vụ tính năng bị bỏ được thay cùng phạm vi; kiểm tra auth/ownership/retry/speech tiếp tục được thực thi trong suite mới, không hạ coverage threshold.
 

@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-10-18 — Link HTTPS chia sẻ tạm thời
+
+- Thêm Compose/proxy Nginx riêng phục vụ bản build qua HTTPS tunnel, hỗ trợ cấu hình SSE/WebSocket và giữ các cổng dev/database ở loopback.
+- Hướng dẫn bật/dừng chia sẻ, cấu hình Origin và giới hạn 60 phút của phiên Pinggy miễn phí trong README.
+
+## 2026-10-18 — Đồng bộ URL sau đăng nhập
+
+- Đăng nhập/đăng ký thành công đổi URL sang `#hoi-thoai`; đăng xuất hoặc hết phiên trả về `#dang-nhap`, không tải lại trang.
+- Sửa hash hoặc quay lại URL cũ không làm mất bản nháp hay thay đổi quyền truy cập.
+
+## 2026-10-18 — Ô nhập một hàng, sáng/tối và đổi giọng khi gọi
+
+- Canh ô nhập và các icon trên một hàng, bỏ toolbar tầng dưới và viền focus lồng bên trong; placeholder không tự làm khung cao thêm trên điện thoại.
+- Icon tai nghe mở tùy chọn giọng. Nút mặt trăng/mặt trời chuyển sáng/tối nằm trên topbar cạnh tài khoản và nhớ lựa chọn.
+- Cho phép đổi giọng đang thoại: tự nối lại trong cùng hội thoại, giữ lịch sử đã lưu/mute; bấm kết thúc hoặc rời chat sẽ hủy lần nối lại đang chờ.
+
+## 2026-10-17 — Khung chào mới và thanh nhập bằng icon
+
+- Vào app mở lời chào và ô nhập trống; lịch sử chỉ mở khi được chọn. Hội thoại mới chỉ được lưu khi gửi tin đầu tiên hoặc bắt đầu gọi thoại.
+- Gom tùy chọn âm thanh, ghi âm, thoại trực tiếp và gửi vào cùng khung nhập. Chọn giọng trong menu bánh răng, có nhãn truy cập/tooltip; Escape và click ngoài đóng menu.
+- Chỉ hiển thị phụ đề khi đang thoại; kết thúc cuộc gọi trả lại thanh nhập gọn.
+
+## 2026-10-16 — Hội thoại Việt/Anh, giọng Live và giao diện gọn
+
+- AI theo tiếng Việt/Anh của lượt nói hoặc tin nhắn mới nhất; có thể yêu cầu dịch/song ngữ/luyện tiếng Anh rõ ràng.
+- Chọn giọng Gemini cho thoại trực tiếp trước khi gọi, tách khỏi giọng Blaze đọc tin nhắn; không đổi giọng giữa phiên.
+- Lịch sử chuyển sang sidebar trái, vùng chat rộng hơn; ô nhập gọn, tùy chọn âm thanh trong nút bánh răng, bỏ dòng thông tin lặp. Giữ trang đăng nhập/đăng ký và nhận diện EngMate.
+- Nghe câu trả lời hỗ trợ giọng Việt/Anh; ghi âm từng lượt chọn ngôn ngữ trong menu âm thanh.
+
 ## 2026-10-16 — Cố định khung hội thoại
 
 - Khung chat vừa chiều cao màn hình; tin nhắn và lịch sử cuộn riêng, gửi/nhận tin không kéo cả trang.

@@ -16,6 +16,18 @@ LIVE_URL = (
     "google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
 )
 
+# A curated subset of Google's prebuilt voices; no paid catalog request is needed.
+LIVE_VOICES = {
+    "Kore": "Rõ ràng, chắc chắn",
+    "Puck": "Vui vẻ, lạc quan",
+    "Charon": "Mạch lạc, truyền đạt",
+    "Fenrir": "Sôi nổi",
+    "Aoede": "Nhẹ nhàng, thoải mái",
+    "Leda": "Trẻ trung",
+    "Orus": "Chắc chắn",
+    "Zephyr": "Tươi sáng",
+}
+
 
 class GeminiLiveClient:
     """Use an authenticated server connection and wait for provider setup ack."""
@@ -30,10 +42,27 @@ class GeminiLiveClient:
             raise HTTPException(503, "GEMINI_API_KEY chưa được cấu hình.")
         return {"x-goog-api-key": self.settings.gemini_api_key.get_secret_value()}
 
+    def voices(self) -> dict[str, str]:
+        """Include the administrator's configured default in the public catalog."""
+        return {
+            **LIVE_VOICES,
+            self.settings.gemini_voice: LIVE_VOICES.get(
+                self.settings.gemini_voice, "Giọng mặc định"
+            ),
+        }
+
+    def select_voice(self, voice_id: str | None) -> str:
+        """Reject unsupported IDs before opening any provider connection."""
+        selected = voice_id or self.settings.gemini_voice
+        if selected not in self.voices():
+            raise HTTPException(422, "Giọng đối thoại không được hỗ trợ.")
+        return selected
+
     async def open(
-        self, prompt: str, history: list[ContextMessage]
+        self, prompt: str, history: list[ContextMessage], voice_id: str | None = None
     ) -> ClientConnection:
         """Configure native PCM audio, transcription, server VAD and role history."""
+        voice = self.select_voice(voice_id)
         logger = logging.getLogger("engmate.gemini.transport")
         logger.setLevel(logging.WARNING)
         settings = self.settings
@@ -58,9 +87,7 @@ class GeminiLiveClient:
                                 "maxOutputTokens": settings.gemini_max_output_tokens,
                                 "speechConfig": {
                                     "voiceConfig": {
-                                        "prebuiltVoiceConfig": {
-                                            "voiceName": self.settings.gemini_voice
-                                        }
+                                        "prebuiltVoiceConfig": {"voiceName": voice}
                                     }
                                 },
                             },

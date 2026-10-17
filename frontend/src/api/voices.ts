@@ -2,13 +2,16 @@ import { apiFetch } from './database';
 export interface GiongDoc {
   id: string;
   name: string;
-  language: 'en';
+  language: 'en' | 'vi';
   gender: 'male' | 'female' | null;
 }
 
 /** Load the server catalog; provider credentials stay in the backend. */
-export async function layGiongDoc(signal: AbortSignal): Promise<GiongDoc[]> {
-  const response = await apiFetch('/api/speech/voices?language=en', { signal });
+export async function layGiongDoc(
+  signal: AbortSignal,
+  language: 'en' | 'vi' = 'en',
+): Promise<GiongDoc[]> {
+  const response = await apiFetch(`/api/speech/voices?language=${language}`, { signal });
   if (!response.ok) throw new Error('Chưa tải được danh sách giọng nói. Vui lòng thử lại.');
   const data: unknown = await response.json();
   if (
@@ -24,7 +27,7 @@ export async function layGiongDoc(signal: AbortSignal): Promise<GiongDoc[]> {
         typeof voice.name === 'string' &&
         voice.name.trim() &&
         'language' in voice &&
-        voice.language === 'en' &&
+        voice.language === language &&
         'gender' in voice &&
         (voice.gender === null || voice.gender === 'male' || voice.gender === 'female'),
     )

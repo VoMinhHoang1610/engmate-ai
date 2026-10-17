@@ -115,6 +115,17 @@ afterEach(() => {
 });
 
 describe('Gemini Live voice', () => {
+  it('sends the selected conversation voice in the authenticated REST offer', async () => {
+    const session = new GeminiVoiceSession(7, events(), 'Aoede');
+    await boot(session);
+    expect(api).toHaveBeenCalledWith(
+      '/conversations/7/voice',
+      'POST',
+      { voice_id: 'Aoede' },
+      expect.any(AbortSignal),
+    );
+    await session.stop();
+  });
   it('authenticates by ticket, captures PCM, plays audio, interrupts, mutes and cleans up', async () => {
     const callbacks = events();
     const session = new GeminiVoiceSession(1, callbacks);

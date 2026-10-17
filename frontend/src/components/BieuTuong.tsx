@@ -2,6 +2,12 @@ const paths: Record<string, string> = {
   grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   chat: 'M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2v-9.5A8.5 8.5 0 0 1 10.5 4H13a8 8 0 0 1 8 7.5Z M7 10h10 M7 14h6',
   mic: 'M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0V5Z M5 10v2a7 7 0 0 0 14 0v-2 M12 19v3 M8 22h8',
+  'mic-off':
+    'm3 3 18 18 M9 9v3a3 3 0 0 0 5 2 M9 5a3 3 0 0 1 6 0v4 M5 10v2a7 7 0 0 0 12 5 M19 10v2 M12 19v3 M8 22h8',
+  waveform: 'M4 10v4 M8 6v12 M12 3v18 M16 6v12 M20 10v4',
+  stop: 'M6 6h12v12H6z',
+  sun: 'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5 19 19 M5 19l1.5-1.5 M17.5 6.5 19 5',
+  moon: 'M20.8 13a9 9 0 1 1-9.8-9.8A7 7 0 0 0 20.8 13Z',
   compass: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z M16 8l-3 5-5 3 3-5 5-3Z',
   headphones:
     'M3 13v-1a9 9 0 0 1 18 0v1 M3 12h4v9H5a2 2 0 0 1-2-2v-7Z M21 12h-4v9h2a2 2 0 0 0 2-2v-7Z',

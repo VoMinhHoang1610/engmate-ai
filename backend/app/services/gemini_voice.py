@@ -31,6 +31,7 @@ class GeminiSession(VoiceSession):
     history: list[ContextMessage] = field(default_factory=list)
     current: VoiceTurn | None = None
     completed_turn: VoiceTurn | None = None
+    voice_id: str = "Kore"
 
 
 class GeminiVoiceManager(RealtimeManager):
@@ -41,8 +42,11 @@ class GeminiVoiceManager(RealtimeManager):
         super().__init__(settings, database)
         self.live = GeminiLiveClient(settings)
 
-    async def start(self, user_id: int, identity: int, sdp: str = "") -> Record:
+    async def start(
+        self, user_id: int, identity: int, sdp: str = "", voice_id: str | None = None
+    ) -> Record:
         """Authorize context first; open the provider only after browser attachment."""
+        voice = self.live.select_voice(voice_id)
         self.live.headers()
         if (
             any(s.user_id == user_id for s in self.sessions.values())
@@ -57,6 +61,7 @@ class GeminiVoiceManager(RealtimeManager):
             user_id,
             identity,
             ticket_hash=hashlib.sha256(ticket.encode()).digest(),
+            voice_id=voice,
         )
         self.sessions[session.session_id] = session
         try:
@@ -225,7 +230,9 @@ class GeminiVoiceManager(RealtimeManager):
         tasks: list[asyncio.Task[None]] = []
         try:
             await asyncio.wait_for(session.attached.wait(), 10)
-            session.socket = await self.live.open(session.prompt, session.history)
+            session.socket = await self.live.open(
+                session.prompt, session.history, session.voice_id
+            )
             session.prompt, session.history = "", []
             session.state = "listening"
             await self.emit(session, {"type": "ready"})

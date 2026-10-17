@@ -41,6 +41,7 @@ export class VoiceSession {
   constructor(
     private readonly identity: number,
     private readonly events: VoiceEvents,
+    private readonly voiceId?: string,
   ) {}
 
   private status(state: VoiceState) {
@@ -117,7 +118,7 @@ export class VoiceSession {
       const result = await api<{ session_id: string; sdp: string }>(
         `/conversations/${this.identity}/voice`,
         'POST',
-        { sdp: offer },
+        { sdp: offer, ...(this.voiceId ? { voice_id: this.voiceId } : {}) },
         signal,
       );
       // The server may have created a paid call just before End Voice/route change.

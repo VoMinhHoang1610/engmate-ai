@@ -27,7 +27,7 @@ from app.services.common import (
     start_session,
 )
 
-PROMPT_VERSION = "persona.v3"
+PROMPT_VERSION = "persona.v4"
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
 
 

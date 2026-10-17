@@ -49,6 +49,9 @@ async def test_live_setup_headers_history_and_audio(
     assert "gemini-test-key" not in args.args[0]
     setup = json.loads(socket.send.call_args_list[0].args[0])["setup"]
     assert setup["model"] == "models/gemini-3.8-live"
+    speech = setup["generationConfig"]["speechConfig"]
+    assert speech["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"] == "Kore"
+    assert "languageCode" not in speech
     assert setup["inputAudioTranscription"] == setup["outputAudioTranscription"] == {}
     assert (
         setup["realtimeInputConfig"]["activityHandling"]
@@ -76,6 +79,27 @@ async def test_live_setup_headers_history_and_audio(
         GeminiLiveClient(Settings()).headers()
 
 
+async def test_live_selected_voice_reaches_setup_without_changing_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A user's choice changes their upstream setup, never shared configuration."""
+    socket = AsyncMock()
+    socket.recv.return_value = '{"setupComplete": {}}'
+    connect = AsyncMock(return_value=socket)
+    monkeypatch.setattr("app.llm.gemini_live.connect", connect)
+    client = manager().live
+    await client.open("Prompt", [], "Puck")
+    setup = json.loads(socket.send.call_args_list[0].args[0])["setup"]
+    assert setup["generationConfig"]["speechConfig"]["voiceConfig"] == {
+        "prebuiltVoiceConfig": {"voiceName": "Puck"}
+    }
+    assert client.settings.gemini_voice == "Kore"
+    with pytest.raises(HTTPException) as error:
+        await client.open("Prompt", [], "Unknown")
+    assert error.value.status_code == 422
+    assert connect.await_count == 1
+
+
 async def test_one_use_ticket_owner_limits_and_full_cleanup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -93,7 +117,7 @@ async def test_one_use_ticket_owner_limits_and_full_cleanup(
     socket.recv.side_effect = wait
     opened = AsyncMock(return_value=socket)
     monkeypatch.setattr(service.live, "open", opened)
-    grant = await service.start(1, 2)
+    grant = await service.start(1, 2, voice_id="Aoede")
     session = service.owned(1, grant["session_id"])
     assert isinstance(session, GeminiSession)
     opened.assert_not_called()
@@ -119,6 +143,7 @@ async def test_one_use_ticket_owner_limits_and_full_cleanup(
         service.attach_browser(session.session_id, grant["ticket"], browser)
     )
     await asyncio.wait_for(ready.wait(), 2)
+    opened.assert_awaited_once_with("Prompt", [], "Aoede")
     assert not session.ticket_hash
     await service.attach_browser(session.session_id, grant["ticket"], rejected)
     assert rejected.close.await_count == 2
@@ -337,6 +362,7 @@ def test_websocket_origin_ticket_shape_and_rest_auth(
     monkeypatch.setattr(app.state.voice, "attach_browser", attach)
     path = f"/api/voice/{uuid4()}/audio"
     with TestClient(app) as client:
+        assert client.get("/api/voice/voices").status_code == 401
         assert client.post("/api/conversations/1/voice", json={}).status_code == 401
         with pytest.raises(WebSocketDisconnect) as error:
             with client.websocket_connect(

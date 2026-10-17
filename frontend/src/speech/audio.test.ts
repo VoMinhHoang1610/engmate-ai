@@ -3,6 +3,7 @@ import {
   chepLoi,
   chuanBiAmThanh,
   docTiengAnh,
+  docVanBan,
   dungDoc,
   layAmThanhDaLuu,
   xoaBoNhoAmThanh,
@@ -33,6 +34,7 @@ beforeEach(() => {
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
   delete document.documentElement.dataset.speechRate;
   delete document.documentElement.dataset.speechVoice;
+  delete document.documentElement.dataset.speechVoiceVi;
 });
 afterEach(() => {
   xoaBoNhoAmThanh();
@@ -41,6 +43,30 @@ afterEach(() => {
 });
 
 describe('Blaze speech in the browser', () => {
+  it('reads Vietnamese with its own voice and keeps the English voice separate', async () => {
+    const request = vi.fn().mockResolvedValue(audioResponse());
+    vi.stubGlobal('fetch', request);
+    document.documentElement.dataset.speechVoice = 'UK-Nu-1-TM';
+    document.documentElement.dataset.speechVoiceVi = 'HN-Nam-1-BL';
+    await docVanBan('Xin chào, hôm nay bạn thế nào?', 1, undefined, false);
+    expect(JSON.parse(request.mock.calls[0][1].body)).toMatchObject({
+      language: 'vi',
+      speaker_id: 'HN-Nam-1-BL',
+    });
+    await docVanBan('How are you today?', 1, undefined, false);
+    expect(JSON.parse(request.mock.calls[1][1].body)).toMatchObject({
+      language: 'en',
+      speaker_id: 'UK-Nu-1-TM',
+    });
+  });
+  it('uploads Vietnamese dictation using the chosen recognition language', async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ text: 'Xin chào' }) });
+    vi.stubGlobal('fetch', request);
+    expect(await chepLoi(new Blob(['voice']), new AbortController().signal, 'vi')).toBe('Xin chào');
+    expect(request).toHaveBeenCalledWith('/api/speech/stt?language=vi', expect.any(Object));
+  });
   function nativeSpeech() {
     class Utterance {
       voice: unknown;

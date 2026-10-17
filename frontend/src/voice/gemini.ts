@@ -25,6 +25,7 @@ export class GeminiVoiceSession {
   constructor(
     private readonly identity: number,
     private readonly events: VoiceEvents,
+    private readonly voiceId?: string,
   ) {}
 
   private status(state: VoiceState): void {
@@ -90,7 +91,7 @@ export class GeminiVoiceSession {
       const result = await api<{ session_id: string; transport: string; ticket: string }>(
         `/conversations/${this.identity}/voice`,
         'POST',
-        {},
+        this.voiceId ? { voice_id: this.voiceId } : {},
         signal,
       );
       if (this.ended || generation !== this.generation) {

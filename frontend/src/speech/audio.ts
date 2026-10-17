@@ -54,14 +54,22 @@ function loiSpeech(status: number): string {
 
 function speechBody(text: string, rate: number) {
   const preference = Number(document.documentElement.dataset.speechRate ?? 1);
+  const language = /[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i.test(
+    text.normalize('NFC'),
+  )
+    ? 'vi'
+    : 'en';
   return {
     text: text.trim(),
-    language: 'en',
+    language,
     speed: Math.min(
       2,
       Math.max(0.5, rate * ([0.75, 1, 1.25].includes(preference) ? preference : 1)),
     ),
-    speaker_id: document.documentElement.dataset.speechVoice || 'UK-Nu-1-TM',
+    speaker_id:
+      language === 'vi'
+        ? document.documentElement.dataset.speechVoiceVi || 'HN-Nam-1-BL'
+        : document.documentElement.dataset.speechVoice || 'UK-Nu-1-TM',
   };
 }
 
@@ -184,7 +192,7 @@ export function xoaBoNhoAmThanh() {
   cacheBytes = 0;
 }
 
-export async function docTiengAnh(
+export async function docVanBan(
   text: string,
   rate = 1,
   signal?: AbortSignal,
@@ -203,12 +211,13 @@ export async function docTiengAnh(
   try {
     const prepared = layAmThanhDaLuu(text, rate);
     const voices = allowLocal && !prepared ? window.speechSynthesis?.getVoices() : undefined;
-    const english = voices?.filter(
-      (voice) => voice.localService && /^en(?:[-_]|$)/i.test(voice.lang),
-    );
     const body = speechBody(text, rate);
-    const accent = body.speaker_id.startsWith('UK-') ? 'en-GB' : 'en-US';
-    const voice = english?.find((item) => item.lang === accent) ?? english?.[0];
+    const matching = voices?.filter(
+      (voice) => voice.localService && voice.lang.slice(0, 2).toLowerCase() === body.language,
+    );
+    const accent =
+      body.language === 'vi' ? 'vi-VN' : body.speaker_id.startsWith('UK-') ? 'en-GB' : 'en-US';
+    const voice = matching?.find((item) => item.lang === accent) ?? matching?.[0];
     if (!prepared && voice && typeof SpeechSynthesisUtterance !== 'undefined') {
       if (request.signal.aborted || active !== request) return;
       const utterance = new SpeechSynthesisUtterance(body.text);
@@ -237,7 +246,12 @@ export async function docTiengAnh(
           utterance.onerror = () => {
             finishLocal();
             if (request.signal.aborted) resolve();
-            else reject(new Error('Không phát được giọng tiếng Anh trên máy.'));
+            else
+              reject(
+                new Error(
+                  `Không phát được giọng ${body.language === 'vi' ? 'tiếng Việt' : 'tiếng Anh'} trên máy.`,
+                ),
+              );
           };
           window.speechSynthesis.resume();
           window.speechSynthesis.speak(utterance);
@@ -284,7 +298,14 @@ export async function docTiengAnh(
   }
 }
 
-export async function chepLoi(blob: Blob, signal: AbortSignal): Promise<string> {
+/** Compatibility export for earlier English-only callers. */
+export const docTiengAnh = docVanBan;
+
+export async function chepLoi(
+  blob: Blob,
+  signal: AbortSignal,
+  language: 'en' | 'vi' = 'en',
+): Promise<string> {
   if (!blob.size) throw new Error('Bản ghi trống. Hãy thử ghi âm lại.');
   if (blob.size > 8 * 1024 * 1024) throw new Error('Bản ghi quá lớn. Hãy ghi một đoạn ngắn hơn.');
   const form = new FormData();
@@ -294,7 +315,7 @@ export async function chepLoi(blob: Blob, signal: AbortSignal): Promise<string> 
       ? 'ogg'
       : 'webm';
   form.append('file', blob, `recording.${extension}`);
-  const response = await apiFetch('/api/speech/stt?language=en', {
+  const response = await apiFetch(`/api/speech/stt?language=${language}`, {
     method: 'POST',
     body: form,
     signal,

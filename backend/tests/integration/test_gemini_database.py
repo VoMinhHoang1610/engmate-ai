@@ -65,11 +65,37 @@ async def test_gemini_stream_retry_voice_context_and_owned_history(
         assert events[-1]["turn"]["evaluation"]["provider"] == "gemini"
         again = await client.post(path, json=data)
         assert len(calls) == 1 and '"type":"done"' in again.text.replace(" ", "")
-        grant = await client.post(f"/api/conversations/{identity}/voice", json={})
+        catalog = (await client.get("/api/voice/voices")).json()
+        assert catalog["provider"] == "gemini" and catalog["default_voice"] == "Kore"
+        assert {v["id"] for v in catalog["voices"]} >= {"Kore", "Puck", "Aoede"}
+        assert "gemini-test-key" not in str(catalog)
+        for invalid in ("Unknown", "", "x" * 65, "Puck<script>"):
+            invalid_offer = await client.post(
+                f"/api/conversations/{identity}/voice", json={"voice_id": invalid}
+            )
+            assert invalid_offer.status_code == 422
+            assert not manager.sessions
+        grant = await client.post(
+            f"/api/conversations/{identity}/voice", json={"voice_id": "Puck"}
+        )
         assert grant.status_code == 200 and grant.json()["transport"] == "websocket"
         sid = grant.json()["session_id"]
         session = manager.sessions[sid]
         assert isinstance(session, GeminiSession)
+        assert session.voice_id == "Puck" and manager.settings.gemini_voice == "Kore"
+        system = calls[0]["systemInstruction"]
+        assert isinstance(system, dict)
+        text_prompt = system["parts"][0]["text"]
+        assert "Version: 4." in text_prompt
+        assert (
+            "reply in Vietnamese to Vietnamese, and in English to English"
+            in text_prompt
+        )
+        assert "Version: 4." in session.prompt
+        assert (
+            "reply in Vietnamese to Vietnamese, and in English to English"
+            in session.prompt
+        )
         assert session.history == [
             {"role": "user", "content": "My name is Linh"},
             {"role": "assistant", "content": "Hi Linh!"},

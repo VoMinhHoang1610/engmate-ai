@@ -3,10 +3,9 @@ import { api, hasSession, saveSession } from './api/database';
 import { AuthForm } from './AuthForm';
 import { Chat } from './Chat';
 import { Logo } from './components/Logo';
-import { LinhThu } from './components/LinhThu';
 import { BieuTuong } from './components/BieuTuong';
-import { TieuDeTrang } from './components/TieuDeTrang';
 import { MenuNguoiDung } from './components/MenuNguoiDung';
+import { ThemeToggle } from './components/ThemeToggle';
 import { xoaBoNhoAmThanh } from './speech/audio';
 import type { Account, Capabilities, Conversation } from './types';
 
@@ -15,6 +14,8 @@ export default function App() {
   const [account, setAccount] = useState<Account | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
+  const [draftIdentity, setDraftIdentity] = useState<number | null>(null);
+  const [workspace, setWorkspace] = useState(0);
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const [loading, setLoading] = useState(hasSession);
   const [more, setMore] = useState(false);
@@ -24,8 +25,27 @@ export default function App() {
   const [retry, setRetry] = useState(0);
   const lock = useRef(false);
   const generation = useRef(0);
-  const createId = useRef(crypto.randomUUID());
   const sessionState = useRef(hasSession());
+
+  useEffect(() => {
+    const syncLocation = () => {
+      const hash = hasSession() ? '#hoi-thoai' : '#dang-nhap';
+      if (window.location.hash !== hash)
+        window.history.replaceState(
+          window.history.state,
+          '',
+          `${window.location.pathname}${window.location.search}${hash}`,
+        );
+    };
+    // The URL reflects the session; changing the hash never grants access.
+    syncLocation();
+    window.addEventListener('hashchange', syncLocation);
+    window.addEventListener('popstate', syncLocation);
+    return () => {
+      window.removeEventListener('hashchange', syncLocation);
+      window.removeEventListener('popstate', syncLocation);
+    };
+  }, [signedIn]);
 
   useEffect(() => {
     const escape = (event: KeyboardEvent) => {
@@ -45,6 +65,8 @@ export default function App() {
       setAccount(null);
       setConversations([]);
       setSelected(null);
+      setDraftIdentity(null);
+      setWorkspace((n) => n + 1);
       setError('');
       setLoading(active);
     };
@@ -72,7 +94,6 @@ export default function App() {
           if (current !== generation.current) return;
           setAccount(me);
           setConversations(rows);
-          setSelected(rows[0] ?? null);
           setMore(rows.length === 50);
         })
         .catch((e: unknown) => {
@@ -94,37 +115,19 @@ export default function App() {
     setAccount(null);
     setConversations([]);
     setSelected(null);
+    setDraftIdentity(null);
+    setWorkspace((n) => n + 1);
     setError('');
     setLoading(signedIn);
     setRetry((n) => n + 1);
   }
 
-  async function create() {
-    if (lock.current) return;
-    const current = generation.current;
-    lock.current = true;
-    setBusy(true);
+  function create() {
+    setSelected(null);
+    setDraftIdentity(null);
+    setWorkspace((n) => n + 1);
     setError('');
-    try {
-      const row = await api<Conversation>('/conversations', 'POST', {
-        client_request_id: createId.current,
-        title: 'Hội thoại mới',
-      });
-      if (current !== generation.current) return;
-      createId.current = crypto.randomUUID();
-      setConversations((rows) => [
-        row,
-        ...rows.filter((item) => item.conversation_id !== row.conversation_id),
-      ]);
-      setSelected(row);
-      setMenu(false);
-    } catch (e) {
-      if (current === generation.current)
-        setError(e instanceof Error ? e.message : 'Chưa tạo được hội thoại.');
-    } finally {
-      lock.current = false;
-      if (current === generation.current) setBusy(false);
-    }
+    setMenu(false);
   }
   async function loadMore() {
     if (lock.current) return;
@@ -197,27 +200,60 @@ export default function App() {
           onClick={() => setMenu(false)}
         />
       )}
-      <aside className="sidebar" aria-label="Menu chính">
+      <aside
+        id="lich-su-hoi-thoai"
+        className={`sidebar conversation-history ${menu ? 'open' : ''}`}
+        aria-label="Lịch sử hội thoại"
+      >
         <a className="brand" href="#hoi-thoai" aria-label="EngMate AI">
           <Logo />
         </a>
-        <nav aria-label="Điều hướng">
-          <div className="nav-group">
-            <a className="nav-link active" href="#hoi-thoai" aria-current="page">
-              <BieuTuong ten="chat" />
-              Hội thoại AI<span className="nav-badge">AI</span>
-            </a>
-          </div>
+        <button
+          className="btn primary full-width new-chat"
+          disabled={busy}
+          onClick={() => void create()}
+        >
+          <BieuTuong ten="plus" size={18} /> Hội thoại mới
+        </button>
+        <h2>Lịch sử hội thoại</h2>
+        <nav aria-label="Danh sách hội thoại">
+          {conversations.map((row) => (
+            <button
+              key={row.conversation_id}
+              aria-label={`${row.title}, ${new Date(row.created_at).toLocaleDateString('vi-VN')}${row.status !== 'in_progress' ? ', Đã kết thúc' : ''}`}
+              className={`history-item ${(selected?.conversation_id ?? draftIdentity) === row.conversation_id ? 'active' : ''}`}
+              aria-current={
+                (selected?.conversation_id ?? draftIdentity) === row.conversation_id
+                  ? 'page'
+                  : undefined
+              }
+              onClick={() => {
+                setSelected(row);
+                setDraftIdentity(null);
+                setMenu(false);
+              }}
+            >
+              <BieuTuong ten="chat" size={18} />
+              <span>
+                {row.title}
+                <small>
+                  {new Date(row.created_at).toLocaleDateString('vi-VN')}
+                  {row.status !== 'in_progress' ? ' · Đã kết thúc' : ''}
+                </small>
+              </span>
+            </button>
+          ))}
+          {more && (
+            <button
+              className="text-button full-width"
+              disabled={busy}
+              onClick={() => void loadMore()}
+            >
+              Tải thêm hội thoại
+            </button>
+          )}
+          {!conversations.length && <p className="muted">Chưa có hội thoại.</p>}
         </nav>
-        <div className="sidebar-bottom">
-          <div className="sidebar-mate">
-            <LinhThu size={60} />
-            <div>
-              <strong>Học cùng Mate</strong>
-              <p>Luyện nói mỗi ngày</p>
-            </div>
-          </div>
-        </div>
       </aside>
       <div className="main-wrapper">
         <header className="topbar">
@@ -234,7 +270,7 @@ export default function App() {
             <a className="mobile-brand" href="#hoi-thoai" aria-label="EngMate AI">
               <Logo compact />
             </a>
-            <span>Không gian học tập</span>
+            <h1>Hội thoại AI</h1>
           </div>
           <div className="topbar-right">
             <span className="pill">
@@ -247,13 +283,11 @@ export default function App() {
                     : 'BLAZE AI'}
             </span>
             <span className="account-name">{account.username}</span>
+            <ThemeToggle />
             <MenuNguoiDung account={account} busy={busy} onLogout={logout} />
           </div>
         </header>
         <main id="noi-dung" tabIndex={-1} className="main-content">
-          <TieuDeTrang ten="Hội thoại AI">
-            <span className="pill purple">AI · Trò chuyện cùng Mate</span>
-          </TieuDeTrang>
           {(!capabilities?.chat || error) && (
             <div className="notice" role="alert">
               {error || capabilities?.reason || 'Đang kiểm tra khả năng kết nối AI…'}
@@ -264,13 +298,18 @@ export default function App() {
           )}
           <div className="chat-layout">
             <Chat
-              key={selected?.conversation_id ?? 'empty'}
+              key={selected?.conversation_id ?? `draft-${workspace}`}
               conversation={selected}
               capabilities={capabilities}
-              onClose={() => {
-                if (!selected) return;
-                const closed: Conversation = { ...selected, status: 'completed' };
-                setSelected(closed);
+              onCreated={(row) => {
+                setDraftIdentity(row.conversation_id);
+                setConversations((rows) => [
+                  row,
+                  ...rows.filter((item) => item.conversation_id !== row.conversation_id),
+                ]);
+              }}
+              onClose={(closed) => {
+                if (selected) setSelected(closed);
                 setConversations((rows) =>
                   rows.map((row) =>
                     row.conversation_id === closed.conversation_id ? closed : row,
@@ -278,61 +317,8 @@ export default function App() {
                 );
               }}
             />
-            <aside
-              id="lich-su-hoi-thoai"
-              className={`panel conversation-history ${menu ? 'open' : ''}`}
-              aria-label="Lịch sử hội thoại"
-            >
-              <h2>Lịch sử hội thoại</h2>
-              <button
-                className="btn primary full-width new-chat"
-                disabled={busy}
-                onClick={() => void create()}
-              >
-                <BieuTuong ten="plus" size={18} />
-                Hội thoại mới
-              </button>
-              <nav aria-label="Danh sách hội thoại">
-                {conversations.map((row) => (
-                  <button
-                    key={row.conversation_id}
-                    aria-label={`${row.title}, ${new Date(row.created_at).toLocaleDateString('vi-VN')}${row.status !== 'in_progress' ? ', Đã kết thúc' : ''}`}
-                    className={`history-item ${selected?.conversation_id === row.conversation_id ? 'active' : ''}`}
-                    aria-current={
-                      selected?.conversation_id === row.conversation_id ? 'page' : undefined
-                    }
-                    onClick={() => {
-                      setSelected(row);
-                      setMenu(false);
-                    }}
-                  >
-                    <BieuTuong ten="chat" size={18} />
-                    <span>
-                      {row.title}
-                      <small>
-                        {new Date(row.created_at).toLocaleDateString('vi-VN')}
-                        {row.status !== 'in_progress' ? ' · Đã kết thúc' : ''}
-                      </small>
-                    </span>
-                  </button>
-                ))}
-                {more && (
-                  <button
-                    className="text-button full-width"
-                    disabled={busy}
-                    onClick={() => void loadMore()}
-                  >
-                    Tải thêm hội thoại
-                  </button>
-                )}
-                {!conversations.length && (
-                  <p className="muted">Chưa có hội thoại. Bắt đầu câu chuyện đầu tiên của bạn.</p>
-                )}
-              </nav>
-            </aside>
           </div>
         </main>
-        <footer className="site-footer">© 2026 EngMate-AI</footer>
       </div>
     </div>
   );

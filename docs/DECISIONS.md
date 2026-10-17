@@ -1,5 +1,33 @@
 # Quyết định kỹ thuật
 
+## 2026-10-18 — Chia sẻ HTTPS tạm thời bằng SSH tunnel và Nginx
+
+Người dùng chọn chia sẻ bản đang chạy trên máy bằng link HTTPS tạm thời. Dùng reverse proxy riêng cho bản build để không đưa Vite/source code ra Internet; giữ base Compose bind loopback và không đổi schema/auth. Nginx chính thức được ghim digest đã pull, chạy read-only với tmpfs cần thiết, chuyển Upgrade cho thoại và tắt buffering cho chat SSE theo [Nginx](https://nginx.org/en/docs/http/websocket.html).
+
+[Cloudflare Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) không hỗ trợ SSE. Thử localhost.run đã chuyển được HTTP/WebSocket nhưng domain tự đổi khi đang QA, làm link cũ trả “no tunnel”; đã dừng đúng tiến trình cũ. Chọn [Pinggy HTTP tunnel](https://pinggy.io/docs/http_tunnels/), có [hỗ trợ SSE](https://pinggy.io/docs/guides/pocketbase/) và [giới hạn phiên miễn phí 60 phút](https://pinggy.io/help/). Không đăng ký dịch vụ trả phí hoặc dùng khóa SSH cá nhân; khóa tunnel riêng nằm trong artifact bị Git bỏ qua và chỉ tài khoản hiện tại đọc được. Origin thêm đúng domain nhận từ SSH; không dùng wildcard hoặc bỏ kiểm tra Origin/ticket.
+
+## 2026-10-18 — Canh một hàng, tách theme khỏi giọng và đổi giọng trong cuộc gọi
+
+Theo phản hồi người dùng, thay composer hai tầng bằng một hàng flex, icon tai nghe cho giọng và nút sáng/tối trên topbar. Tái sử dụng biến màu dark đã có; lưu preference giao diện riêng, không thêm dependency hoặc trộn với token/lịch sử.
+
+Giọng được truyền trong setup theo [Google Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities). Adapter hiện tại không có lệnh đổi cấu hình trên kết nối đang mở, nên ứng dụng thực hiện stop/start tuần tự trong cùng conversation thay vì gửi setup mới qua socket. Chờ server cleanup/xử lý lượt dở trước khi mở tiếp, giữ mute và context đã lưu; epoch bỏ callbacks cũ, stop/unmount vô hiệu việc nối lại. Có thể gián đoạn ngắn khi đổi và phần âm thanh đang phát dừng lại; không coi đây là đổi giọng liên tục không ngắt âm thanh.
+
+## 2026-10-17 — Bản nháp chào mừng và toolbar trong ô nhập
+
+Không tự chọn bản ghi lịch sử đầu tiên sau đăng nhập. Giữ màn hình chào và chỉ tạo hội thoại khi gửi tin hoặc bắt đầu thoại, tránh phát sinh bản ghi trống mỗi lần mở app/bấm tạo mới. Tái sử dụng API hiện có, giữ UUID khi retry; không thay backend/schema hoặc di chuyển dữ liệu lịch sử.
+
+Gom thao tác vào khung nhập, dùng icon kèm aria-label/title; tùy chọn giọng chuyển vào menu bánh răng. Tham khảo cách đặt nút thoại trong ô nhập của [ChatGPT](https://help.openai.com/en/articles/20001274-chatgpt-voice), [Gemini](https://support.google.com/gemini/answer/16363185) và [Claude](https://support.claude.com/en/articles/11101966-use-voice-mode); giữ màu/logo/Mate của ứng dụng. Menu dùng chung, hỗ trợ Escape/click ngoài và focus; phụ đề chỉ tồn tại trên giao diện khi cuộc gọi đang hoạt động.
+
+## 2026-10-16 — Ngôn ngữ theo lượt, giọng theo phiên và bố cục tập trung hội thoại
+
+Theo yêu cầu mới, persona.v4 thay quy tắc mặc định luyện tiếng Anh bằng phản hồi theo ngôn ngữ lượt mới nhất. Yêu cầu dịch/song ngữ/luyện tập rõ ràng được ưu tiên; không tự tạo hai bản dịch cho mọi câu. Chat và Live cùng đọc prompt mới, không cần sửa bản ghi hoặc migration. Giữ prompt v3 để truy vết lịch sử.
+
+Giọng Gemini Live được chọn trước cuộc gọi qua catalog nội bộ có xác thực và whitelist; lưu trên phiên thay vì sửa cấu hình toàn cục. Catalog dùng tám giọng prebuilt đã có trong tài liệu cùng giọng mặc định admin; không gọi catalog trả phí. Giọng Blaze TTS/STT là lựa chọn riêng trong menu âm thanh. Live native audio tự chọn ngôn ngữ; ghi âm Blaze từng lượt dùng en/vi do người dùng chọn vì hợp đồng STT hiện có không có chế độ auto.
+
+Tham khảo cấu trúc [ChatGPT công khai](https://chatgpt.com/): lịch sử/tạo mới ở sidebar và vùng nhập tập trung. Chuyển lịch sử phải vào sidebar hiện có, bỏ quảng bá Mate/nhãn trang lặp/footer khỏi workspace để mở rộng messages; giữ logo, màu, linh vật ở trạng thái trống và trang auth. Không thêm thư viện, thay công nghệ hoặc bắt chước nguyên giao diện sản phẩm khác.
+
+Hợp đồng giọng/ngôn ngữ: [Google Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities), [prebuilt voices](https://ai.google.dev/gemini-api/docs/speech-generation#voice-options). Tests dùng transport giả lập; microphone/echo/barge-in và chất lượng song ngữ của model cần kiểm chứng thiết bị/provider riêng.
+
 ## 2026-10-16 — Chuyển provider mặc định sang Gemini
 
 Người dùng yêu cầu thay OpenAI bằng Gemini và đã cấp khóa. Chọn Gemini GenerateContent SSE (HTTPX sẵn có) và Gemini Live WebSocket (websockets sẵn có); không dùng khóa Gemini gửi đến endpoint OpenAI. Mặc định chat `gemini-3.5-flash-lite`, thoại `gemini-3.8-live`, voice Kore; đã xác nhận các model qua models API và tài liệu Google. Trong probe, 3.8 Flash trả 503, còn Flash-Lite trả SSE với STOP; không tự đổi model/provider khi lỗi runtime.

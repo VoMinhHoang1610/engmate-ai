@@ -28,6 +28,30 @@ class VoiceOffer(Input):
     """Bound the SDP received from an authenticated browser."""
 
     sdp: str | None = Field(default=None, min_length=10, max_length=64000)
+    voice_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]{1,64}$")
+
+
+@router.get("/voice/voices")
+def voice_catalog(user: User, request: Request) -> Record:
+    """Expose supported live voices, separately from the Blaze reading catalog."""
+    manager = request.app.state.voice
+    settings = request.app.state.settings
+    voices = (
+        manager.live.voices()
+        if isinstance(manager, GeminiVoiceManager)
+        else {settings.openai_voice: "Giọng mặc định"}
+    )
+    return {
+        "provider": settings.llm_provider,
+        "default_voice": (
+            settings.gemini_voice
+            if isinstance(manager, GeminiVoiceManager)
+            else settings.openai_voice
+        ),
+        "voices": [
+            {"id": key, "name": key + " · " + name} for key, name in voices.items()
+        ],
+    }
 
 
 @router.post("/conversations/{identity}/voice")
@@ -37,7 +61,12 @@ async def start_voice(
     """Check ownership/open state before any paid provider signaling call."""
     manager: RealtimeManager = request.app.state.voice
     if isinstance(manager, GeminiVoiceManager):
-        return await manager.start(user["UserId"], identity)
+        return await manager.start(user["UserId"], identity, voice_id=data.voice_id)
+    if (
+        data.voice_id is not None
+        and data.voice_id != request.app.state.settings.openai_voice
+    ):
+        raise HTTPException(422, "Giọng đối thoại không được hỗ trợ.")
     if data.sdp is None:
         raise HTTPException(422, "SDP is required for the OpenAI transport.")
     return await manager.start(user["UserId"], identity, data.sdp)
