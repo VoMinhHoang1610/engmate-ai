@@ -1,5 +1,75 @@
 # Quyết định kỹ thuật
 
+## 2026-10-18 — Chia sẻ HTTPS tạm thời bằng SSH tunnel và Nginx
+
+Người dùng chọn chia sẻ bản đang chạy trên máy bằng link HTTPS tạm thời. Dùng reverse proxy riêng cho bản build để không đưa Vite/source code ra Internet; giữ base Compose bind loopback và không đổi schema/auth. Nginx chính thức được ghim digest đã pull, chạy read-only với tmpfs cần thiết, chuyển Upgrade cho thoại và tắt buffering cho chat SSE theo [Nginx](https://nginx.org/en/docs/http/websocket.html).
+
+[Cloudflare Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) không hỗ trợ SSE. Thử localhost.run đã chuyển được HTTP/WebSocket nhưng domain tự đổi khi đang QA, làm link cũ trả “no tunnel”; đã dừng đúng tiến trình cũ. Chọn [Pinggy HTTP tunnel](https://pinggy.io/docs/http_tunnels/), có [hỗ trợ SSE](https://pinggy.io/docs/guides/pocketbase/) và [giới hạn phiên miễn phí 60 phút](https://pinggy.io/help/). Không đăng ký dịch vụ trả phí hoặc dùng khóa SSH cá nhân; khóa tunnel riêng nằm trong artifact bị Git bỏ qua và chỉ tài khoản hiện tại đọc được. Origin thêm đúng domain nhận từ SSH; không dùng wildcard hoặc bỏ kiểm tra Origin/ticket.
+
+## 2026-10-18 — Canh một hàng, tách theme khỏi giọng và đổi giọng trong cuộc gọi
+
+Theo phản hồi người dùng, thay composer hai tầng bằng một hàng flex, icon tai nghe cho giọng và nút sáng/tối trên topbar. Tái sử dụng biến màu dark đã có; lưu preference giao diện riêng, không thêm dependency hoặc trộn với token/lịch sử.
+
+Giọng được truyền trong setup theo [Google Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities). Adapter hiện tại không có lệnh đổi cấu hình trên kết nối đang mở, nên ứng dụng thực hiện stop/start tuần tự trong cùng conversation thay vì gửi setup mới qua socket. Chờ server cleanup/xử lý lượt dở trước khi mở tiếp, giữ mute và context đã lưu; epoch bỏ callbacks cũ, stop/unmount vô hiệu việc nối lại. Có thể gián đoạn ngắn khi đổi và phần âm thanh đang phát dừng lại; không coi đây là đổi giọng liên tục không ngắt âm thanh.
+
+## 2026-10-17 — Bản nháp chào mừng và toolbar trong ô nhập
+
+Không tự chọn bản ghi lịch sử đầu tiên sau đăng nhập. Giữ màn hình chào và chỉ tạo hội thoại khi gửi tin hoặc bắt đầu thoại, tránh phát sinh bản ghi trống mỗi lần mở app/bấm tạo mới. Tái sử dụng API hiện có, giữ UUID khi retry; không thay backend/schema hoặc di chuyển dữ liệu lịch sử.
+
+Gom thao tác vào khung nhập, dùng icon kèm aria-label/title; tùy chọn giọng chuyển vào menu bánh răng. Tham khảo cách đặt nút thoại trong ô nhập của [ChatGPT](https://help.openai.com/en/articles/20001274-chatgpt-voice), [Gemini](https://support.google.com/gemini/answer/16363185) và [Claude](https://support.claude.com/en/articles/11101966-use-voice-mode); giữ màu/logo/Mate của ứng dụng. Menu dùng chung, hỗ trợ Escape/click ngoài và focus; phụ đề chỉ tồn tại trên giao diện khi cuộc gọi đang hoạt động.
+
+## 2026-10-16 — Ngôn ngữ theo lượt, giọng theo phiên và bố cục tập trung hội thoại
+
+Theo yêu cầu mới, persona.v4 thay quy tắc mặc định luyện tiếng Anh bằng phản hồi theo ngôn ngữ lượt mới nhất. Yêu cầu dịch/song ngữ/luyện tập rõ ràng được ưu tiên; không tự tạo hai bản dịch cho mọi câu. Chat và Live cùng đọc prompt mới, không cần sửa bản ghi hoặc migration. Giữ prompt v3 để truy vết lịch sử.
+
+Giọng Gemini Live được chọn trước cuộc gọi qua catalog nội bộ có xác thực và whitelist; lưu trên phiên thay vì sửa cấu hình toàn cục. Catalog dùng tám giọng prebuilt đã có trong tài liệu cùng giọng mặc định admin; không gọi catalog trả phí. Giọng Blaze TTS/STT là lựa chọn riêng trong menu âm thanh. Live native audio tự chọn ngôn ngữ; ghi âm Blaze từng lượt dùng en/vi do người dùng chọn vì hợp đồng STT hiện có không có chế độ auto.
+
+Tham khảo cấu trúc [ChatGPT công khai](https://chatgpt.com/): lịch sử/tạo mới ở sidebar và vùng nhập tập trung. Chuyển lịch sử phải vào sidebar hiện có, bỏ quảng bá Mate/nhãn trang lặp/footer khỏi workspace để mở rộng messages; giữ logo, màu, linh vật ở trạng thái trống và trang auth. Không thêm thư viện, thay công nghệ hoặc bắt chước nguyên giao diện sản phẩm khác.
+
+Hợp đồng giọng/ngôn ngữ: [Google Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities), [prebuilt voices](https://ai.google.dev/gemini-api/docs/speech-generation#voice-options). Tests dùng transport giả lập; microphone/echo/barge-in và chất lượng song ngữ của model cần kiểm chứng thiết bị/provider riêng.
+
+## 2026-10-16 — Chuyển provider mặc định sang Gemini
+
+Người dùng yêu cầu thay OpenAI bằng Gemini và đã cấp khóa. Chọn Gemini GenerateContent SSE (HTTPX sẵn có) và Gemini Live WebSocket (websockets sẵn có); không dùng khóa Gemini gửi đến endpoint OpenAI. Mặc định chat `gemini-3.5-flash-lite`, thoại `gemini-3.8-live`, voice Kore; đã xác nhận các model qua models API và tài liệu Google. Trong probe, 3.8 Flash trả 503, còn Flash-Lite trả SSE với STOP; không tự đổi model/provider khi lỗi runtime.
+
+Chọn relay backend thay phát standard key hoặc để browser tự báo assistant transcript. REST bearer cấp ticket một lần, WS kiểm tra Origin, chỉ nhận PCM có giới hạn; history và transcript provider giữ ở server. Gemini Live dùng PCM16 input 16 kHz/output 24 kHz và server VAD. AudioWorklet xử lý sample rate thiết bị; hàng đợi phát có giới hạn và xóa khi ngắt lời. Không đổi schema/login/giao diện, không thêm dependency hoặc coordination phân tán. Adapter OpenAI cũ được giữ để tương thích và test; `.env` local chuyển Gemini và xóa giá trị OPENAI_API_KEY.
+
+Nguồn chính thức: [GenerateContent API](https://ai.google.dev/api/generate-content), [Live WebSocket](https://ai.google.dev/api/live), [Live capabilities](https://ai.google.dev/gemini-api/docs/live-api/capabilities), [danh mục model](https://ai.google.dev/gemini-api/docs/models). Không coi test doubles hoặc Live phát audio từ text là bằng chứng microphone/echo/barge-in trên thiết bị thật đã đạt.
+
+## 2026-10-16 — OpenAI Responses và Realtime theo lựa chọn người dùng
+
+Người dùng chọn OpenAI cho Chat/Realtime và giữ Blaze cho giọng đọc; đã cung cấp key riêng để cấu hình backend. Giữ React/FastAPI/MySQL/auth/layout cũ, JSON API tương thích. Responses dùng HTTPX có sẵn, SSE có typed lifecycle và assistant MessageId bền vững; history là role-typed input, không ghép dữ liệu người dùng vào system prompt. Prompt persona.v3 chung cho Chat/Voice.
+
+Voice chọn WebRTC thay upload audio theo lượt: provider quản lý media/jitter/VAD và truncate khi ngắt lời. Backend tạo call bằng key bí mật và attach sideband để nạp lịch sử/lưu transcript authoritative; browser không được tự ghi assistant text. Tất cả wire contract/provider calls nằm trong app/llm. Registry hiện in-process, một worker, heartbeat/TTL/session limit; không thêm Redis hoặc thay schema trong lượt này. Multi-worker cần coordination bền vững và kiểm thử riêng trước khi bật.
+
+Runtime không import model double; get_settings từ chối mock. Doubles chuyển vào tests/fakes.py và inject trong tests. Giữ assertions auth/retry/ownership/speech, bổ sung stream/voice tests; smoke đổi từ “realtime luôn false” sang kiểm tra cấu hình OpenAI/streaming và không mock, phù hợp chức năng mới.
+
+Thêm websockets==15.0.1 (client sideband, BSD license), đã cài và ghim cùng hai requirements lock. Giữ nguyên các dependency đã khóa; pip-compile offline không resolve được bộ package hiện có nên bổ sung dependency không có transitive này vào lockfiles, không tự nâng phiên bản cả môi trường. Docker nhận biến OpenAI chỉ ở backend; không đưa secret sang frontend.
+
+Kiểm chứng OpenAI live bị chặn bởi credit_balance_exhausted, không phải bằng chứng model đã trả lời. Người dùng hiện chưa thể bổ sung credit. Dừng các probe tính phí và không đổi sang provider/mock khác. Tài liệu OpenAI chính thức làm cơ sở hợp đồng: [Responses streaming](https://developers.openai.com/api/docs/guides/streaming-responses), [WebRTC](https://developers.openai.com/api/docs/guides/voice-webrtc), [sideband](https://developers.openai.com/api/docs/guides/voice-server-controls?api=realtime&voice-api=realtime), [interruption/truncation](https://developers.openai.com/api/docs/guides/realtime-conversations).
+
+## 2026-10-16 — Giữ giao diện gốc khi thu gọn tính năng
+
+Người dùng yêu cầu sửa việc tự thiết kế lại giao diện: giữ thiết kế cũ, kể cả đăng nhập/đăng ký. Khôi phục trực tiếp CSS và các component hình ảnh từ HEAD; App/AuthForm/Chat dùng lại cấu trúc/class gốc, ghép với transport REST và state đã kiểm thử. Không khôi phục demo/context cũ, OAuth giả hay trang học tập phụ. Menu avatar được giữ với callback logout gọi backend. Bổ sung xác nhận mật khẩu cùng kiểm tra mismatch, không thay đổi chính sách xác thực backend.
+
+Khóa do người dùng cung cấp được lưu duy nhất trong `.env` root bị Git bỏ qua. Chỉ kiểm tra có cấu hình, không ghi giá trị vào tài liệu/log và không gọi dịch vụ tính phí. Có khóa speech chưa cung cấp hợp đồng sinh phản hồi Chat/Voice Agent; tiếp tục công khai giới hạn này.
+
+## 2026-10-16 — Thu gọn về hội thoại
+
+Người dùng duyệt loại toàn bộ chức năng học tập phụ, giữ tài khoản/lịch sử/chat chữ/speech và yêu cầu voice realtime bằng Blaze. Chọn tái sử dụng các bảng chat v1 và cơ chế JWT/ownership/idempotency, thu gọn schema bootstrap mới, bảo toàn database cũ. Một frontend luôn dùng REST, bỏ localStorage/demo switch để dev/build thống nhất. Lịch sử JOIN trạng thái phiên để tránh N+1.
+
+Tài liệu https://blaze.vn/#api và https://app.blaze.vn/api/documentation/realTimeTts xác minh speech/TTS WebSocket nhưng chưa có hợp đồng Chat/Voice Agent. Chọn fail closed cho Blaze Chat và công khai realtime=false, không đoán endpoint hoặc âm thầm thay bằng mock. Mock chỉ hoạt động khi cấu hình rõ, có nhãn. Không chọn LLM khác thay yêu cầu Blaze khi chưa được người dùng cho phép.
+
+CI đổi sang MySQL 8.0 với schema test riêng để kiểm chứng driver chính; giữ ngưỡng coverage. Tên nhánh dùng tiếng Việt không dấu `tai-cau-truc/chi-giu-hoi-thoai-ai`; nội dung commit/PR bằng tiếng Việt và tiền tố Conventional Commits. Chưa tự commit/push.
+
+2026-10-09 — Luồng mở ứng dụng/đăng nhập: theo yêu cầu hiện đăng nhập trước mỗi lần mở trang MySQL, giữ token trong bộ nhớ thay vì khôi phục sessionStorage; không thay tài khoản/dữ liệu hay chính sách JWT của backend. Form chờ thao tác tải context sau authenticate rồi điều hướng Tổng quan. Chọn chờ Promise của context thay sự kiện `engmate-login` không có kết quả trả về để nút xử lý/lỗi gắn với toàn bộ quá trình. Demo cũng chuyển Tổng quan sau đăng nhập; các fixture demo đã đăng nhập vẫn kiểm tra trang học riêng. Assertion cũ chờ bấm thêm liên kết vào học/chuyển về trang Cài đặt được thay bằng kiểm tra vào Tổng quan tự động vì đây là hành vi người dùng yêu cầu.
+
+2026-10-09 — Kết nối MySQL và frontend: sau khi người dùng cung cấp connection và yêu cầu đồng bộ, chọn SQLAlchemy Core/PyMySQL, giữ service/hợp đồng API và ánh xạ bảng tiếng Việt thay vì đổi DDL hoặc tạo ORM mới. PyMySQL[rsa] hỗ trợ xác thực caching_sha2_password của MySQL 8; dependencies được khóa trong requirements. Theo [SQLAlchemy MySQL dialect](https://docs.sqlalchemy.org/en/20/dialects/mysql.html), dùng INSERT + PK/SELECT và UPDATE + SELECT trong transaction, không dùng OUTPUT/RETURNING của SQL Server. READ COMMITTED + SELECT FOR UPDATE theo user bảo vệ retry; mỗi kết nối đặt UTC. Token Version giữ hex 16 ký tự để UI dùng cùng hợp đồng.
+
+Frontend chọn `VITE_DATA_SOURCE=mysql`, lấy dữ liệu có xác thực từ server; demo vẫn có thể chạy độc lập. Không nhập tự động localStorage vì dữ liệu demo không có ownership đáng tin cậy. Chỉ token phiên ở sessionStorage; secrets DB/Blaze ở backend. MySQL lưu đủ bảy mức, onboarding và giọng; AI nói/viết/chat vẫn mock. Bộ test dùng schema riêng, rollback API workflows; browser E2E dùng schema riêng khác và mock speech để không ghi tài khoản thử vào database người dùng hoặc phát sinh phí.
+
+2026-10-09: theo yêu cầu chuyển sang MySQL, chuẩn bị bootstrap riêng trong file SQL người dùng cung cấp trước khi sửa backend. Giữ tên bảng tiếng Việt của file; thêm TrinhDoCEFR/TuVungBaiHoc, mở Reading qua các bảng bài học hiện có, giữ ràng buộc ownership. Chọn OnboardingCompletedAt thay cờ lặp và SpeechVoiceId lấy catalog từ provider; không hard-code danh sách giọng/key. Seed đủ nội dung frontend và không sửa revision đã xuất bản khi chạy lại. Backend SQL Server chưa thay đổi; đổi adapter là bước sau khi người dùng chạy schema.
+
 ## 2026-10-08 — Hợp nhất UI mới với backend SQL v1
 
 - Giữ luồng làm quen, Reading/lộ trình bảy mức, hỗ trợ Mate mới và toàn bộ backend đã có trên develop. Giữ sửa lỗi phiên intro, username và storage jsdom của develop.
@@ -109,3 +179,13 @@
 - Lockfile backend/npm được giữ đồng bộ với manifest. Vitest/coverage dùng 4.1.11; nguồn phiên bản vá: [advisory của Vitest](https://github.com/vitest-dev/vitest/security/advisories/GHSA-82fw-gwwq-j7x9).
 - DB/auth/chat streaming được làm theo backlog khi bắt đầu nghiệp vụ; scaffold không tạo database hoặc giả lập đăng nhập.
 - Bản nguồn cũ được sao lưu trong `.artifacts/before-reset-*`; Git history và môi trường cài dependency hiện có tiếp tục dùng cho checkout này.
+
+## 2026-10-08 — Blaze speech adapter
+
+Theo yêu cầu nối key TTS/STT, dùng httpx async (đã có pin 0.28.1 trong dev lock) làm runtime dependency thay vì SDK mới. TTS poll trong timeout và trả MP3 vì payload Blaze thực tế là MP3; không tin URL audio từ provider. STT synchronous, không lưu DB; mặc định JWT, local demo opt-in. Không nối UI hoặc biến speech thành LLM/chấm phát âm.
+
+2026-10-08: theo yêu cầu tiếp nối, đổi toàn bộ nút Nghe sang NutDoc gọi backend; chia sẻ useThuAm cho Speaking/Hội thoại. Văn bản STT là bản nháp sửa được, không tự gửi chat, không biến feedback mẫu thành chấm phát âm. Không giữ key ở frontend và không dùng browser speech synthesis để thay thế kết quả Blaze khi lỗi.
+
+2026-10-08: lấy danh sách giọng qua endpoint backend thay vì hard-code 27 giọng vào UI. Giọng người dùng chọn là cài đặt trình duyệt, dùng cùng vòng đời localStorage hiện có; không mở rộng SQL ngoài phạm vi. Preview dùng TTS cùng giọng/tốc độ để phản ánh cách đọc trong bài học.
+
+2026-10-08: giảm độ trễ bằng preload có chọn lọc và cache RAM theo text/voice/speed. Dùng chung generation giữa preload/click, mỗi caller hủy độc lập; cache bị chặn bởi số clip/bytes/TTL và xóa khi logout. Chưa thêm streaming, lưu audio lâu dài hoặc thay giọng người dùng bằng browser synthesis. Lần tạo đầu vẫn phụ thuộc Blaze; preload có thể tốn credit, nên danh sách nhiều nút không tải hàng loạt.

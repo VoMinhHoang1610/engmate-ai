@@ -1,34 +1,44 @@
-"""SQLAlchemy Core mappings reflected from the authoritative SQL Server schema."""
+"""Reflect only the legacy tables needed by account and conversation workflows."""
 
 from threading import Lock
 
 from sqlalchemy import Connection, MetaData, Table
 
-TABLE_NAMES = frozenset(
-    "SchemaVersions Users LearnerProfiles UserSettings MediaAssets OAuthIdentities "
-    "AuthSessions AccountTokens Topics Lessons LessonQuestions QuestionOptions "
-    "StudySessions Conversations Messages PracticeAttempts AttemptAnswers "
-    "AIEvaluations ErrorRecords UserVocabulary FlashcardSessions FlashcardReviews "
-    "vUserLearningStats vDailyLearningStats".split()
+MYSQL_TABLES = dict(
+    zip(
+        (
+            "SchemaVersions Users LearnerProfiles AuthSessions StudySessions "
+            "Conversations Messages AIEvaluations"
+        ).split(),
+        (
+            "PhienBanCauTruc NguoiDung HoSoNguoiHoc PhienDangNhap "
+            "PhienHoc HoiThoai TinNhan DanhGiaAI"
+        ).split(),
+        strict=True,
+    )
 )
+TABLE_NAMES = frozenset(MYSQL_TABLES)
 
 
 class ModelCatalog:
-    """Reuse reflected columns and SQL types without generating replacement DDL."""
+    """Reuse existing data without creating or dropping application tables."""
 
-    table_names = TABLE_NAMES
-
-    def __init__(self) -> None:
-        """Create a catalog scoped to one database instance."""
-        self.metadata = MetaData(schema="em")
+    def __init__(self, mysql: bool = False) -> None:
+        """Scope reflected metadata and its lock to one database instance."""
+        self.mysql = mysql
+        self.table_names = TABLE_NAMES
+        self.metadata = MetaData(schema=None if mysql else "em")
         self.lock = Lock()
 
     def table(self, name: str, connection: Connection) -> Table:
-        """Resolve only known tables/views; clients never choose SQL identifiers."""
-        if name not in TABLE_NAMES:
+        """Resolve server-owned identifiers; clients cannot select SQL names."""
+        if name not in self.table_names:
             raise ValueError("Unknown application table")
-        key = "em." + name
+        physical = MYSQL_TABLES[name] if self.mysql else name
+        key = physical if self.mysql else "em." + name
         with self.lock:
             if key not in self.metadata.tables:
-                Table(name, self.metadata, autoload_with=connection, resolve_fks=False)
+                Table(
+                    physical, self.metadata, autoload_with=connection, resolve_fks=False
+                )
         return self.metadata.tables[key]

@@ -1,152 +1,118 @@
 # EngMate-AI
 
-EngMate-AI là ứng dụng luyện tiếng Anh dành cho người học nói tiếng Việt, với bài tập Speaking, Listening, Reading, Writing và hội thoại mô phỏng cùng Mate. Frontend dùng React/TypeScript; backend dùng FastAPI và có API lưu dữ liệu trên SQL Server.
+Ứng dụng hội thoại tiếng Việt và tiếng Anh: AI đáp theo ngôn ngữ người dùng, hỗ trợ tài khoản riêng, lịch sử, nhập chữ và thoại trực tiếp. Frontend React/TypeScript/Vite; backend FastAPI; lưu tài khoản và lịch sử bằng REST API trên MySQL. Adapter SQL Server v1 được giữ để tương thích dữ liệu cũ.
 
-**Demo chạy không cần database hoặc API key.** Giao diện lưu dữ liệu trong localStorage; hội thoại gọi AI mock. API SQL/JWT được thử riêng qua Swagger, chưa được giao diện demo sử dụng.
+Giao diện giữ logo, màu xanh, linh vật Mate và trang đăng nhập/đăng ký gốc. Lịch sử và nút hội thoại mới nằm ở thanh bên trái; vùng tin nhắn chiếm phần còn lại. Ô nhập và các icon nằm trên một hàng; icon tai nghe mở tùy chọn giọng/âm thanh. Nút mặt trăng/mặt trời cạnh tài khoản chuyển sáng/tối và nhớ lựa chọn trên trình duyệt. Các trang học tập phụ không được khôi phục.
 
-## Ví dụ đầu ra
+Sau khi đăng nhập, app luôn mở khung chào mừng trống. Chỉ mở tin nhắn cũ khi chọn lịch sử; nút **Hội thoại mới** trở về khung chào và không tạo bản ghi trống. Hội thoại được tạo khi gửi tin đầu tiên hoặc bắt đầu thoại. Các icon tùy chọn âm thanh, thoại trực tiếp, ghi âm và gửi nằm chung trong khung nhập; rê chuột hoặc dùng trình đọc màn hình để biết chức năng.
 
-Gửi `Hello` với `level=B1` tới `POST /api/ai/reply` nhận phản hồi mock:
+URL đồng bộ theo phiên: `#hoi-thoai` khi đã đăng nhập, `#dang-nhap` khi chưa đăng nhập/đã đăng xuất hoặc hết phiên. Cập nhật URL không tải lại trang; sửa hash không cấp quyền truy cập. Reload vẫn yêu cầu đăng nhập lại theo cơ chế token trong bộ nhớ hiện có.
 
-```json
-{
-  "reply": "[Mock/B1] You said: Hello. What would you like to practice?",
-  "provider": "mock",
-  "level": "B1"
-}
-```
+Khung chat nằm trong chiều cao màn hình; tin nhắn và lịch sử cuộn riêng, ô nhập giữ ở cuối khung. Trên màn hình hẹp, mở lịch sử bằng nút menu ở thanh trên.
 
-## Tính năng chính
+Chọn **Giọng đối thoại** trong icon tai nghe ở khung nhập để đổi giọng Gemini trước hoặc trong cuộc gọi. Khi đang thoại, app hiển thị “Đang đổi giọng…” và tự nối lại trong cùng hội thoại sau khi đóng kết nối cũ; giữ lịch sử đã lưu và trạng thái tắt micro. Âm thanh đang phát sẽ dừng khi đổi. Có thể bấm kết thúc trong lúc đổi để hủy nối lại; lỗi đóng phiên được báo rõ, không mở chồng cuộc gọi. Icon sóng âm bắt đầu/kết thúc thoại, icon micro ghi âm thành bản nháp. Live tự nhận tiếng Việt/Anh, dùng chung quy tắc ngôn ngữ với chat. Yêu cầu dịch, trả lời song ngữ hoặc luyện tiếng Anh được ưu tiên nếu bạn nói rõ. Prompt mới áp dụng cho cả hội thoại cũ khi gửi lượt mới.
 
-- Mate hỏi mức học lần đầu; lộ trình Pre-A1 đến C2, chữ cái/số/lời chào kèm giọng đọc trình duyệt.
-- Bốn kỹ năng theo mức học; Reading có 7 bài/21 câu hỏi, Listening chấm theo đáp án có sẵn.
-- Hội thoại và nhập vai dùng phản hồi mock có nhãn; kết quả nói/viết là minh họa.
-- Sổ từ vựng, flashcard/lịch ôn, hồ sơ và cài đặt sáng/tối/giảm chuyển động.
-- Backend SQL Server: tài khoản/JWT, hồ sơ, catalog, lịch sử học, từ vựng/flashcard, media riêng tư và dashboard.
+Menu tai nghe chứa lựa chọn giọng Blaze cho **Nghe câu trả lời** và ngôn ngữ **Ghi âm** từng lượt (mặc định tiếng Việt). Giọng đọc nhận diện dấu tiếng Việt trong văn bản để chọn giọng Việt/Anh tương ứng; văn bản không dấu hoặc pha trộn có thể nhận diện chưa chính xác. Ghi âm từng lượt dùng ngôn ngữ đã chọn; thoại Live tự nhận ngôn ngữ.
 
-Giao diện có 12 trang học tập và trang đăng nhập riêng. UI/mock hỗ trợ bảy mức; API lưu hồ sơ/hội thoại theo schema SQL v1 chỉ nhận A2/B1/B2. Phạm vi từng endpoint ở [docs/API.md](docs/API.md).
+**Trạng thái tích hợp:** mặc định dùng **Gemini** cho chat streaming và thoại trực tiếp Gemini Live theo yêu cầu mới. Blaze tiếp tục phục vụ STT/TTS từng lượt. Khóa ở backend; không fallback sang OpenAI hoặc câu trả lời giả. Đã nhận câu trả lời thật bằng adapter chat và Gemini Live tạo âm thanh thật bằng lời nhắc văn bản; kiểm chứng microphone/loa và ngắt lời trên trình duyệt thật còn cần thực hiện. Tests tự động dùng transport doubles, không gọi API tính phí.
 
-## Yêu cầu hệ thống
+Đã loại lộ trình, onboarding, dashboard, bài tập/chấm điểm bốn kỹ năng, flashcard, sổ từ, hồ sơ mở rộng, OAuth giả và các màn hình phụ. Ứng dụng luôn gọi backend; không còn tài khoản demo `abc/123`, localStorage demo hoặc `VITE_DATA_SOURCE`.
 
-- **Python 3.13 khuyến nghị**; [backend/pyproject.toml](backend/pyproject.toml) khai báo Python ≥3.11. Cần Python để dùng bộ lệnh bên dưới, kể cả khi chạy Docker.
-- **Node.js 24 và npm** nếu chạy local; [frontend/package.json](frontend/package.json) yêu cầu Node ≥22.12. Docker/CI dùng Python 3.13 và Node 24.
-- **Git** để lấy mã nguồn. **Docker Desktop/Engine với Compose v2 đang chạy** nếu chọn Docker; không cần Node/npm trên host cho cách này.
-- Chỉ khi dùng API lưu dữ liệu: SQL Server 2019+ và ODBC Driver 17/18. SQL Server 2022 đã được kiểm thử; Docker backend có ODBC 18 và ffmpeg. Xem [hướng dẫn SQL](docs/LOCAL_DEVELOPMENT.md#bật-api-sql-server).
+## Chạy local
 
-## Cài đặt
+Cần Python 3.11+ (khuyến nghị 3.13), Node >=22.12 (khuyến nghị 24), MySQL 8.0.16+ và database đã chuẩn bị.
 
-Sau khi tải/clone repo, mở terminal tại thư mục gốc chứa `README.md`, `scripts/`, `backend/` và `frontend/`. Chọn một cách:
-
-**Docker — demo nhanh:**
-
-```bash
-python scripts/manage.py env
-```
-
-**Local — phát triển và chạy test:**
-
-```bash
+```powershell
 python scripts/manage.py setup
 ```
 
-`setup` tạo `.venv`, cài backend editable/frontend theo lockfile và tạo `.env` nếu thiếu. `env` chỉ sao chép `.env.example` khi chưa có `.env`. Cả hai giữ nguyên cấu hình đã tồn tại.
+Chỉnh `.env` root theo `.env.example`: `DATABASE_MYSQL_URL`, `JWT_SECRET` ngẫu nhiên >=32 ký tự, `LLM_PROVIDER=gemini`, `GEMINI_API_KEY`; tùy chọn `BLAZE_API_KEY` cho micro/đọc từng lượt. Backend giữ toàn bộ secret. Ký tự đặc biệt trong mật khẩu URL phải percent-encode. `.env` không được commit. `LLM_PROVIDER=mock` bị từ chối khi khởi động runtime; tests inject doubles trực tiếp.
 
-## Cấu hình
+Mặc định `GEMINI_CHAT_MODEL=gemini-3.5-flash-lite`, `GEMINI_LIVE_MODEL=gemini-3.8-live`, `GEMINI_VOICE=Kore`, `GEMINI_MAX_OUTPUT_TOKENS=2048`. Khóa cần quyền truy cập model và quota khả dụng; có khóa không đồng nghĩa provider luôn sẵn sàng. Flash-Lite đã trả stream khi kiểm tra, trong khi lần gọi Gemini 3.8 Flash trả 503. Thay model bằng biến môi trường khi cần; không đặt khóa trong biến `VITE_*`. Sau khi đổi `.env`, khởi động lại backend. Các biến `OPENAI_*` chỉ phục vụ adapter cũ khi chủ động chọn `LLM_PROVIDER=openai`; không cần cho Gemini.
 
-Mẫu cấu hình: [.env.example](.env.example). Demo dùng các giá trị mặc định; để trống `DATABASE_ODBC_CONNECTION` và `JWT_SECRET`. Backend local và Compose đọc `.env` ở root; biến đã đặt trong terminal được ưu tiên. Không lưu secret vào Git hoặc biến frontend `VITE_*`.
+Database mới: chạy [SQL](gemini-code-1791478978574.sql) trên database **chưa có bảng ứng dụng**. File hiện tạo 9 bảng/4 trigger, chỉ seed mã CEFR tương thích và version; không seed tài khoản. Database EngMateAI v1 hiện có được dùng tiếp bằng các bảng tương thích; **không chạy lại bootstrap hoặc DROP bảng cũ**. [Chi tiết MySQL](database/mysql/README.md).
 
-| Biến | Ý nghĩa | Mặc định / ví dụ |
-| --- | --- | --- |
-| `APP_NAME` | Tiêu đề API | `EngMate-AI` |
-| `LLM_PROVIDER` | Provider hiện được hỗ trợ | `mock`; không cần API key |
-| `BACKEND_PORT`, `FRONTEND_PORT` | Cổng host Docker; không đổi cổng dev local | `8010`, `5174` |
-| `CORS_ORIGINS` | Các origin được phép, cách nhau bằng dấu phẩy | `http://localhost:5174,http://127.0.0.1:5174` |
-| `BACKEND_URL` | Vite proxy local; đặt trong terminal frontend | `http://127.0.0.1:8010` |
-| `DATABASE_ODBC_CONNECTION` | Connection string cho API SQL | Trống khi demo; mẫu theo host trong [hướng dẫn SQL](docs/LOCAL_DEVELOPMENT.md#bật-api-sql-server) |
-| `JWT_SECRET` | Khóa ký token khi bật database | Trống khi demo; tự sinh chuỗi ngẫu nhiên ≥32 ký tự |
-| `ACCESS_TOKEN_MINUTES`, `REFRESH_TOKEN_DAYS` | Thời hạn access/refresh token | `15` phút, `30` ngày |
-| `AUTH_REQUESTS_PER_MINUTE` | Giới hạn auth theo IP/process | `30` |
-| `MEDIA_DIRECTORY` | Nơi lưu file riêng tư của backend local | `.artifacts/media`; Docker dùng volume tại `/app/media` |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SENDER` | Gửi link reset mật khẩu qua backend | Host/sender trống; port `587` |
-| `SMTP_USERNAME`, `SMTP_PASSWORD` | Xác thực SMTP, nếu server yêu cầu | Trống; điền riêng trên máy vận hành |
-| `FRONTEND_URL` | URL frontend trong link reset | `http://127.0.0.1:5174` |
-| `SQLSERVER_TEST_ODBC_CONNECTION` | Connection chỉ dành cho test SQL, đặt trong terminal | `tempdb` với schema `em` chưa tồn tại; xem [kiểm thử](docs/TESTING.md) |
-| `SMOKE_BACKEND_URL`, `SMOKE_FRONTEND_URL` | URL stack cần HTTP smoke | `http://127.0.0.1:8010`, `http://127.0.0.1:5174` |
+Mở hai terminal tại root:
 
-SMTP chỉ cần khi thử reset mật khẩu bằng API SQL. Hướng dẫn đổi cổng, Windows/Docker SQL và các lệnh bổ trợ nằm trong [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md).
+```powershell
+python scripts/manage.py dev-backend
+```
 
-## Cách chạy
+```powershell
+python scripts/manage.py dev-frontend
+```
 
-### Docker
+Web: http://127.0.0.1:5174 · Swagger: http://127.0.0.1:8010/docs · health: `/api/health` · readiness: `/api/ready` · khả năng dịch vụ: `/api/capabilities`.
 
-```bash
+Đăng ký tài khoản thật → đăng nhập → gửi tin ngay từ khung chào → mở lại lịch sử khi cần. Reload trang bắt đầu lại ở đăng nhập; token chỉ giữ trong bộ nhớ, lịch sử vẫn lưu trong database. Kết thúc hội thoại khóa gửi thêm nhưng vẫn đọc lại được. Lịch sử mới nhất trước, có tải thêm; tin nhắn tải đủ các trang theo thứ tự thời gian.
+
+Chat hiển thị phản hồi từng phần, có nút Dừng phản hồi; retry vẫn dùng cùng UUID. Micro từng lượt vẫn chép lời vào bản nháp qua Blaze. Nghe/chọn giọng Blaze độc lập với Voice Realtime.
+
+Chọn **Bắt đầu thoại trực tiếp**, cấp quyền micro, nói rồi ngừng khoảng 900 ms để AI phản hồi. Có thể nói chen khi AI đang nói; sự kiện ngắt lời từ Gemini xóa hàng đợi âm thanh. **Tắt microphone** là thao tác thủ công; hệ thống không tự tắt micro khi AI nói. **Kết thúc thoại** dừng tracks/audio/kết nối và đồng bộ lịch sử. Cần Web Audio/AudioWorklet và secure context (HTTPS hoặc localhost). Micro PCM16 16 kHz đi qua WebSocket backend đến Gemini; âm thanh phản hồi PCM16 24 kHz được phát theo hàng đợi có giới hạn. Không gửi text đồng thời trong cùng hội thoại đang gọi.
+
+Voice hiện chạy **một backend worker**: tối đa 32 phiên/process, mỗi tài khoản một phiên, thời lượng mặc định 600 giây, heartbeat 12 giây/hết hạn sau 35 giây, reconnect tối đa 3 lần và không gửi lại audio cũ. `VOICE_MAX_SESSION_SECONDS`, `VOICE_VAD_SILENCE_MS`, `VOICE_VAD_THRESHOLD` cấu hình các giới hạn tương ứng. Chưa hỗ trợ registry phân tán/multi-worker. Quyền micro, echo/speaker và barge-in cần kiểm chứng trên thiết bị thật.
+
+Vite đọc `BACKEND_URL` từ `.env` root hoặc terminal; mặc định `http://127.0.0.1:8010`, proxy cả HTTP và WebSocket `/api`. Reverse proxy khi triển khai cũng cần chuyển tiếp WebSocket Upgrade. Đổi port bằng `--port` và cập nhật proxy/CORS tương ứng. Dev và production dùng cùng backend, không còn lựa chọn demo ở build. Nếu báo `Port 5174 is already in use`, kiểm tra frontend đã chạy tại địa chỉ trên trước khi mở thêm tiến trình.
+
+## Kiểm chứng
+
+Chuẩn bị database test mới, tên kết thúc `_test`, chưa có tài khoản. Bootstrap bằng bản SQL đổi tên database sang schema test; đặt `MYSQL_TEST_URL` trong terminal, tuyệt đối không trỏ biến này vào database người dùng. Tests từ chối schema sai tên hoặc đã có tài khoản, ghi trong transaction rồi rollback.
+
+```powershell
+python scripts/manage.py lint
+python scripts/manage.py test
+python scripts/manage.py coverage
+python scripts/manage.py build
+python scripts/manage.py smoke
+python scripts/manage.py export-api
+```
+
+Coverage yêu cầu >=80% cho backend và từng chỉ số frontend. Thiếu database test làm integration bị skip; kết quả đó chưa chứng minh persistence. Frontend dùng 2 worker để tránh timeout do chạy quá nhiều bộ jsdom cùng lúc. Không hạ timeout/assertion/ngưỡng coverage.
+
+Smoke chỉ đọc health, HTML, proxy, capabilities, OpenAPI; không tạo tài khoản hoặc gọi Blaze tính phí. OpenAPI xuất tại `.artifacts/api/openapi.json`, có thể import Postman. CI được cấu hình MySQL 8.0/schema test riêng; kết quả CI từ xa phải được xác nhận sau khi chạy thực tế.
+
+## Docker dev
+
+```powershell
+python scripts/manage.py docker-check
 python scripts/manage.py docker-up
 python scripts/manage.py smoke
 ```
 
-Dừng stack sau khi dùng:
+MySQL là dịch vụ ngoài Compose. Với MySQL trên Windows host, đặt `DOCKER_DATABASE_MYSQL_URL` riêng dùng `host.docker.internal`; `DATABASE_MYSQL_URL` local vẫn dùng host local đã xác minh. Cổng mặc định 5174/8010 phải trống trước khi bật stack Docker. Không khởi chạy thêm các lệnh Compose khi có lệnh cũ treo. Health container là liveness; readiness/provider phải kiểm tra riêng.
 
-```bash
-python scripts/manage.py down
-```
+## Link HTTPS tạm thời từ máy đang chạy
 
-Compose chạy backend/frontend ở chế độ dev; SQL Server là dịch vụ bên ngoài. Với cấu hình demo mặc định, API cần database trả 503; health và mock reply vẫn chạy. Volume `learning-media` giữ upload khi dừng stack.
+Build giao diện và mở reverse proxy riêng (frontend Vite 5174/backend 8010 vẫn chỉ trên máy):
 
-### Local
-
-Mở hai terminal tại root repo:
-
-```bash
-# Terminal 1
-python scripts/manage.py dev-backend
-```
-
-```bash
-# Terminal 2
-python scripts/manage.py dev-frontend
-```
-
-- Web: [http://127.0.0.1:5174](http://127.0.0.1:5174)
-- Swagger: [http://127.0.0.1:8010/docs](http://127.0.0.1:8010/docs)
-- Health: [http://127.0.0.1:8010/api/health](http://127.0.0.1:8010/api/health)
-
-**Thử demo:** đăng nhập bằng tài khoản mẫu công khai `abc / 123` → trả lời Mate và xác nhận mức học → mở Reading để làm bài hoặc Hội thoại AI để gửi `Hello`. Dữ liệu được giữ trong trình duyệt; tài khoản mẫu này không dùng để xác thực API SQL.
-
-Để thử lưu dữ liệu thật, làm theo [hướng dẫn bật SQL Server](docs/LOCAL_DEVELOPMENT.md#bật-api-sql-server), đăng ký tài khoản backend trong Swagger rồi dùng Bearer token. Hướng dẫn trình diễn: [docs/DEMO_DEVELOP.md](docs/DEMO_DEVELOP.md).
-
-## Test và lint
-
-Sau khi cài local:
-
-```bash
-python scripts/manage.py lint
-python scripts/manage.py test
+```powershell
 python scripts/manage.py build
+docker compose -f docker-compose.yml -f docker-compose.share.yml up -d --wait share
+ssh -T -p 443 -o ServerAliveInterval=30 -R 0:127.0.0.1:5180 free.pinggy.io
 ```
 
-`lint` gồm Ruff/Black/mypy, ESLint/TypeScript/Prettier. `test` chạy pytest và Vitest; nếu chưa đặt connection test, 22 SQL integration cases được bỏ qua và chưa kiểm chứng phần lưu dữ liệu. `build` tạo frontend production tại `frontend/dist/`.
+SSH in ra URL HTTPS ngẫu nhiên; nếu hỏi mật khẩu, nhấn Enter theo [hướng dẫn Pinggy](https://pinggy.io/help/). Giữ terminal SSH chạy; máy/Docker/MySQL phải hoạt động. Người khác dùng URL HTTPS đó, đăng ký/đăng nhập bằng giao diện hiện có. Phiên miễn phí hết hạn sau khoảng **60 phút**; khởi động lại tunnel sẽ có link mới. Đây là link chia sẻ tạm, không phải hosting cố định.
 
-Để đo coverage toàn bộ, trước tiên cấu hình `SQLSERVER_TEST_ODBC_CONNECTION` theo [docs/TESTING.md](docs/TESTING.md), chỉ dùng `tempdb` không có schema `em`:
+Lần đầu mở bằng trình duyệt, Pinggy hiện trang xác nhận của dịch vụ; chọn **Enter site** để vào app. Không cần nhập mật khẩu hoặc thông tin tài khoản trên trang xác nhận đó; form đăng nhập EngMate nằm ở bước sau.
 
-```bash
-python scripts/manage.py coverage
+Trong terminal khác, thêm **đúng origin HTTPS không có dấu `/` cuối** vào `CORS_ORIGINS` trong `.env` (giữ các origin local đã có), rồi chạy:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.share.yml up -d --wait backend
 ```
 
-Tests SQL tạo dữ liệu trong transaction rồi rollback; không dùng database ứng dụng. Ngưỡng coverage là 80% cho backend và từng chỉ số frontend. CI chạy cùng task runner cho PR và push vào `main`; kết quả local không thay thế GitHub Actions.
+Bước này cho phép Origin của thoại WebSocket; không dùng wildcard hoặc bỏ kiểm tra ticket/xác thực. Proxy Nginx phục vụ `frontend/dist`, chuyển `/api` tới backend, chuyển tiếp WebSocket Upgrade và tắt buffering cho SSE. Không public Vite/source code, `.env`, SQL hoặc cổng MySQL. Cấu hình nằm ở `deploy/share.nginx.conf`; image Nginx được ghim digest. Không chọn [Cloudflare Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) cho chế độ này vì không hỗ trợ SSE.
 
-## Cấu trúc thư mục
+Để dừng chia sẻ, kết thúc SSH bằng Ctrl+C và dừng proxy:
 
-```text
-backend/            FastAPI, cấu hình, schemas, services, LLM mock, repository và tests
-frontend/           React/TypeScript/Vite/Tailwind, trang học, localStorage và tests
-database/sqlserver/ Schema, seed, views, truy vấn mẫu và kiểm thử T-SQL
-scripts/            Task runner Windows/Linux và HTTP smoke
-docs/               API, kiến trúc, thiết kế database và hướng dẫn chi tiết
-.github/workflows/  CI lint, coverage, build và Docker smoke
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.share.yml stop share
 ```
 
-Tài liệu thêm: [kiến trúc](docs/ARCHITECTURE.md), [ERD/database](docs/DATABASE_SQLSERVER.md), [prompt](docs/PROMPTS.md), [linh thú Mate](docs/LINH_THU.md).
+Lần chạy do agent thiết lập dùng SSH nền và khóa riêng tạm thời trong `.artifacts/share/`, bị Git bỏ qua; không dùng khóa SSH cá nhân. Trạng thái PID/thời điểm bắt đầu/URL nằm trong `.artifacts/share/tunnel-process.json`; bản sao origin trước chia sẻ trong `.artifacts/share/origins-before.json`. Có thể dừng proxy bằng lệnh trên để ngắt truy cập ứng dụng ngay; khi dừng SSH nền phải kiểm tra PID còn là đúng tiến trình `ssh` và đúng thời điểm bắt đầu, tránh dừng nhầm tiến trình đã tái sử dụng PID. Xóa origin tạm khỏi `.env` khi không dùng nữa và chạy lại backend nếu muốn thu hồi cấu hình Origin.
 
-## Đóng góp
+## Tài liệu
 
-Tạo nhánh theo công việc (`feat/...`, `fix/...` hoặc `docs/...`), dùng Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`) với mô tả ngắn, dễ hiểu. PR vào `develop` cần nêu thay đổi và kết quả lint/test/build; chạy coverage khi thay đổi mã thực thi với môi trường SQL test. Không đưa `.env`, token hoặc file upload vào PR.
+- [REST API](docs/API.md), [kiến trúc](docs/ARCHITECTURE.md), [kiểm thử](docs/TESTING.md).
+- [Yêu cầu và trạng thái còn thiếu](docs/REQUIREMENTS.md), [nhật ký](docs/PROGRESS.md), [quyết định](docs/DECISIONS.md).
+- Tuân thủ [AGENT.md](AGENT.md) và [CLAUDE.md](CLAUDE.md). Nhánh tiếng Việt không dấu; mô tả commit bằng tiếng Việt, giữ tiền tố Conventional Commits. Không tự commit/push khi chưa được yêu cầu.

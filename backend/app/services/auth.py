@@ -1,11 +1,7 @@
-"""Transactional password accounts, revocable JWT sessions and password reset."""
+"""Transactional password accounts with revocable JWT sessions."""
 
-import logging
 import secrets
-import smtplib
 from datetime import timedelta
-from email.message import EmailMessage
-from typing import Protocol
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -21,60 +17,16 @@ from app.core.security import (
 )
 from app.db.database import Database, Record
 from app.db.repository import Repository
-from app.schemas.learning import AccountUpdate, Login, Register
+from app.schemas.chat import Login, Register
 from app.services.common import now, public
-
-LOGGER = logging.getLogger(__name__)
-
-
-class Mailer(Protocol):
-    """Delivery is injected so tests never send messages to real people."""
-
-    def send_reset(self, email: str, token: str) -> None:
-        """Deliver a reset link without returning the token to API clients."""
-        ...
-
-
-class SMTPMailer:
-    """Optional TLS SMTP delivery configured by the application operator."""
-
-    def __init__(self, settings: Settings) -> None:
-        """Store connection settings; do not connect until a reset is requested."""
-        self.settings = settings
-
-    def send_reset(self, email: str, token: str) -> None:
-        """Send only via an explicitly configured mail server."""
-        settings = self.settings
-        if not settings.smtp_host or not settings.smtp_sender:
-            raise HTTPException(503, "Password reset email is not configured.")
-        message = EmailMessage()
-        message["Subject"] = "EngMate-AI password reset"
-        message["From"] = settings.smtp_sender
-        message["To"] = email
-        message.set_content(settings.frontend_url + "/#dang-nhap?reset-token=" + token)
-        try:
-            with smtplib.SMTP(
-                settings.smtp_host, settings.smtp_port, timeout=10
-            ) as smtp:
-                smtp.starttls()
-                if settings.smtp_username and settings.smtp_password:
-                    smtp.login(
-                        settings.smtp_username,
-                        settings.smtp_password.get_secret_value(),
-                    )
-                smtp.send_message(message)
-        except (OSError, smtplib.SMTPException) as exc:
-            raise HTTPException(
-                503, "Email delivery is temporarily unavailable."
-            ) from exc
 
 
 class AuthService:
-    """Own identity and token lifecycles; no secrets are serialized in responses."""
+    """Own identity and token lifecycles without serializing secrets."""
 
-    def __init__(self, database: Database, settings: Settings, mailer: Mailer) -> None:
-        """Bind dependencies without opening a connection."""
-        self.db, self.settings, self.mailer = database, settings, mailer
+    def __init__(self, database: Database, settings: Settings) -> None:
+        """Bind the shared database and signing configuration."""
+        self.db, self.settings = database, settings
 
     def issue(self, repo: Repository, user: Record) -> Record:
         """Persist a hashed refresh token and return one revocable token pair."""
@@ -126,7 +78,6 @@ class AuthService:
             repo.insert(
                 "LearnerProfiles", UserId=user["UserId"], DisplayName=data.display_name
             )
-            repo.insert("UserSettings", UserId=user["UserId"])
             return self.issue(repo, user)
 
     def login(self, data: Login) -> Record:
@@ -218,121 +169,3 @@ class AuthService:
             if not all_sessions:
                 statement = statement.where(table.c.AuthSessionId == user["SessionId"])
             connection.execute(statement.values(RevokedAt=now()))
-
-    def change_password(self, user: Record, current: str, new_password: str) -> None:
-        """Change the hash and revoke all sessions as one transaction."""
-        password_hash = hash_password(new_password)
-        with self.db.transaction() as connection:
-            self.db.lock_user(connection, user["UserId"])
-            repo = Repository(self.db, connection)
-            stored = repo.one("Users", UserId=user["UserId"])
-            if not verify_password(current, stored["PasswordHash"]):
-                raise HTTPException(401, "Current password is incorrect.")
-            repo.update(
-                "Users",
-                {"UserId": user["UserId"]},
-                {"PasswordHash": password_hash, "UpdatedAt": now()},
-            )
-            table = self.db.models.table("AuthSessions", connection)
-            connection.execute(
-                table.update()
-                .where(table.c.UserId == user["UserId"], table.c.RevokedAt.is_(None))
-                .values(RevokedAt=now())
-            )
-
-    def update_account(self, user: Record, data: AccountUpdate) -> Record:
-        """Protect account edits and invalidate reset links sent to the old address."""
-        with self.db.transaction() as connection:
-            self.db.lock_user(connection, user["UserId"])
-            repo = Repository(self.db, connection)
-            stored = repo.one("Users", UserId=user["UserId"])
-            if not verify_password(
-                data.current_password.get_secret_value(), stored["PasswordHash"]
-            ):
-                raise HTTPException(401, "Current password is incorrect.")
-            values: Record = {
-                "Username": data.username.lower(),
-                "Email": data.email.lower(),
-                "UpdatedAt": now(),
-            }
-            if data.email.lower() != stored["Email"].lower():
-                values["EmailVerifiedAt"] = None
-                tokens = self.db.models.table("AccountTokens", connection)
-                connection.execute(
-                    tokens.update()
-                    .where(tokens.c.UserId == user["UserId"], tokens.c.UsedAt.is_(None))
-                    .values(UsedAt=now())
-                )
-            updated = repo.update(
-                "Users",
-                {"UserId": user["UserId"], "Version": bytes.fromhex(data.version)},
-                values,
-            )
-            return self.user_public(updated)
-
-    def forgot_password(self, email: str) -> None:
-        """Store a single-use token; delivery happens outside the transaction."""
-        if isinstance(self.mailer, SMTPMailer) and (
-            not self.settings.smtp_host or not self.settings.smtp_sender
-        ):
-            raise HTTPException(503, "Password reset email is not configured.")
-        token = secrets.token_urlsafe(48)
-        recipient: str | None = None
-        with self.db.transaction() as connection:
-            repo = Repository(self.db, connection)
-            users = repo.rows("Users", Email=email.lower(), Status="active")
-            if users and users[0]["PasswordHash"]:
-                recipient = users[0]["Email"]
-                repo.insert(
-                    "AccountTokens",
-                    UserId=users[0]["UserId"],
-                    Purpose="reset_password",
-                    TokenHash=token_hash(token),
-                    ExpiresAt=now() + timedelta(minutes=20),
-                )
-        if recipient is not None:
-            try:
-                self.mailer.send_reset(recipient, token)
-            except HTTPException as exc:
-                if exc.status_code != 503:
-                    raise
-                # A different HTTP response would reveal whether the email exists.
-                LOGGER.warning("Password-reset email delivery is unavailable.")
-
-    def reset_password(self, token: str, new_password: str) -> None:
-        """Consume a token under the owner lock and revoke every old session."""
-        password_hash = hash_password(new_password)
-        with self.db.transaction() as connection:
-            repo = Repository(self.db, connection)
-            matches = repo.rows(
-                "AccountTokens", TokenHash=token_hash(token), Purpose="reset_password"
-            )
-            if not matches:
-                raise HTTPException(400, "Invalid or expired reset token.")
-            self.db.lock_user(connection, matches[0]["UserId"])
-            stored = repo.one(
-                "AccountTokens", AccountTokenId=matches[0]["AccountTokenId"]
-            )
-            user = repo.one("Users", UserId=stored["UserId"])
-            if (
-                stored["UsedAt"] is not None
-                or stored["ExpiresAt"] <= now()
-                or user["Status"] != "active"
-            ):
-                raise HTTPException(400, "Invalid or expired reset token.")
-            repo.update(
-                "AccountTokens",
-                {"AccountTokenId": stored["AccountTokenId"]},
-                {"UsedAt": now()},
-            )
-            repo.update(
-                "Users",
-                {"UserId": stored["UserId"]},
-                {"PasswordHash": password_hash, "UpdatedAt": now()},
-            )
-            table = self.db.models.table("AuthSessions", connection)
-            connection.execute(
-                table.update()
-                .where(table.c.UserId == stored["UserId"], table.c.RevokedAt.is_(None))
-                .values(RevokedAt=now())
-            )

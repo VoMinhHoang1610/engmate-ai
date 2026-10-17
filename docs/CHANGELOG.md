@@ -1,5 +1,73 @@
 # Changelog
 
+## 2026-10-18 — Link HTTPS chia sẻ tạm thời
+
+- Thêm Compose/proxy Nginx riêng phục vụ bản build qua HTTPS tunnel, hỗ trợ cấu hình SSE/WebSocket và giữ các cổng dev/database ở loopback.
+- Hướng dẫn bật/dừng chia sẻ, cấu hình Origin và giới hạn 60 phút của phiên Pinggy miễn phí trong README.
+
+## 2026-10-18 — Đồng bộ URL sau đăng nhập
+
+- Đăng nhập/đăng ký thành công đổi URL sang `#hoi-thoai`; đăng xuất hoặc hết phiên trả về `#dang-nhap`, không tải lại trang.
+- Sửa hash hoặc quay lại URL cũ không làm mất bản nháp hay thay đổi quyền truy cập.
+
+## 2026-10-18 — Ô nhập một hàng, sáng/tối và đổi giọng khi gọi
+
+- Canh ô nhập và các icon trên một hàng, bỏ toolbar tầng dưới và viền focus lồng bên trong; placeholder không tự làm khung cao thêm trên điện thoại.
+- Icon tai nghe mở tùy chọn giọng. Nút mặt trăng/mặt trời chuyển sáng/tối nằm trên topbar cạnh tài khoản và nhớ lựa chọn.
+- Cho phép đổi giọng đang thoại: tự nối lại trong cùng hội thoại, giữ lịch sử đã lưu/mute; bấm kết thúc hoặc rời chat sẽ hủy lần nối lại đang chờ.
+
+## 2026-10-17 — Khung chào mới và thanh nhập bằng icon
+
+- Vào app mở lời chào và ô nhập trống; lịch sử chỉ mở khi được chọn. Hội thoại mới chỉ được lưu khi gửi tin đầu tiên hoặc bắt đầu gọi thoại.
+- Gom tùy chọn âm thanh, ghi âm, thoại trực tiếp và gửi vào cùng khung nhập. Chọn giọng trong menu bánh răng, có nhãn truy cập/tooltip; Escape và click ngoài đóng menu.
+- Chỉ hiển thị phụ đề khi đang thoại; kết thúc cuộc gọi trả lại thanh nhập gọn.
+
+## 2026-10-16 — Hội thoại Việt/Anh, giọng Live và giao diện gọn
+
+- AI theo tiếng Việt/Anh của lượt nói hoặc tin nhắn mới nhất; có thể yêu cầu dịch/song ngữ/luyện tiếng Anh rõ ràng.
+- Chọn giọng Gemini cho thoại trực tiếp trước khi gọi, tách khỏi giọng Blaze đọc tin nhắn; không đổi giọng giữa phiên.
+- Lịch sử chuyển sang sidebar trái, vùng chat rộng hơn; ô nhập gọn, tùy chọn âm thanh trong nút bánh răng, bỏ dòng thông tin lặp. Giữ trang đăng nhập/đăng ký và nhận diện EngMate.
+- Nghe câu trả lời hỗ trợ giọng Việt/Anh; ghi âm từng lượt chọn ngôn ngữ trong menu âm thanh.
+
+## 2026-10-16 — Cố định khung hội thoại
+
+- Khung chat vừa chiều cao màn hình; tin nhắn và lịch sử cuộn riêng, gửi/nhận tin không kéo cả trang.
+- Ô nhập giữ trong khung khi nội dung thoại dài; lịch sử chuyển sang drawer trên màn hình hẹp. Giữ giao diện gốc và thu gọn khoảng trống khi màn hình thấp.
+
+## 2026-10-16 — Hội thoại dùng Gemini thay OpenAI
+
+- Gemini là provider mặc định cho chat streaming và thoại trực tiếp Live; giữ giao diện cũ, tài khoản/lịch sử/MySQL và Blaze STT/TTS.
+- Khóa Gemini chỉ ở backend. Thoại dùng relay WebSocket, ticket một lần, PCM capture/playback có giới hạn, mute/cleanup/reconnect và xóa audio khi ngắt lời. Header hiển thị đúng GEMINI.
+- Không cần credit OpenAI cho cấu hình mới; lỗi Gemini vẫn được báo thật, không fallback. Chưa xác minh thoại bằng microphone/loa vật lý.
+
+## 2026-10-16 — Chat OpenAI streaming và Voice WebRTC
+
+- Chat dùng OpenAI Responses, hiển thị từng delta vào cùng assistant message; có Dừng phản hồi, giữ draft/retry UUID và lưu kết quả thật trong MySQL. Lỗi/quota không fallback câu trả lời giả.
+- Thêm Bắt đầu/Kết thúc thoại, Mute và trạng thái theo WebRTC/VAD; nói chen hủy/clear/truncate audio cũ. Backend sideband lưu transcript provider vào cùng lịch sử; cleanup/reconnect có hạn. Giữ phong cách giao diện cũ và Blaze STT/TTS từng lượt.
+- Key OpenAI chỉ backend/.env; runtime từ chối mock. Đã triển khai và test offline; kiểm chứng live chưa hoàn tất vì OpenAI trả credit_balance_exhausted. Chưa khẳng định giọng nói/echo/interrupt hoạt động trên thiết bị thật.
+
+## 2026-10-16 — Khôi phục giao diện gốc theo yêu cầu
+
+- Khôi phục màu sắc, CSS, logo, linh vật Mate, sidebar/topbar và bố cục hội thoại/lịch sử gốc. Đăng nhập/đăng ký trở lại pane trượt, nền/hiệu ứng Mate và xác nhận mật khẩu.
+- Menu avatar giữ tương tác hover/touch/bàn phím; đăng xuất vẫn thu hồi phiên qua REST. Giữ xử lý tài khoản/lịch sử/chat/speech đã sửa; không đưa lại các tính năng học tập phụ.
+- Cấu hình khóa Blaze riêng trong `.env` backend, không đưa vào source/frontend. Chưa gọi upstream tính phí; Blaze Chat/realtime vẫn phụ thuộc hợp đồng API.
+
+## 2026-10-16 — Bản hội thoại (breaking API)
+
+- Thay giao diện học tập nhiều trang bằng tài khoản và không gian hội thoại; giữ lịch sử riêng, tạo/mở/kết thúc, chat chữ và speech từng lượt.
+- Bỏ lộ trình/bài tập/chấm điểm/flashcard/sổ từ/dashboard/onboarding/hồ sơ mở rộng và API phụ. Bỏ tài khoản demo/OAuth giả/SMTP reset; xem API.md cho endpoint đã loại.
+- Lịch sử mới nhất trước, phân trang vượt 100; retry/draft/cancel/stale pending, response schema và lỗi mạng rõ ràng.
+- Schema cài mới chỉ có 9 bảng; database cũ được bảo toàn. Dev/build cùng gọi REST API.
+- Hiển thị rõ trạng thái mock và cấu hình Blaze chưa sẵn sàng. AI thật và realtime còn chờ contract upstream; không được công bố là đã hoạt động.
+
+2026-10-09: bỏ trạng thái “Đang tạo giọng nói…” và giữ biểu tượng nút Nghe. Nạp sẵn bộ phát/tái dùng clip, bỏ chờ preload 250 ms; khi Blaze chưa có âm thanh, dùng giọng tiếng Anh cục bộ để phát nhanh. Nghe thử giọng luôn giữ đúng lựa chọn Blaze. Dừng/đổi trang/logout dừng cả hai loại tiếng, không phát MP3 muộn chồng lên giọng máy.
+
+2026-10-09: mở/tải lại ứng dụng MySQL hiện đăng nhập trước; đăng nhập chờ tải dữ liệu rồi vào Tổng quan ngay, không cần tải lại hay bấm thêm liên kết. Nút giữ trạng thái xử lý trong khi tải; lỗi tải cho thử lại. Tài khoản mới vẫn qua bước làm quen, dữ liệu MySQL giữ nguyên sau đăng nhập lại.
+
+2026-10-09: kết nối backend và giao diện với MySQL EngMateAI. Đăng ký/đăng nhập thật; lưu onboarding/bảy mức, hồ sơ, giọng/cài đặt, từ/flashcard, bài làm, hội thoại và thống kê theo tài khoản. Reading/Listening chấm server, dictation nghe MP3 không lộ text key. Tải lại/đăng nhập lại giữ dữ liệu; retry flashcard giữ request ID. AI chat/nói/viết vẫn mock có nhãn.
+
+2026-10-09: hoàn thiện gemini-code-1791478978574.sql cho MySQL: bảy mức học, Reading, lựa chọn giọng, trạng thái làm quen, timestamp và seed khớp frontend. Đã thực thi thử schema với 45 kiểm tra trên MySQL 8.0.45; chưa chuyển backend.
+
 ## [Unreleased]
 
 ### Hợp nhất giao diện mới vào develop — 2026-10-08
@@ -76,3 +144,11 @@
 - Loại bỏ phụ thuộc GNU Make trong wrapper Windows và các cấu hình thừa của khung cũ.
 
 Kết quả chạy thật và các giới hạn ghi trong `PROGRESS.md`.
+
+## 2026-10-08 — Blaze speech
+
+Thêm POST /api/speech/tts (MP3) và /api/speech/stt (transcript), cấu hình server-only và test. UI đã dùng giọng đọc Blaze, tự chép lời Speaking và có micro nhập bản nháp Hội thoại.
+
+Cài đặt có mục Giọng nói: chọn giọng tiếng Anh theo nhóm nam/nữ, nghe thử/dừng; tự lưu và áp dụng cho toàn bộ nút Nghe.
+
+Giảm độ trễ nút Nghe: chuẩn bị clip hiện tại trước click, cache RAM có giới hạn, chia sẻ lượt tải và phát lại không gọi TTS lần nữa. Đổi giọng/tốc độ không dùng nhầm clip; logout xóa âm thanh đã lưu. Lần chưa chuẩn bị vẫn chờ provider.

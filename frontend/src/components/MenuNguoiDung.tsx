@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useDuLieu } from '../demo/LuuTru';
 import { BieuTuong } from './BieuTuong';
+import type { Account } from '../types';
 
-/** Menu avatar hỗ trợ chuột, touch và điều hướng bằng bàn phím. */
-export function MenuNguoiDung() {
-  const { hoSo, daDangNhap, capNhat } = useDuLieu();
+/** Giữ menu avatar gốc và thu hồi phiên qua REST khi đăng xuất. */
+export function MenuNguoiDung({
+  account,
+  busy,
+  onLogout,
+}: {
+  account: Account;
+  busy: boolean;
+  onLogout: () => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -16,11 +23,7 @@ export function MenuNguoiDung() {
     const escape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setOpen(false);
-      if (
-        wrapper.current?.contains(document.activeElement) ||
-        (event.target instanceof Node && wrapper.current?.contains(event.target))
-      )
-        trigger.current?.focus();
+      trigger.current?.focus();
     };
     document.addEventListener('pointerdown', outside);
     document.addEventListener('keydown', escape);
@@ -49,15 +52,7 @@ export function MenuNguoiDung() {
         aria-controls="menu-nguoi-dung"
         onClick={() => setOpen((value) => !value)}
       >
-        {daDangNhap ? (
-          hoSo.anhDaiDien ? (
-            <img src={hoSo.anhDaiDien} alt="Avatar" className="avatar-img" />
-          ) : (
-            hoSo.ten.slice(0, 1).toUpperCase()
-          )
-        ) : (
-          <BieuTuong ten="user" size={19} />
-        )}
+        {account.username.slice(0, 1).toUpperCase()}
       </button>
       {open && (
         <div
@@ -67,27 +62,11 @@ export function MenuNguoiDung() {
           aria-label="Tùy chọn tài khoản"
         >
           <div className="user-menu-panel">
-            {daDangNhap ? (
-              <>
-                <a href="#ho-so" onClick={() => setOpen(false)}>
-                  <BieuTuong ten="user" size={18} /> Hồ sơ học tập
-                </a>
-                <button
-                  className="user-menu-logout"
-                  onClick={() => {
-                    capNhat({ daDangNhap: false });
-                    setOpen(false);
-                    trigger.current?.focus();
-                  }}
-                >
-                  <BieuTuong ten="logout" size={18} /> Đăng xuất
-                </button>
-              </>
-            ) : (
-              <a href="#dang-nhap" onClick={() => setOpen(false)}>
-                <BieuTuong ten="user" size={18} /> Đăng nhập
-              </a>
-            )}
+            <p className="muted account-menu-email">{account.email}</p>
+            <button className="user-menu-logout" disabled={busy} onClick={() => void onLogout()}>
+              <BieuTuong ten="logout" size={18} />
+              Đăng xuất
+            </button>
           </div>
         </div>
       )}
