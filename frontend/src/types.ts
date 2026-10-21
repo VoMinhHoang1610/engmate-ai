@@ -9,6 +9,7 @@ export interface Capabilities {
   chat: boolean;
   speech: boolean;
   realtime: boolean;
+  voice_provider?: 'blaze' | 'native';
   reason: string | null;
 }
 export interface Conversation {

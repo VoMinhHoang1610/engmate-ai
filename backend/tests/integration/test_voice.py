@@ -32,6 +32,7 @@ async def test_owned_voice_lifecycle_and_shared_history(
     tokens = await register(chat_client)
     identity = await conversation(chat_client)
     database.settings.llm_provider = "openai"
+    database.settings.voice_provider = "native"
     database.settings.openai_api_key = SecretStr("test-voice-key")
     application = create_app(database.settings, database)
     manager: RealtimeManager = application.state.voice

@@ -1,5 +1,19 @@
 # TTS/STT Blaze trong backend
 
+## Luồng Mate hiện tại
+
+Đặt `LLM_PROVIDER=gemini`, `VOICE_PROVIDER=blaze` và cấu hình hai khóa ở backend.
+Mate dùng Blaze để nghe/chép lời và phát giọng, Gemini chỉ sinh câu trả lời bằng
+văn bản. `voice/blaze.ts` tự phát hiện lượt nói, gửi WAV vào STT, gọi chat SSE có
+lưu lịch sử rồi đọc kết quả bằng TTS. Ngôn ngữ ghi âm chọn Việt/Anh; câu trả lời
+được tách theo câu/ngôn ngữ và giới hạn 2000 ký tự mỗi job TTS. Nhận diện ngôn
+ngữ theo dấu tiếng Việt còn hạn chế với câu trộn hoặc không dấu.
+
+Nói chen dừng audio và hủy phản hồi trước khi xử lý lượt mới. Kết thúc thoại,
+đổi giọng, đổi trang/logout dừng micro và thu hồi tài nguyên. Không gọi Gemini
+Live, không dùng speechSynthesis và không tự fallback sang giọng khác. Ghi âm
+từng lượt vẫn chỉ điền bản nháp; chế độ thoại gửi transcript và đọc tự động.
+
 Backend gọi `https://api.blaze.vn` bằng Bearer token. Tham chiếu: [Swagger Blaze](https://api.blaze.vn/docs), [TTS](https://app.blaze.vn/api/documentation/tts), [STT](https://app.blaze.vn/api/documentation/stt).
 
 ## Cấu hình
@@ -15,7 +29,7 @@ BLAZE_LOCAL_DEMO=false
 
 Để thử local không có SQL/JWT, đặt `BLAZE_LOCAL_DEMO=true` và khởi động lại backend. Chỉ request từ loopback được miễn JWT khi chưa cấu hình database. Khi DB được bật, endpoint luôn yêu cầu access token backend. Request có Origin ngoài CORS_ORIGINS và origin backend bị từ chối. Không bật demo sau proxy; không tin X-Forwarded-For. Compose luôn tắt demo speech.
 
-Key trống trả 503. Model chọn từ cấu hình server. Chat `/api/ai/reply` tiếp tục dùng mock; key speech không kích hoạt LLM.
+Key trống trả 503. Model chọn từ cấu hình server. Chat dùng Gemini qua API hội thoại; khóa Blaze chỉ cấp quyền STT/TTS, không thay nhà cung cấp suy luận.
 
 ## POST /api/speech/tts
 
@@ -31,7 +45,7 @@ Response 200 là MP3 với Content-Type `audio/mpeg`. Backend tạo một job qu
 
 Kiểm tra thực tế: Blaze trả MP3 dù yêu cầu WAV và header audio/wav. Adapter yêu cầu MP3 và kiểm tra chữ ký trước khi trả audio/mpeg.
 
-Frontend dùng NutDoc và docTiengAnh để phát tiếng Anh. Nút giữ nguyên biểu tượng/nhãn khi xử lý, không hiển thị “Đang tạo giọng nói…” hoặc bị làm mờ; một lần bấm đủ để phát, các lần bấm trùng trong khi chờ được gộp. MP3 đã chuẩn bị được nạp vào Audio trước và phát trực tiếp; khi chưa có MP3, dùng giọng tiếng Anh cục bộ trên máy nếu có. Không chuyển sang MP3 giữa lúc giọng máy đang đọc. Nút Nghe thử trong Cài đặt luôn dùng đúng giọng Blaze đã chọn. Tốc độ đọc được nhân với cài đặt người dùng, giới hạn 0.5–2. Speaking và Hội thoại dùng MediaRecorder (ưu tiên WebM/Opus, Ogg/Opus, M4A), tối đa 60 giây, dừng track micro trước khi gửi STT. Transcript được điền vào textarea/input để sửa; Hội thoại không tự gửi. Không có key Blaze trong trình duyệt.
+Frontend dùng docVanBan/docTiengAnh để phát giọng Blaze, có cache trong phiên. Khi chưa có MP3, đợi Blaze; không dùng giọng máy. Tốc độ đọc giới hạn 0.5–2. Ghi âm từng lượt dùng MediaRecorder tối đa 60 giây, dừng track micro trước khi gửi STT; transcript điền bản nháp để sửa. Thoại liên tục dùng AudioWorklet và gửi tự động theo lượt như mô tả trên. Không có key Blaze trong trình duyệt.
 
 ## POST /api/speech/stt?language=en
 
@@ -57,7 +71,11 @@ GET `/api/speech/voices?language=en` lấy danh sách speaker hiện tại từ 
 
 Chrome đã kiểm tra 27 giọng en, chọn Alice, tải lại trang, nghe thử và phát câu Speaking bằng đúng speaker_id. Desktop/mobile hiển thị được selector.
 
-## Giảm thời gian chờ khi bấm Nghe
+## Lịch sử tối ưu giọng máy (đã thay thế)
+
+Các mô tả tối ưu giọng máy và preload bên dưới ghi lại phiên bản cũ. Từ yêu cầu
+Mate chỉ nói bằng Blaze, `docVanBan` không còn nhánh giọng máy và các màn hiện tại
+không tự preload trả phí. Cache MP3 trong RAM vẫn giữ tối đa 32 clip/16 MiB/15 phút.
 
 Frontend chuẩn bị âm thanh của câu Speaking, bài Listening/tab đang dùng, flashcard hiện tại, câu AI mới nhất và preview khi danh sách giọng đã tải xong. Bắt đầu ở tick tiếp theo để context áp dụng giọng/tốc độ trước, bỏ thời gian chờ 250 ms. Các nút trong danh sách nhiều từ/chữ cái chỉ chuẩn bị khi rê chuột hoặc focus bàn phím; không tạo giọng cho cả danh sách. Chuẩn bị không tự phát âm thanh và có thể dùng credit Blaze dù chưa bấm Nghe.
 

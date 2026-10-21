@@ -1,0 +1,397 @@
+.mate-session-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--mate-bg, #f7f8fc);
+}
+
+.mate-app.voice-session-root {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 32px 48px max(28px, env(safe-area-inset-bottom));
+  color: var(--mate-text);
+  background: var(--mate-bg);
+  outline: none;
+  isolation: isolate;
+}
+
+.voice-session-root::before {
+  position: absolute;
+  inset: 15% 5% 20%;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, var(--mate-accent-soft), transparent 65%);
+  content: '';
+  pointer-events: none;
+}
+
+.mate-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mate-session-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.mate-session-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mate-session-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--mate-line);
+  border-radius: 12px;
+  color: var(--mate-accent);
+  background: var(--mate-surface);
+}
+
+.mate-session-identity h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.mate-session-demo {
+  padding: 7px 12px;
+  border: 1px solid var(--mate-line);
+  border-radius: 999px;
+  color: var(--mate-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mate-session-stage {
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 30px 0 0;
+  text-align: center;
+}
+
+.mate-session-topic {
+  margin: 0 0 16px;
+  color: var(--mate-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mate-session-orb {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 304px;
+  height: 292px;
+  place-items: center;
+}
+
+.mate-session-wave {
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  display: flex;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mate-session-wave span {
+  width: 3px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--mate-accent);
+  animation: mate-session-wave 950ms ease-in-out infinite alternate;
+}
+
+.mate-session-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 15px 0 28px;
+  color: var(--mate-muted);
+  font-size: 13px;
+}
+
+.mate-session-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mate-muted);
+}
+
+.mate-session-status-dot.is-listening,
+.mate-session-status-dot.is-speaking {
+  background: var(--mate-accent);
+}
+
+.mate-session-transcript {
+  width: 100%;
+  min-height: 160px;
+}
+
+.mate-session-caption {
+  min-height: 90px;
+}
+
+.mate-session-speaker {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--mate-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mate-session-caption p {
+  max-width: 620px;
+  margin: 0 auto;
+  color: var(--mate-text);
+  font-size: clamp(23px, 3.4vw, 32px);
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.mate-session-caption .mate-session-ready {
+  color: var(--mate-muted);
+  font-size: 22px;
+}
+
+.mate-session-word {
+  min-height: 44px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--mate-accent);
+  background: var(--mate-accent-soft);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+
+.mate-session-word:focus-visible,
+.voice-session-root .mate-session-action:focus-visible {
+  outline: 3px solid var(--mate-accent);
+  outline-offset: 5px;
+}
+
+.mate-session-tip-space {
+  display: flex;
+  min-height: 60px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+.mate-session-tip {
+  margin: 0;
+  padding: 9px 14px;
+  border: 1px solid var(--mate-line);
+  border-radius: 12px;
+  color: var(--mate-text);
+  background: var(--mate-surface);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mate-session-footer {
+  flex: 0 0 auto;
+  padding-top: 8px;
+  text-align: center;
+}
+
+.mate-session-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.mate-session-control {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 64px;
+  color: var(--mate-muted);
+  font-size: 11px;
+}
+
+.voice-session-root .mate-session-action {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--mate-line);
+  border-radius: 50%;
+  color: var(--mate-text);
+  background: var(--mate-surface);
+  box-shadow: 0 4px 14px rgb(20 24 58 / 3%);
+  transition:
+    transform 180ms ease-out,
+    color 300ms ease-out,
+    background-color 300ms ease-out;
+  cursor: pointer;
+}
+
+.voice-session-root .mate-session-pause {
+  width: 64px;
+  height: 64px;
+  border-color: transparent;
+  color: var(--mate-on-accent);
+  background: var(--mate-accent);
+  box-shadow: 0 6px 20px rgb(79 70 229 / 15%);
+}
+
+.voice-session-root .mate-session-action.is-muted {
+  color: var(--mate-warning);
+  background: var(--mate-warning-soft);
+}
+
+.voice-session-root .mate-session-action:hover {
+  transform: translateY(-2px);
+}
+
+.voice-session-root .mate-session-action:active {
+  transform: scale(0.97);
+}
+
+.mate-session-disclaimer {
+  margin: 22px 0 0;
+  color: var(--mate-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@keyframes mate-session-wave {
+  from {
+    opacity: 0.45;
+    transform: scaleY(0.24);
+  }
+
+  to {
+    opacity: 0.9;
+    transform: scaleY(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .mate-app.voice-session-root {
+    padding: max(20px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  }
+
+  .mate-session-identity h2 {
+    font-size: 13px;
+  }
+
+  .mate-session-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .mate-session-demo {
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+
+  .mate-session-stage {
+    padding-top: 24px;
+  }
+
+  .mate-session-orb {
+    width: 260px;
+    height: 260px;
+  }
+
+  .mate-session-controls {
+    gap: 26px;
+  }
+
+  .mate-session-transcript {
+    min-height: 174px;
+  }
+}
+
+@media (max-height: 740px) {
+  .mate-session-stage {
+    padding-top: 16px;
+  }
+
+  .mate-session-topic {
+    margin-bottom: 0;
+  }
+
+  .mate-session-orb {
+    width: 220px;
+    height: 220px;
+  }
+
+  .mate-session-orb > :first-child {
+    transform: scale(0.85);
+  }
+
+  .mate-session-status {
+    margin: 8px 0 18px;
+  }
+
+  .mate-session-transcript {
+    min-height: 150px;
+  }
+
+  .mate-session-disclaimer {
+    margin-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mate-session-wave span {
+    animation: none;
+    transform: scaleY(0.55);
+  }
+
+  .voice-session-root .mate-session-action {
+    transition: none;
+  }
+
+  .voice-session-root .mate-session-action:hover,
+  .voice-session-root .mate-session-action:active {
+    transform: none;
+  }
+}

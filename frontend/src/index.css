@@ -113,50 +113,50 @@
 :root {
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
   font-synthesis: none;
-  color: #202a38;
-  background: #f7f8fa;
-  --background: #f7f8fa;
-  --surface: #ffffff;
-  --surface-soft: #f3f5f8;
-  --text: #202a38;
-  --muted: #687587;
-  --line: #e4e8ee;
-  --accent: #007db5;
-  --accent-dark: #006392;
-  --brand-cyan: #00a6e8;
-  --brand-navy: #071540;
-  --brand-soft: #edf6fb;
-  --success: #27845c;
-  --success-soft: #edf7f2;
-  --danger: #b6404e;
-  --danger-soft: #fcf1f2;
-  --violet: #8664d4;
-  --violet-soft: #f1ecff;
-  --coral: #d98258;
-  --coral-soft: #fff0e6;
-  --cyan-soft: #e8f7fd;
+  color: #09090b;
+  background: #ffffff;
+  --background: #ffffff;
+  --surface: #fafafa;
+  --surface-soft: #f4f4f5;
+  --text: #09090b;
+  --muted: #52525b;
+  --line: #e4e4e7;
+  --accent: #096985;
+  --accent-dark: #075269;
+  --brand-cyan: #087e9c;
+  --brand-navy: #09090b;
+  --brand-soft: #f4f4f5;
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --danger: #e11d48;
+  --danger-soft: #ffe4e6;
+  --violet: #6851b5;
+  --violet-soft: #f3e8ff;
+  --coral: #c46e45;
+  --coral-soft: #ffedd5;
+  --cyan-soft: #e0f2fe;
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --background: #111820;
-  --surface: #18212c;
-  --surface-soft: #202b38;
-  --text: #e8edf4;
-  --muted: #a2afbf;
-  --line: #2c3948;
-  --accent: #76c9ee;
-  --accent-dark: #9ddafa;
-  --brand-soft: #19384a;
-  --success: #78c9a2;
-  --success-soft: #203b32;
-  --danger: #efa0a8;
-  --danger-soft: #3c2930;
-  --violet: #b69aef;
-  --violet-soft: #302641;
+  --background: #000000;
+  --surface: #0a0a0a;
+  --surface-soft: #141414;
+  --text: #fafafa;
+  --muted: #a1a1aa;
+  --line: #27272a;
+  --accent: #8fe3f5;
+  --accent-dark: #b0edfa;
+  --brand-soft: #18181b;
+  --success: #4ade80;
+  --success-soft: #052e16;
+  --danger: #fb7185;
+  --danger-soft: #2e1017;
+  --violet: #b09aef;
+  --violet-soft: #1e1738;
   --coral: #efad89;
-  --coral-soft: #3c2d2a;
-  --cyan-soft: #19384a;
-  background: var(--background);
+  --coral-soft: #2e2420;
+  --cyan-soft: #18181b;
+  background: #000000;
   color: var(--text);
 }
 * {
@@ -245,6 +245,10 @@ svg {
 ::selection {
   background: #b9e5f8;
   color: #071540;
+}
+:root[data-theme='dark'] ::selection {
+  background: rgba(143, 227, 245, 0.3);
+  color: #f0f3ff;
 }
 button,
 a,
@@ -2543,30 +2547,48 @@ details > summary::marker {
 }
 .auth-intro-aura {
   position: absolute;
-  width: min(420px, 70vw);
-  height: min(420px, 70vw);
+  width: min(440px, 72vw);
+  height: min(440px, 72vw);
   border-radius: 50%;
   pointer-events: none;
+  filter: drop-shadow(0 0 36px rgba(69, 197, 235, 0.45));
+  animation: auth-aura-pulse 4s ease-in-out infinite alternate;
 }
 .auth-intro-aura span {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px dashed #7fd6f455;
+  border: 1.5px dashed rgba(127, 214, 244, 0.6);
+  box-shadow:
+    0 0 35px rgba(127, 214, 244, 0.35),
+    inset 0 0 25px rgba(127, 214, 244, 0.2);
   opacity: 0;
-  animation: auth-intro-ring 1.4s ease-out both;
+  animation: auth-intro-ring 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .auth-intro-aura span:nth-child(2) {
   inset: 12%;
   animation-delay: 120ms;
-  border-color: #c5b4f966;
+  border-color: rgba(197, 180, 249, 0.7);
+  box-shadow:
+    0 0 45px rgba(197, 180, 249, 0.4),
+    inset 0 0 30px rgba(197, 180, 249, 0.25);
 }
 .auth-intro-aura span:nth-child(3) {
-  inset: 24%;
+  inset: 22%;
   animation-delay: 220ms;
   border-style: solid;
-  border-color: #45c5eb44;
-  background: radial-gradient(circle, #45c5eb22, transparent 68%);
+  border-color: rgba(69, 197, 235, 0.65);
+  background: radial-gradient(
+    circle,
+    rgba(69, 197, 235, 0.35) 0%,
+    rgba(169, 137, 237, 0.2) 48%,
+    transparent 72%
+  );
+  box-shadow:
+    0 0 60px rgba(69, 197, 235, 0.55),
+    inset 0 0 35px rgba(69, 197, 235, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .auth-intro-mate {
   position: relative;
@@ -2645,6 +2667,7 @@ details > summary::marker {
   transition: opacity 240ms ease;
 }
 .auth-stage.is-intro-hidden {
+  animation: none;
   opacity: 0;
   transform: scale(0.86) translateY(28px);
   filter: blur(10px);
@@ -2690,13 +2713,29 @@ details > summary::marker {
   }
 }
 @keyframes auth-intro-ring {
-  from {
+  0% {
     opacity: 0;
-    transform: scale(0.55);
+    transform: scale(0.45) rotate(-6deg);
+    filter: blur(12px);
   }
-  to {
+  60% {
+    opacity: 0.95;
+    filter: blur(2px);
+  }
+  100% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+@keyframes auth-aura-pulse {
+  0% {
+    transform: scale(0.96);
+    filter: drop-shadow(0 0 24px rgba(69, 197, 235, 0.35));
+  }
+  100% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 48px rgba(127, 214, 244, 0.65));
   }
 }
 @keyframes auth-intro-veil-in {
@@ -2770,6 +2809,8 @@ details > summary::marker {
   border: 1px solid var(--line);
   border-radius: 28px;
   background: var(--surface);
+  backdrop-filter: blur(30px) saturate(1.5);
+  -webkit-backdrop-filter: blur(30px) saturate(1.5);
   box-shadow: 0 28px 80px #07154014;
   overflow: clip;
   isolation: isolate;
@@ -2796,6 +2837,8 @@ details > summary::marker {
   display: flex;
   align-items: center;
   padding: 36px 40px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition:
     translate var(--auth-roll) var(--auth-ease),
     opacity 0.35s ease 0.2s;
@@ -2828,6 +2871,8 @@ details > summary::marker {
   padding: 36px 44px;
   color: #f4fbff;
   text-align: center;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   background:
     radial-gradient(circle at 30% 20%, #1a6fae88, transparent 42%),
     radial-gradient(circle at 80% 80%, #00a6e855, transparent 45%),
@@ -2984,25 +3029,42 @@ details > summary::marker {
   bottom: 18px;
   display: none;
   translate: -50% 0;
-  gap: 4px;
-  padding: 4px;
+  gap: 6px;
+  padding: 5px;
   border-radius: 999px;
-  background: #ffffff22;
-  border: 1px solid #ffffff44;
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    0 8px 32px rgba(7, 21, 64, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
 }
 .auth-mode-switch button {
   min-width: 96px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
-  color: #e8f6ff;
+  color: rgba(232, 246, 255, 0.85);
   font-size: 13px;
   font-weight: 600;
   background: transparent;
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+.auth-mode-switch button:hover:not(.active) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
 }
 .auth-mode-switch button.active {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   color: #071540;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .auth-switcher {
   position: relative;
@@ -3323,6 +3385,39 @@ details > summary::marker {
 }
 :root[data-theme='dark'] .auth-wave-path {
   fill: var(--surface);
+}
+
+/* ── Auth Glass Animations ── */
+.auth-stage {
+  animation: auth-stage-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes auth-stage-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+.auth-form-pane input {
+  transition: all 0.3s ease;
+}
+.auth-form-pane input:focus {
+  box-shadow:
+    0 0 0 3px rgba(143, 227, 245, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+  border-color: rgba(143, 227, 245, 0.3);
+}
+.btn.primary {
+  transition: all 0.3s ease;
+}
+.btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(143, 227, 245, 0.3);
 }
 
 /* Decorative surfaces and motion */

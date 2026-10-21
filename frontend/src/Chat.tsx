@@ -1,21 +1,49 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import { api } from './api/database';
 import { layGiongDoc, type GiongDoc } from './api/voices';
 import { useThuAm } from './hooks/useThuAm';
 import { docVanBan, dungDoc } from './speech/audio';
+import { setSpeechVoice, useSpeechPreferences } from './speech/preferences';
 import { LinhThu } from './components/LinhThu';
 import { BieuTuong } from './components/BieuTuong';
 import { AudioSettingsMenu } from './components/AudioSettingsMenu';
 import type { Capabilities, Conversation, Message, Turn } from './types';
 import { streamTurn, type ChatEvent } from './api/chatStream';
 import { VoiceChat } from './voice/VoiceChat';
+import type { VoiceState } from './voice/session';
+import { MateOrb } from './components/MateOrb';
+import { Mic } from 'lucide-react';
+import { TeacherMate } from './tutor/TutorScene';
 
 export function Chat({
   conversation,
   capabilities,
   onClose,
   onCreated,
+  initialDraft = '',
+  welcome,
+  onDraftChange,
+  lessonOpening,
+  startVoiceRequest = 0,
+  onLearningSync,
+  onVoiceActive,
+  recognitionLanguage = 'vi',
 }: {
+  initialDraft?: string;
+  welcome?: ReactNode;
+  onDraftChange?: (text: string) => void;
+  lessonOpening?: string;
+  startVoiceRequest?: number;
+  onLearningSync?: () => void;
+  onVoiceActive?: (active: boolean) => void;
+  recognitionLanguage?: 'en' | 'vi';
   conversation: Conversation | null;
   capabilities: Capabilities | null;
   onClose: (conversation: Conversation) => void;
@@ -24,7 +52,10 @@ export function Chat({
   const [created, setCreated] = useState<Conversation | null>(null);
   const currentConversation = conversation ?? created;
   const [messages, setMessages] = useState<Message[]>([]);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialDraft);
+  useEffect(() => {
+    onDraftChange?.(text);
+  }, [text, onDraftChange]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(Boolean(conversation));
   const [error, setError] = useState('');
@@ -32,12 +63,19 @@ export function Chat({
   const [reload, setReload] = useState(0);
   const [voices, setVoices] = useState<GiongDoc[]>([]);
   const [voiceError, setVoiceError] = useState('');
-  const [voice, setVoice] = useState('UK-Nu-1-TM');
-  const [voiceVi, setVoiceVi] = useState('HN-Nam-1-BL');
+  const { voiceEn: voice, voiceVi } = useSpeechPreferences();
   const [speechLanguage, setSpeechLanguage] = useState<'en' | 'vi'>('en');
-  const [recordLanguage, setRecordLanguage] = useState<'en' | 'vi'>('vi');
+  const [recordLanguage, setRecordLanguage] = useState<'en' | 'vi'>(recognitionLanguage);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [voiceActive, setVoiceActive] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const [voiceLevel, setVoiceLevel] = useState<number | undefined>(undefined);
+  const [voiceMuted, setVoiceMuted] = useState(false);
+  const [voiceCaption, setVoiceCaption] = useState('');
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
+  const [manualVoiceRequest, setManualVoiceRequest] = useState(0);
+  const [voiceReady, setVoiceReady] = useState(false);
+  const orbMuted = voiceMuted && voiceState !== 'assistant_speaking';
   const [streaming, setStreaming] = useState(false);
   const activeResponse = useRef<number | null>(null);
   const streamAbort = useRef<AbortController | null>(null);
@@ -105,10 +143,6 @@ export function Chat({
     const pane = messagePane.current;
     pane?.scrollTo?.({ top: pane.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
-  useEffect(() => {
-    document.documentElement.dataset.speechVoice = voice;
-    document.documentElement.dataset.speechVoiceVi = voiceVi;
-  }, [voice, voiceVi]);
 
   async function ensureConversation(): Promise<number> {
     if (identity) return identity;
@@ -211,6 +245,7 @@ export function Chat({
       }
       setText('');
       request.current = null;
+      onLearningSync?.();
     } catch (e) {
       if (current !== generation.current || signal?.aborted) return;
       setError(e instanceof Error ? e.message : 'Chưa gửi được tin nhắn.');
@@ -249,6 +284,7 @@ export function Chat({
   }
 
   function syncVoice() {
+    onLearningSync?.();
     if (!identity || !controller.current) return;
     const current = generation.current;
     void load(identity, controller.current.signal)
@@ -295,7 +331,7 @@ export function Chat({
     setError('');
     setSpeaking(message.message_id);
     try {
-      await docVanBan(message.content, 1, controller.current?.signal, false);
+      await docVanBan(message.content, 1, controller.current?.signal);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Chưa phát được âm thanh.');
       setSpeaking(null);
@@ -350,9 +386,11 @@ export function Chat({
         <select
           aria-label={speechLanguage === 'en' ? 'Giọng đọc tiếng Anh' : 'Giọng đọc tiếng Việt'}
           value={speechLanguage === 'en' ? voice : voiceVi}
-          onChange={(e) =>
-            speechLanguage === 'en' ? setVoice(e.target.value) : setVoiceVi(e.target.value)
-          }
+          onChange={(e) => {
+            dungDoc();
+            setSpeaking(null);
+            setSpeechVoice(speechLanguage, e.target.value);
+          }}
         >
           <option value={speechLanguage === 'en' ? 'UK-Nu-1-TM' : 'HN-Nam-1-BL'}>
             Giọng mặc định
@@ -364,7 +402,10 @@ export function Chat({
           ))}
         </select>
       )}
-      <p>Giọng đọc dùng cho “Nghe câu trả lời”. Thoại trực tiếp tự nhận tiếng Việt và tiếng Anh.</p>
+      <p>
+        Giọng đọc dùng chung với lựa chọn trong Cài đặt. Khi thoại với Mate, chọn ngôn ngữ bạn sẽ
+        nói ở “Ngôn ngữ ghi âm”.
+      </p>
       {voiceError && (
         <p className="error-text" role="alert">
           {voiceError}
@@ -374,7 +415,13 @@ export function Chat({
   );
 
   return (
-    <section className="panel chat-panel" aria-label="Hội thoại">
+    <section
+      className={`panel chat-panel ${!identity ? 'tutor-chat-empty' : 'tutor-chat-active'}`}
+      data-voice-active={voiceActive}
+      data-thinking={busy}
+      data-transcript-open={transcriptOpen}
+      aria-label="Hội thoại"
+    >
       <header className="chat-top">
         <span className="icon-tile">
           <BieuTuong ten="chat" />
@@ -407,26 +454,99 @@ export function Chat({
           </button>
         )}
       </header>
+      {voiceActive && (
+        <aside className="tutor-live-teacher">
+          <MateOrb
+            size="session"
+            state={
+              orbMuted
+                ? 'idle'
+                : voiceState === 'processing' ||
+                    voiceState === 'connecting' ||
+                    voiceState === 'reconnecting'
+                  ? 'thinking'
+                  : voiceState === 'assistant_speaking'
+                    ? 'speaking'
+                    : 'listening'
+            }
+            frozen={orbMuted}
+            level={voiceLevel}
+          />
+          <div className="mate-live-copy">
+            <span className="mate-live-eyebrow">NÓI CÙNG MATE</span>
+            <h3 aria-live="polite">
+              {orbMuted
+                ? 'Micro đang tắt'
+                : voiceState === 'connecting'
+                  ? 'Đang kết nối với Mate…'
+                  : voiceState === 'reconnecting'
+                    ? 'Đang nối lại cuộc trò chuyện…'
+                    : voiceState === 'processing'
+                      ? 'Để mình nghĩ chút'
+                      : voiceState === 'assistant_speaking'
+                        ? 'Mate đang nói'
+                        : 'Mình đang nghe'}
+            </h3>
+            {voiceCaption && (
+              <p className="mate-current-caption" aria-live="polite">
+                {voiceCaption}
+              </p>
+            )}
+            <p>{voiceMuted ? 'Bật micro khi bạn sẵn sàng.' : 'Cứ nói theo cách của bạn.'}</p>
+            <button
+              type="button"
+              className="text-button"
+              aria-expanded={transcriptOpen}
+              aria-controls="mate-conversation-transcript"
+              onClick={() => setTranscriptOpen((value) => !value)}
+            >
+              {transcriptOpen ? 'Thu gọn bản chép lời' : 'Xem bản chép lời'}
+            </button>
+          </div>
+        </aside>
+      )}
       <div
+        id="mate-conversation-transcript"
         className="chat-messages"
         ref={messagePane}
         aria-busy={loading}
         tabIndex={0}
         aria-label="Tin nhắn hội thoại"
       >
-        {!identity && (
-          <div className="conversation-empty">
-            <LinhThu size={120} />
-            <h2>Bắt đầu từ một lời chào.</h2>
-            <p>Nhắn tin hoặc bắt đầu thoại bằng tiếng Việt hay tiếng Anh.</p>
-          </div>
-        )}
+        {!identity &&
+          (welcome ? (
+            <>
+              <div className="mate-live-welcome-orb">
+                <MateOrb />
+              </div>
+              {welcome}
+              {capabilities?.realtime && (
+                <button
+                  type="button"
+                  className="mate-start-speaking"
+                  disabled={!voiceReady}
+                  onClick={() => setManualVoiceRequest((value) => value + 1)}
+                >
+                  <Mic size={22} />
+                  Nói cùng Mate
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="conversation-empty">
+              <LinhThu size={120} />
+              <h2>Bắt đầu từ một lời chào.</h2>
+              <p>Nhắn tin hoặc bắt đầu thoại bằng tiếng Việt hay tiếng Anh.</p>
+            </div>
+          ))}
         {loading && <p role="status">Đang tải tin nhắn…</p>}
         {identity && !loading && !messages.length && (
           <div className="conversation-empty">
-            <LinhThu size={96} />
-            <h2>Hôm nay bạn muốn trò chuyện gì?</h2>
-            <p>Nhắn tin hoặc bắt đầu thoại bằng tiếng Việt hay tiếng Anh.</p>
+            {lessonOpening ? <TeacherMate small mood="encouraging" /> : <LinhThu size={96} />}
+            <h2>
+              {lessonOpening ? 'Mate mời bạn bắt đầu bài học' : 'Hôm nay bạn muốn trò chuyện gì?'}
+            </h2>
+            <p>{lessonOpening ?? 'Nhắn tin hoặc bắt đầu thoại bằng tiếng Việt hay tiếng Anh.'}</p>
           </div>
         )}
         {messages.map((message) => (
@@ -435,10 +555,12 @@ export function Chat({
             className={`message-row ${message.role === 'user' ? 'ban' : 'mate-message'}`}
           >
             <span className={`avatar ${message.role === 'assistant' ? 'bot-avatar' : ''}`}>
-              <BieuTuong ten={message.role === 'user' ? 'user' : 'sparkles'} size={18} />
+              {message.role === 'user' ? <BieuTuong ten="user" size={18} /> : <LinhThu size={42} />}
             </span>
             <div>
-              <span className="message-author">{message.role === 'user' ? 'Bạn' : 'Mate'}</span>
+              <span className="message-author">
+                {message.role === 'user' ? 'Bạn' : 'Thầy Mate'}
+              </span>
               <p className="message-bubble">
                 {message.content ||
                   (message.status === 'pending'
@@ -448,7 +570,11 @@ export function Chat({
                       : 'Chưa tạo được câu trả lời.')}
               </p>
               {message.role === 'assistant' && message.content && capabilities?.speech && (
-                <button className="text-button message-audio" onClick={() => void speak(message)}>
+                <button
+                  className="text-button message-audio"
+                  disabled={voiceActive || recording.active}
+                  onClick={() => void speak(message)}
+                >
                   <BieuTuong ten="volume" size={15} />
                   Nghe câu trả lời
                 </button>
@@ -535,20 +661,30 @@ export function Chat({
           <div className="composer-toolbar">
             {capabilities?.realtime && (
               <VoiceChat
-                key={capabilities.provider}
+                key={`${capabilities.provider}:${capabilities.voice_provider ?? 'native'}`}
                 provider={capabilities.provider}
+                speechProvider={capabilities.voice_provider}
+                speechOptions={{ language: recordLanguage, voiceEn: voice, voiceVi }}
+                opening={lessonOpening}
+                startRequest={startVoiceRequest + manualVoiceRequest}
                 identity={identity}
                 ensureIdentity={ensureConversation}
                 audioOptions={audioOptions}
                 disabled={busy || pending || loading || recording.active || !open}
                 onActive={(active) => {
                   setVoiceActive(active);
+                  onVoiceActive?.(active);
                   if (active) {
                     dungDoc();
                     setSpeaking(null);
                   }
                 }}
                 onSync={syncVoice}
+                onState={setVoiceState}
+                onLevel={setVoiceLevel}
+                onMuted={setVoiceMuted}
+                onCaption={setVoiceCaption}
+                onReady={setVoiceReady}
               />
             )}
             {!capabilities?.realtime && <AudioSettingsMenu>{audioOptions}</AudioSettingsMenu>}
@@ -571,7 +707,7 @@ export function Chat({
               <BieuTuong ten={recording.recording ? 'pause' : 'mic'} size={18} />
             </button>
             <button
-              className="btn primary"
+              className="btn primary composer-send"
               aria-label="Gửi tin nhắn"
               title="Gửi tin nhắn"
               disabled={

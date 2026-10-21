@@ -7,14 +7,23 @@ export function MenuNguoiDung({
   account,
   busy,
   onLogout,
+  onProfile,
+  onSettings,
+  displayName,
+  avatar,
 }: {
   account: Account;
   busy: boolean;
   onLogout: () => Promise<void>;
+  onProfile?: () => void;
+  onSettings?: () => void;
+  displayName?: string;
+  avatar?: string;
 }) {
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const openedByHover = useRef(false);
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => {
@@ -36,9 +45,15 @@ export function MenuNguoiDung({
     <div
       className="user-menu"
       ref={wrapper}
-      onMouseEnter={() => setOpen(true)}
+      onMouseEnter={() => {
+        openedByHover.current = !open;
+        setOpen(true);
+      }}
       onMouseLeave={() => {
-        if (!wrapper.current?.contains(document.activeElement)) setOpen(false);
+        if (!wrapper.current?.contains(document.activeElement)) {
+          setOpen(false);
+          openedByHover.current = false;
+        }
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -50,9 +65,18 @@ export function MenuNguoiDung({
         aria-label="Mở menu tài khoản"
         aria-expanded={open}
         aria-controls="menu-nguoi-dung"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          if (openedByHover.current) {
+            openedByHover.current = false;
+            setOpen(true);
+          } else setOpen((value) => !value);
+        }}
       >
-        {account.username.slice(0, 1).toUpperCase()}
+        {avatar ? (
+          <img src={avatar} className="avatar-img" alt="Ảnh đại diện" />
+        ) : (
+          (displayName || account.username).slice(0, 1).toUpperCase()
+        )}
       </button>
       {open && (
         <div
@@ -62,7 +86,28 @@ export function MenuNguoiDung({
           aria-label="Tùy chọn tài khoản"
         >
           <div className="user-menu-panel">
-            <p className="muted account-menu-email">{account.email}</p>
+            {onProfile && (
+              <button
+                className="user-menu-profile"
+                onClick={() => {
+                  setOpen(false);
+                  onProfile();
+                }}
+              >
+                <BieuTuong ten="user" size={18} /> Hồ sơ học tập
+              </button>
+            )}
+            {onSettings && (
+              <button
+                className="user-menu-settings"
+                onClick={() => {
+                  setOpen(false);
+                  onSettings();
+                }}
+              >
+                <BieuTuong ten="settings" size={18} /> Cài đặt
+              </button>
+            )}
             <button className="user-menu-logout" disabled={busy} onClick={() => void onLogout()}>
               <BieuTuong ten="logout" size={18} />
               Đăng xuất

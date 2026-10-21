@@ -28,6 +28,7 @@ async def test_gemini_stream_retry_voice_context_and_owned_history(
     tokens = await register(chat_client)
     identity = await conversation(chat_client)
     database.settings.llm_provider = "gemini"
+    database.settings.voice_provider = "native"
     database.settings.gemini_api_key = SecretStr("gemini-test-key")
     app = create_app(database.settings, database)
     calls: list[dict[str, object]] = []
@@ -86,12 +87,15 @@ async def test_gemini_stream_retry_voice_context_and_owned_history(
         system = calls[0]["systemInstruction"]
         assert isinstance(system, dict)
         text_prompt = system["parts"][0]["text"]
-        assert "Version: 4." in text_prompt
+        assert "Version: 5." in text_prompt
+        assert "a patient English teacher" in text_prompt
+        assert "wait for the learner before evaluating" in text_prompt
         assert (
             "reply in Vietnamese to Vietnamese, and in English to English"
             in text_prompt
         )
-        assert "Version: 4." in session.prompt
+        assert "Version: 5." in session.prompt
+        assert "a patient English teacher" in session.prompt
         assert (
             "reply in Vietnamese to Vietnamese, and in English to English"
             in session.prompt

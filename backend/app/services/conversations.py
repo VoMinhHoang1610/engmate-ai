@@ -27,7 +27,7 @@ from app.services.common import (
     start_session,
 )
 
-PROMPT_VERSION = "persona.v4"
+PROMPT_VERSION = "persona.v5"
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
 
 
@@ -89,14 +89,23 @@ class ConversationService(PersistenceService):
             self.expire_pending(repo, user_id, identity)
             if repo.rows("Messages", ConversationId=identity, Status="pending"):
                 raise HTTPException(409, "A reply is already in progress.")
-            return PROMPT_PATH.read_text(
-                encoding="utf-8"
-            ) + f"\nLearner level: {conversation['CefrLevel']}", self.context(
-                repo, identity
+            prompt = PROMPT_PATH.read_text(encoding="utf-8")
+            if conversation["PromptVersion"] == "toeic.v1":
+                from app.services.learning import learning_context
+
+                prompt += learning_context(repo, user_id, identity)
+            return (
+                prompt + f"\nLearner level: {conversation['CefrLevel']}",
+                self.context(repo, identity),
             )
 
     def start(self, user_id: int, data: ConversationCreate) -> Record:
         """Create free chat once, preserving existing schema and account data."""
+        if data.lesson_id is not None:
+            from app.services.curriculum import find_lesson
+
+            stage, lesson = find_lesson(data.lesson_id)
+            data = data.model_copy(update={"level": stage.level, "title": lesson.title})
         with self.transaction(user_id) as repo:
             if not self.db.mysql and data.level not in ("A2", "B1", "B2"):
                 raise HTTPException(
@@ -111,6 +120,10 @@ class ConversationService(PersistenceService):
                 conversation = repo.one(
                     "Conversations", StudySessionId=previous[0]["StudySessionId"]
                 )
+                if (conversation["PromptVersion"] == "toeic.v1") != (
+                    data.lesson_id is not None
+                ):
+                    raise HTTPException(409, "Request ID belongs to another activity.")
                 if (conversation["CefrLevel"], conversation["Title"]) != (
                     data.level,
                     data.title,
@@ -129,8 +142,20 @@ class ConversationService(PersistenceService):
                     Mode="free_chat",
                     Title=data.title,
                     CefrLevel=data.level,
-                    AIRoleSnapshot="English conversation partner",
-                    PromptVersion=PROMPT_VERSION,
+                    AIRoleSnapshot=(
+                        "Thay Mate: guided voice lesson"
+                        if data.lesson_id is not None
+                        else "English conversation partner"
+                    ),
+                    PromptVersion=(
+                        "toeic.v1" if data.lesson_id is not None else PROMPT_VERSION
+                    ),
+                )
+            if data.lesson_id is not None:
+                from app.services.learning import bind_lesson
+
+                bind_lesson(
+                    repo, user_id, conversation["ConversationId"], data.lesson_id
                 )
             return self.serialize(repo, conversation)
 
@@ -295,6 +320,10 @@ class ConversationService(PersistenceService):
             )
             history = self.context(repo, identity, sequence)
             prompt = PROMPT_PATH.read_text(encoding="utf-8")
+            if conversation["PromptVersion"] == "toeic.v1":
+                from app.services.learning import learning_context
+
+                prompt += learning_context(repo, user_id, identity, data.message)
             level = cast(Level, conversation["CefrLevel"])
             return PendingTurn(message, assistant, evaluation, prompt, level, history)
 

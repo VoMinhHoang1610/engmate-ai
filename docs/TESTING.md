@@ -1,5 +1,104 @@
 # Kiểm thử bản hội thoại
 
+## Chọn giọng trong Cài đặt
+
+- `speech/preferences.test.ts`: tách lựa chọn theo tài khoản, khôi phục giọng/tốc độ, dữ liệu hỏng, storage bị chặn và dataset đồng bộ.
+- `settings/VoiceSettings.test.tsx`: danh sách Anh/Việt thật từ hợp đồng API, tải/rỗng/lỗi/thử lại, giọng không còn sẵn; chỉ nghe thử bằng click, dừng/hủy, lỗi phát và bỏ kết quả muộn.
+- `voice/VoiceChat.test.tsx`: cặp giọng/tốc độ từ Cài đặt vào phiên Blaze tiếp theo, chọn trực tiếp lưu sau cleanup, chặn giọng mất khỏi catalog, giữ adapter native và ngắt/đổi phiên hiện có.
+- `App.test.tsx`: chọn hai giọng và tốc độ trong Cài đặt, trở lại chat vẫn giữ, đăng xuất đặt lại và đăng nhập khôi phục. `speech/audio.test.ts` xác nhận callback kết thúc/lỗi phát và không nhận callback cũ sau hủy.
+- `.artifacts/check-settings-voice.cjs`: Chrome với metadata/API/WAV fixture kiểm tra speaker ID/tốc độ của request nghe thử, không tự gọi TTS khi đổi lựa chọn, lưu qua điều hướng/đăng nhập và giao diện sáng/tối/điện thoại. Fixture không chứng minh chất lượng giọng hay quota Blaze thật.
+
+## Thanh bên và giao diện tối giản
+
+Đợt màu tương tác dùng `.artifacts/audit-workspace-colors.cjs` với API fixture,
+đo màu computed/độ tương phản của chữ đang hiển thị ở home/lộ trình/hồ sơ/cài
+đặt, nút chính thường/hover và điều hướng đang chọn trong sáng/tối. Kiểm tra
+focus và hình học hover; không coi phép lấy mẫu này là chứng nhận toàn bộ WCAG.
+Kết quả tại `.artifacts/workspace-color-audit.json`; ảnh sáng/tối desktop/mobile.
+
+`WorkspaceSidebar.test.tsx` kiểm tra hover/focus/ghim, trạng thái chọn/khóa,
+điều hướng, menu mobile, inert, Escape, focus trap và phục hồi focus/scroll.
+App tests kiểm tra mở hồ sơ/cài đặt từ sidebar, giữ bản nháp chat khi chuyển
+trang, chuyển focus từ menu mobile sang lịch sử và trả về nút menu đang hiển thị.
+Luồng đăng xuất vẫn kiểm tra lỗi server và thu hồi phiên. Kiểm tra hash chạy
+cùng logic runtime, không bỏ đồng bộ URL trong môi trường test.
+Theme tests xác nhận đổi ở Cài đặt/sidebar luôn đồng bộ và một click chuyển
+đúng chiều sau khi theme được áp dụng từ nơi khác.
+
+`.artifacts/check-workspace.cjs` kiểm tra Chrome với API fixture: sidebar
+72/240 px, vùng nội dung đứng yên khi mở, sáng/tối, lộ trình, hồ sơ, cài đặt,
+drawer/focus và ô nhập trong viewport 1440/900/390/320 px. Mở trang hoặc đổi
+menu không được tạo hội thoại bài học hay gọi STT/TTS. Script học giọng nói
+`check-learning.cjs` kiểm lại bắt đầu bài bằng click, microphone WAV, Blaze,
+Gemini SSE, chuyển bước, kiểm tra và mở lại tiến độ trên shell mới.
+
+## SQL khởi tạo đồng bộ với backend
+
+`gemini-code-1791478978574.sql` tạo đủ 13 bảng và 4 trigger trên database mới.
+Khi kiểm chứng bootstrap, đổi tên `EngMateAI` sang một schema mới kết thúc
+`_test`, thực thi file SQL trực tiếp rồi đặt `MYSQL_TEST_URL` trỏ schema đó.
+Không chạy installer trước suite này: làm vậy có thể che việc bootstrap thiếu bảng.
+`database/mysql/tests/verify_chat.sql` gồm 9 truy vấn chỉ đọc kiểm tra version,
+CEFR, bảng bắt buộc và tính nhất quán owner/JSON.
+
+`backend/tests/integration/test_mysql_schema.py` so sánh kiểu dữ liệu, độ dài,
+nullable, khóa chính, default, auto-increment và trigger của bốn bảng lộ trình
+với metadata backend; đồng thời kiểm tra các mức trong giáo án và base version 1.
+Chạy cùng toàn bộ backend suite để kiểm chứng đăng ký, hồ sơ, chat và tiến độ
+trên chính schema vừa bootstrap. Các test vẫn rollback, không dùng database ứng dụng.
+
+## Lộ trình TOEIC và buổi học bằng giọng nói
+
+`backend/tests/test_learning_catalog.py` kiểm tra 5 chặng/25 cụm/100 bài,
+200 câu kiểm tra và việc loại khóa đáp án khỏi catalog công khai.
+`backend/tests/integration/test_learning.py` dùng schema MySQL test riêng, rollback
+từng test: quyền sở hữu, plan version, start/check idempotency, liên kết giáo án
+với chat, câu lệnh chuyển bước, loại lượt lỗi/điều khiển khỏi số lượt luyện,
+chấm bài, lịch ôn và giới hạn gợi ý theo điểm mục tiêu. Bootstrap mới đã có đủ
+bảng. Chỉ với schema test cũ thiếu bảng lộ trình, bổ sung trước bằng
+`scripts/install_learning.py --test` với `MYSQL_TEST_URL`.
+
+`frontend/src/learning/learning.test.tsx` kiểm tra mục tiêu, khám phá chặng, mở bài,
+409/retry giữ nháp, chuyển bước, nghe theo thao tác, hủy audio, chấm bài và không
+hiển thị điểm TOEIC giả. App tests kiểm tra lesson chat đã bind phía server,
+khởi động thoại có chủ ý và không gửi tin người học giả. Voice tests kiểm tra
+Mate đọc mở bài qua Blaze rồi chờ, hỗ trợ chen lời ngay trong mở bài.
+
+Browser script `.artifacts/check-learning.cjs` dùng catalog thật, API fixture và
+microphone WAV giả lập trong Chrome, chạy AudioWorklet/HTMLAudio thật: ba lượt
+luyện, chuyển bước bằng lời nói, kiểm tra hoàn thành, học tiếp, đăng nhập lại xem
+tiến độ và responsive 1440/900/390/320 px. Không dùng tài khoản thật hoặc API
+tính phí. Kết quả kỹ thuật không chứng minh chất lượng giảng dạy, pronunciation
+accuracy hoặc mức TOEIC; cần thẩm định chuyên môn và thử thiết bị thật riêng.
+
+## Giọng Blaze và Gemini text
+
+- `backend/tests/unit/test_blaze_voice.py`: metadata cần cả hai dịch vụ, catalog
+  song ngữ có bearer, thiếu Blaze không fallback, chặn REST/WS native, giữ Gemini
+  GenerateContent làm adapter sinh nội dung.
+- `frontend/src/voice/blaze.test.ts`: WAV/VAD, im lặng không gọi API, pipeline
+  STT → text SSE → TTS, phân ngôn ngữ/giọng, giới hạn lượt/phiên, ngắt lời, chờ
+  cancel server, mute, stop, quyền micro và kết quả đến muộn.
+- `VoiceChat.test.tsx`, `catalog.test.ts`, `speech/audio.test.ts`: chọn Blaze khi
+  đầu não Gemini, catalog sai không khởi động, giọng máy không được dùng kể cả
+  khi có sẵn hoặc Blaze lỗi. Native transport giữ tests riêng.
+- Test tự động dùng doubles, không gọi API tính phí. Kiểm thử thiết bị thật và
+  quota/chất lượng nhà cung cấp không được suy ra từ các kết quả này.
+
+## Kiểm thử khôi phục hồ sơ
+
+- `backend/tests/integration/test_profile.py`: đọc/ghi trên schema `_test` rollback, chuẩn hóa dữ liệu, stale version 409, dữ liệu sai/giả owner/account fields 422; tài khoản thứ hai không đọc được ảnh của tài khoản thứ nhất; 401 khi thiếu bearer, 404 khi chưa có ảnh, giới hạn dung lượng và từ chối SVG. Test contract giữ các endpoint học tập cũ bị bỏ và bổ sung kiểm tra xác thực cho profile/avatar được khôi phục.
+- `frontend/src/profile/*.test.ts(x)`: biểu mẫu cũ, readonly identity, PUT/version, lỗi server/xung đột giữ nháp, chặn gửi lặp, upload ảnh/lỗi decode/dung lượng, reload sau lỗi và kiểm tra định dạng cục bộ. Menu test xác nhận hover rồi click không đóng mất menu và callback mở hồ sơ.
+- `.artifacts/check-profile.cjs`: Chrome với API giả lập, sửa đầy đủ trường và lưu, encode ảnh thật thành JPEG, avatar menu, xử lý xung đột/tải lại và mở lại sau đăng nhập; screenshot dark/light, không overflow ở 1440/900/390/320 px. Không dùng dữ liệu tài khoản thật. Khi Windows chặn tmp_path mặc định, đặt `PYTEST_ADDOPTS=--basetemp=<thư mục mới trong .cache của repo>` để fixtures ảnh nằm trong workspace.
+
+## Kiểm thử giao diện thầy Mate, 2026-10-18
+
+`App.test.tsx` kiểm tra điều hướng, chọn mục tiêu/bài học, chuẩn bị bản nháp và gửi qua API chat, ghi nhận từ/bài đã học, không đếm bài hai lần, nghe mẫu/chép lời/lỗi speech; giữ toàn bộ kiểm thử hội thoại, retry, hủy, lịch sử, phiên và voice. Các assertion sidebar cũ được chuyển sang mở ngăn kéo; kiểm tra nhãn chào và nav khớp yêu cầu mới, không bỏ test nghiệp vụ. `tutor/curriculum.test.ts` kiểm tra dữ liệu storage sai, tách tài khoản, lọc mục không hợp lệ, giới hạn lịch sử ngày và lịch local.
+
+Integration Gemini kiểm tra prompt `Version: 5.` cho text và realtime. Lượt này dùng schema mới `EngMateAI_tutor_test` riêng, bootstrap từ SQL trong repo; test xác nhận schema kết thúc `_test` và không có tài khoản, các transaction rollback. Database người dùng không được bootstrap lại.
+
+Kiểm tra browser tại `.artifacts/check-tutor.cjs`: Chrome headless, mock API chỉ ở `/api`, không dùng tài khoản/khóa thật; xem sáu màn ở 1440/900/390/320 px, chụp ảnh và kiểm tra overflow, ảnh tải thành công, JavaScript errors. Artifact `.artifacts/tutor-browser.json` và `tutor-*.png`. Kiểm chứng này không thay thế trải nghiệm microphone/loa/provider thật.
+
 Từ root: `python scripts/manage.py lint`, `test`, `coverage`, `build`, `smoke`. Lint gồm Ruff/Black/mypy, ESLint/TypeScript/Prettier. Coverage >=80% giữ nguyên. Frontend chạy 2 worker, giữ timeout/assertion.
 
 Chia sẻ HTTPS: build trước khi bật `docker-compose.share.yml`; kiểm tra Compose `config --quiet` và `exec -T share nginx -t`. Probe public tại `.artifacts/share/check.py` đọc HTML/assets/health/ready/capabilities, xác nhận source/`.env` trả 404, catalog cần auth trả 401, CORS đúng origin và WSS handshake 101 rồi đóng 4404 với ticket giả. Browser `.artifacts/check_share_browser.cjs` mở link thật, kiểm tra màn hình đăng nhập, secure context và API microphone, không đăng nhập hoặc gọi provider. Kết quả trong `.artifacts/share/`. Các probe này không thay thế thử chat trả phí/micro/loa thực.

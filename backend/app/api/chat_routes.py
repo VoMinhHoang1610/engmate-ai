@@ -5,7 +5,16 @@ import json
 from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -23,6 +32,7 @@ from app.schemas.chat import (
     Refresh,
     Register,
 )
+from app.schemas.profile import ProfileResponse, ProfileUpdate
 from app.schemas.responses import (
     AccountResponse,
     ConversationResponse,
@@ -32,6 +42,7 @@ from app.schemas.responses import (
 )
 from app.services.auth import AuthService
 from app.services.conversations import ConversationService, PendingTurn
+from app.services.profile import MAX_AVATAR_BYTES, ProfileService
 
 router = APIRouter(prefix="/api")
 bearer = HTTPBearer(auto_error=False)
@@ -130,6 +141,51 @@ async def logout(
 def me(user: User, service: Auth) -> Record:
     """Return only safe account identity fields."""
     return service.user_public(user)
+
+
+@router.get("/me/profile", tags=["account"], response_model=ProfileResponse)
+def profile(user: User, request: Request) -> Record:
+    """Read only the signed-in learner's profile."""
+    return ProfileService(request.app.state.database).get(
+        user["UserId"], user["PublicId"]
+    )
+
+
+@router.put("/me/profile", tags=["account"], response_model=ProfileResponse)
+def update_profile(data: ProfileUpdate, user: User, request: Request) -> Record:
+    """Save editable personal fields with an expected profile version."""
+    return ProfileService(request.app.state.database).update(
+        user["UserId"], user["PublicId"], data
+    )
+
+
+@router.post("/me/avatar", tags=["account"], status_code=204)
+async def upload_avatar(file: UploadFile, user: User, request: Request) -> Response:
+    """Bound uploads and keep images private behind the existing authentication."""
+    content = await file.read(MAX_AVATAR_BYTES + 1)
+    await run_in_threadpool(
+        ProfileService(request.app.state.database).save_avatar,
+        user["UserId"],
+        user["PublicId"],
+        content,
+    )
+    return Response(status_code=204)
+
+
+@router.get("/me/avatar", tags=["account"])
+def get_avatar(user: User, request: Request) -> Response:
+    """Never expose an avatar through a public static path."""
+    content, media_type = ProfileService(request.app.state.database).avatar(
+        user["PublicId"]
+    )
+    return Response(
+        content,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.post(

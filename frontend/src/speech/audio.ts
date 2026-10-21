@@ -22,9 +22,6 @@ interface AudioRequest {
 let active: AbortController | null = null;
 let audio: HTMLAudioElement | null = null;
 let audioUrl = '';
-let localUtterance: SpeechSynthesisUtterance | null = null;
-// Ask the browser to initialize its installed voice list before the first click.
-window.speechSynthesis?.getVoices();
 
 function boAudio() {
   audio?.pause();
@@ -38,10 +35,6 @@ export function dungDoc() {
   active?.abort();
   active = null;
   boAudio();
-  if (localUtterance) {
-    localUtterance = null;
-    window.speechSynthesis.cancel();
-  }
 }
 
 function loiSpeech(status: number): string {
@@ -196,7 +189,7 @@ export async function docVanBan(
   text: string,
   rate = 1,
   signal?: AbortSignal,
-  allowLocal = true,
+  onFinished?: (error?: Error) => void,
 ): Promise<void> {
   dungDoc();
   const request = new AbortController();
@@ -209,86 +202,32 @@ export async function docVanBan(
   if (signal?.aborted) cancel();
   let started = false;
   try {
+    const key = JSON.stringify(speechBody(text, rate));
     const prepared = layAmThanhDaLuu(text, rate);
-    const voices = allowLocal && !prepared ? window.speechSynthesis?.getVoices() : undefined;
-    const body = speechBody(text, rate);
-    const matching = voices?.filter(
-      (voice) => voice.localService && voice.lang.slice(0, 2).toLowerCase() === body.language,
-    );
-    const accent =
-      body.language === 'vi' ? 'vi-VN' : body.speaker_id.startsWith('UK-') ? 'en-GB' : 'en-US';
-    const voice = matching?.find((item) => item.lang === accent) ?? matching?.[0];
-    if (!prepared && voice && typeof SpeechSynthesisUtterance !== 'undefined') {
-      if (request.signal.aborted || active !== request) return;
-      const utterance = new SpeechSynthesisUtterance(body.text);
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-      utterance.rate = body.speed;
-      localUtterance = utterance;
-      // Never replace this utterance with a late MP3, which would speak twice.
-      const finishLocal = () => {
-        signal?.removeEventListener('abort', cancel);
-        if (active === request) {
-          active = null;
-          localUtterance = null;
-        }
-      };
-      let stopWaiting: () => void = () => undefined;
-      try {
-        await new Promise<void>((resolve, reject) => {
-          stopWaiting = resolve;
-          request.signal.addEventListener('abort', stopWaiting, { once: true });
-          utterance.onstart = () => resolve();
-          utterance.onend = () => {
-            finishLocal();
-            resolve();
-          };
-          utterance.onerror = () => {
-            finishLocal();
-            if (request.signal.aborted) resolve();
-            else
-              reject(
-                new Error(
-                  `Không phát được giọng ${body.language === 'vi' ? 'tiếng Việt' : 'tiếng Anh'} trên máy.`,
-                ),
-              );
-          };
-          window.speechSynthesis.resume();
-          window.speechSynthesis.speak(utterance);
-        });
-      } finally {
-        request.signal.removeEventListener('abort', stopWaiting);
-      }
-      started = true;
-      return;
-    }
     // Cached clips reach play() in the click handler without a network round trip.
     const blob = prepared ?? (await chuanBiAmThanh(text, rate, request.signal));
     if (request.signal.aborted || active !== request) return;
-    const cached = clips.get(JSON.stringify(speechBody(text, rate)));
+    const cached = clips.get(key);
     if (!cached) audioUrl = URL.createObjectURL(blob);
     const player = cached?.player ?? new Audio(audioUrl);
     player.currentTime = 0;
     audio = player;
-    const finish = () => {
+    const finish = (error?: Error) => {
       signal?.removeEventListener('abort', cancel);
-      if (active === request) {
+      if (active === request && !request.signal.aborted) {
         boAudio();
         active = null;
+        onFinished?.(error);
       }
     };
-    player.onended = finish;
-    player.onerror = finish;
+    player.onended = () => finish();
+    player.onerror = () => finish(new Error('Không phát được giọng nói.'));
     await player.play();
     started = true;
   } catch (error) {
     if (active === request) {
       boAudio();
       active = null;
-      if (localUtterance) {
-        localUtterance = null;
-        window.speechSynthesis.cancel();
-      }
     }
     if (!request.signal.aborted) {
       throw error instanceof Error ? error : new Error('Không phát được giọng nói.');

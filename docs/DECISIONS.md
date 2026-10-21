@@ -1,5 +1,69 @@
 # Quyết định kỹ thuật
 
+## 2026-10-18 — Sidebar tối giản cho không gian sau đăng nhập
+
+Theo mẫu người dùng, chọn rail điều hướng trung tính thu/mở và menu trượt trên
+điện thoại. Tái sử dụng React/CSS/icon hiện có thay vì thêm các dependency trong
+đoạn demo. CSS mới có phạm vi `.workspace-shell`, import cuối để giữ giao diện
+trang giới thiệu/đăng nhập và tránh thay đổi các service học tập.
+
+Desktop mở thanh bên dạng overlay, vùng nội dung luôn chừa 72 px. Kiểm thử browser
+phát hiện việc đẩy nội dung theo độ rộng sidebar có thể làm mất click khi blur
+giữa pointerdown/up. Giữ hình học nội dung ổn định giải quyết trực tiếp lỗi này;
+không trì hoãn blur bằng timer. Mobile dùng focus trap/inert và chuyển focus
+rõ ràng khi mở lịch sử từ menu. Không thay API, SQL, provider giọng nói hay tiến độ.
+
+## Lộ trình nhỏ, hội thoại chính, tiến độ có bằng chứng
+
+Triển khai giáo án đã bàn thành catalog server `toeic.v1.json`: 5 chặng, 25 cụm,
+100 bài, mỗi bài 10–14 phút, gồm mục tiêu, giải thích, ví dụ, ba câu thực hành,
+tình huống, từ vựng, đoạn nghe/đọc và kiểm tra. Phân nhóm theo mục tiêu khóa học,
+không xem đây là phân loại chính thức hoặc cam kết điểm TOEIC.
+
+Buổi học tái sử dụng chat/Blaze, gắn lesson ID chuẩn ở server qua
+ConversationService. Gemini nhận đúng giáo án và bước hiện hành; Blaze đọc mở
+bài chỉ sau thao tác vào lớp, rồi người học đối thoại. Lệnh “Mate next step” hoặc
+“Mate, bước tiếp theo” chuyển bước bằng lời nói; không tính lệnh vào lượt luyện.
+Mặc định ghi âm tiếng Anh trong lớp, chat tự do giữ tiếng Việt. Menu âm thanh
+cho đổi ngôn ngữ khi dừng thoại. Native audio không thay Blaze.
+
+Thêm bốn bảng độc lập bằng installer tạo mới có kiểm tra tồn tại; giữ dữ liệu
+cũ, không bootstrap lại hoặc nâng schema legacy. Plan có optimistic version;
+start/check có receipt idempotent, mọi thao tác theo owner. Hoàn thành nghĩa là
+đã có ít nhất ba cặp lượt thành công và đúng các câu kiểm tra của bài; đây là
+bằng chứng hoàn thành hoạt động, chưa phải thành thạo hay điểm phát âm. Gợi ý
+bài dừng ở mục tiêu khóa học; lịch ôn một/ba ngày là quy tắc sản phẩm ban đầu.
+Người học vẫn được khám phá chặng cao hơn. Không thêm dependency.
+
+Chưa có ảnh Part 1 hoặc bộ đề đủ 200 câu theo cấu trúc thi. Nội dung tự biên
+soạn cần giáo viên duyệt trước khi gọi là giáo trình được thẩm định. Các câu
+kiểm tra nhỏ được chữa ngay để phục vụ học, không dùng làm dự đoán điểm thi.
+
+## Mate dùng Blaze cho giọng nói, Gemini cho nội dung
+
+Người dùng yêu cầu giữ Gemini làm đầu não và bắt buộc giọng Blaze. Chọn mặc định
+`VOICE_PROVIDER=blaze`, tái sử dụng SpeechService và chat SSE có persistence; thêm
+VAD/capture và điều phối lượt nói trong `BlazeVoiceSession`. Không thêm dependency
+hoặc migration. Chấp nhận độ trễ STT → text → TTS; không tự retry job tính phí và
+không thay giọng khi lỗi. Giữ native adapter để tương thích khi chủ động chọn
+`VOICE_PROVIDER=native`; chặn signaling native trong chế độ Blaze. Browser
+speechSynthesis bị bỏ để bảo đảm toàn bộ giọng đọc là Blaze. Test dùng doubles;
+không suy ra chất lượng sư phạm, độ chính xác phát âm hoặc quota từ kết quả test.
+
+## 2026-10-18 — Khôi phục hồ sơ thật và ảnh riêng tư
+
+Khôi phục HoSo từ lịch sử Git, chuyển từ demo provider cũ sang API hồ sơ lấy owner từ bearer. Dùng bảng profile đang có và cơ chế Version/lock hiện tại, không phục hồi toàn bộ API học tập/media cũ hoặc thay schema. Username/email chỉ đọc như form MySQL cũ. Trình độ là người học tự chọn; thống kê thời gian dùng DurationSeconds thật, không dùng số demo.
+
+Ảnh được encode lại thành JPEG ở trình duyệt, giới hạn raster/dung lượng ở server, lưu theo UUID tài khoản và chỉ cấp qua route có xác thực. Chọn file storage riêng để hỗ trợ cả schema hội thoại mới không có bảng media cũ; thêm AVATAR_STORAGE_DIR và Docker bind mount để giữ ảnh khi recreate container. Không thêm thư viện. Dữ liệu form lưu MySQL, ảnh cần được backup riêng.
+
+## 2026-10-18 — Giao diện người thầy và dữ liệu học tự ghi nhận
+
+Theo yêu cầu mới, triển khai các màn của Figma Tutor journey trên React hiện có. Dùng linh thú trang đăng nhập thay orb trong bản mẫu; giữ token màu, nhịp bố cục, các orbit/ambient SVG và chuyển động nhẹ, không cài thêm thư viện giao diện. Chat/voice/auth dùng nguyên API và cơ chế bảo vệ hiện có.
+
+Backend hiện chưa có API đánh giá phát âm hoặc tiến độ học. Vì vậy, bài giảng và từ vựng là curriculum xác định, bài/từ hoàn thành được người học chủ động ghi nhận, lưu theo username trong localStorage. Không trình bày dữ liệu demo như kết quả thật; không hứa đồng bộ nhiều thiết bị. Nếu bổ sung đồng bộ, cần endpoint/schema có quyền sở hữu và kiểm thử riêng. Mọi yêu cầu thực hành được người học xem/gửi qua ô chat; không tự gọi provider khi chuyển tab.
+
+Prompt mới `persona.v5` định nghĩa cách giảng dạy chung cho text/voice, giữ quy tắc ngôn ngữ, chờ học viên trả lời trước khi nhận xét và không bịa điểm số. Không đổi provider/model local trong tác vụ giao diện.
+
 ## 2026-10-18 — Chia sẻ HTTPS tạm thời bằng SSH tunnel và Nginx
 
 Người dùng chọn chia sẻ bản đang chạy trên máy bằng link HTTPS tạm thời. Dùng reverse proxy riêng cho bản build để không đưa Vite/source code ra Internet; giữ base Compose bind loopback và không đổi schema/auth. Nginx chính thức được ghim digest đã pull, chạy read-only với tmpfs cần thiết, chuyển Upgrade cho thoại và tắt buffering cho chat SSE theo [Nginx](https://nginx.org/en/docs/http/websocket.html).

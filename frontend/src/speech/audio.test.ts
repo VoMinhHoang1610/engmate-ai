@@ -43,17 +43,45 @@ afterEach(() => {
 });
 
 describe('Blaze speech in the browser', () => {
+  it('reports completion only after playback ends and ignores old or repeated events', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(audioResponse()));
+    const firstFinished = vi.fn();
+    await docVanBan('First preview', 1, undefined, firstFinished);
+    const staleFinish = players[0].onended;
+    expect(firstFinished).not.toHaveBeenCalled();
+    const nextFinished = vi.fn();
+    await docVanBan('Next preview', 1, undefined, nextFinished);
+    staleFinish?.();
+    expect(firstFinished).not.toHaveBeenCalled();
+    expect(nextFinished).not.toHaveBeenCalled();
+    players[1].onended?.();
+    players[1].onended?.();
+    expect(nextFinished).toHaveBeenCalledExactlyOnceWith(undefined);
+  });
+  it('reports a playback error but never completion after cancellation', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(audioResponse()));
+    const finished = vi.fn();
+    await docVanBan('Preview error', 1, undefined, finished);
+    players[0].onerror?.();
+    expect(finished).toHaveBeenCalledExactlyOnceWith(expect.any(Error));
+    const cancelled = vi.fn();
+    const controller = new AbortController();
+    await docVanBan('Cancel preview', 1, controller.signal, cancelled);
+    controller.abort();
+    players[1].onended?.();
+    expect(cancelled).not.toHaveBeenCalled();
+  });
   it('reads Vietnamese with its own voice and keeps the English voice separate', async () => {
     const request = vi.fn().mockResolvedValue(audioResponse());
     vi.stubGlobal('fetch', request);
     document.documentElement.dataset.speechVoice = 'UK-Nu-1-TM';
     document.documentElement.dataset.speechVoiceVi = 'HN-Nam-1-BL';
-    await docVanBan('Xin chào, hôm nay bạn thế nào?', 1, undefined, false);
+    await docVanBan('Xin chào, hôm nay bạn thế nào?', 1);
     expect(JSON.parse(request.mock.calls[0][1].body)).toMatchObject({
       language: 'vi',
       speaker_id: 'HN-Nam-1-BL',
     });
-    await docVanBan('How are you today?', 1, undefined, false);
+    await docVanBan('How are you today?', 1);
     expect(JSON.parse(request.mock.calls[1][1].body)).toMatchObject({
       language: 'en',
       speaker_id: 'UK-Nu-1-TM',
@@ -88,66 +116,46 @@ describe('Blaze speech in the browser', () => {
     vi.stubGlobal('speechSynthesis', native);
     return { native, localVoice };
   }
-  it('starts a local English voice in the click call without waiting for the network', async () => {
-    const { native, localVoice } = nativeSpeech();
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
+  it('uses Blaze even when an installed browser voice is available', async () => {
+    const { native } = nativeSpeech();
+    const request = vi.fn().mockResolvedValue(audioResponse());
+    vi.stubGlobal('fetch', request);
     document.documentElement.dataset.speechRate = '0.75';
-    const request = new AbortController();
-    const playback = docTiengAnh(' Hello ', 1, request.signal);
-    expect(native.speak).toHaveBeenCalledOnce();
-    expect(native.speak.mock.calls[0][0]).toMatchObject({
+    await docTiengAnh(' Hello ');
+    expect(native.speak).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledWith('/api/speech/tts', expect.any(Object));
+    expect(JSON.parse(request.mock.calls[0][1].body)).toMatchObject({
       text: 'Hello',
-      voice: localVoice,
-      rate: 0.75,
+      speed: 0.75,
+      speaker_id: 'UK-Nu-1-TM',
     });
-    expect(fetchMock).not.toHaveBeenCalled();
-    await playback;
-    request.abort();
-    expect(native.cancel).toHaveBeenCalledOnce();
+    expect(players[0].play).toHaveBeenCalledOnce();
   });
-  it('never plays a late Blaze response over an utterance already started locally', async () => {
+  it('shares pending Blaze audio and never switches to a browser voice', async () => {
     const { native } = nativeSpeech();
     let deliver!: (value: ReturnType<typeof audioResponse>) => void;
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        () =>
-          new Promise((resolve) => {
-            deliver = resolve;
-          }),
-      ),
+    const request = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          deliver = resolve;
+        }),
     );
+    vi.stubGlobal('fetch', request);
     const preparation = chuanBiAmThanh('Hello');
-    await docTiengAnh('Hello');
-    deliver(audioResponse());
-    await preparation;
-    expect(players[0].play).not.toHaveBeenCalled();
-    await docTiengAnh('Hello');
-    expect(native.cancel).toHaveBeenCalledOnce();
-    expect(players[0].play).toHaveBeenCalledOnce();
-    expect(native.speak).toHaveBeenCalledOnce();
-  });
-  it('keeps voice previews on Blaze and falls back to Blaze when local English is unavailable', async () => {
-    const { native } = nativeSpeech();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(audioResponse()));
-    await docTiengAnh('Preview', 1, undefined, false);
-    expect(native.speak).not.toHaveBeenCalled();
-    expect(players[0].play).toHaveBeenCalledOnce();
-    native.getVoices.mockReturnValue([{ lang: 'vi-VN', localService: true }]);
-    await docTiengAnh('New clip');
-    expect(native.speak).not.toHaveBeenCalled();
-    expect(players[1].play).toHaveBeenCalledOnce();
-  });
-  it('stops a pending local start on navigation and reports native engine errors', async () => {
-    const { native } = nativeSpeech();
-    native.speak.mockImplementation(() => undefined);
     const playback = docTiengAnh('Hello');
-    dungDoc();
-    await playback;
-    expect(native.cancel).toHaveBeenCalledOnce();
-    native.speak.mockImplementation((utterance) => utterance.onerror?.());
-    await expect(docTiengAnh('Again')).rejects.toThrow('Không phát được giọng tiếng Anh');
+    expect(native.speak).not.toHaveBeenCalled();
+    expect(players).toHaveLength(0);
+    deliver(audioResponse());
+    await Promise.all([preparation, playback]);
+    expect(request).toHaveBeenCalledOnce();
+    expect(players[0].play).toHaveBeenCalledOnce();
+  });
+  it('reports Blaze failure without using the installed voice as fallback', async () => {
+    const { native } = nativeSpeech();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    await expect(docTiengAnh('Hello')).rejects.toThrow('Dịch vụ giọng nói');
+    expect(native.speak).not.toHaveBeenCalled();
+    expect(players).toHaveLength(0);
   });
   it('prepares silently and plays prepared clips immediately without another request', async () => {
     const fetchMock = vi.fn().mockResolvedValue(audioResponse());

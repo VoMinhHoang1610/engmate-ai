@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import DBAPIError, IntegrityError, NoSuchTableError
 
 from app.api.chat_routes import router as chat_router
+from app.api.learning_routes import router as learning_router
 from app.api.routes import router
 from app.api.speech_routes import router as speech_router
 from app.api.voice_routes import router as voice_router
@@ -41,7 +42,7 @@ def create_app(
     application.state.chat_jobs = {}
     application.state.voice = (
         GeminiVoiceManager(config, db)
-        if config.llm_provider == "gemini"
+        if config.voice_provider == "native" and config.llm_provider == "gemini"
         else RealtimeManager(config, db)
     )
     application.add_middleware(
@@ -55,6 +56,7 @@ def create_app(
     )
     application.include_router(router)
     application.include_router(chat_router)
+    application.include_router(learning_router)
     application.include_router(speech_router)
     application.include_router(voice_router)
 

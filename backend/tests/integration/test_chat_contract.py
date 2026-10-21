@@ -17,7 +17,6 @@ async def test_removed_features_are_not_exposed(client: AsyncClient) -> None:
         "/api/flashcards",
         "/api/dashboard",
         "/api/media",
-        "/api/me/profile",
     ):
         assert not any(path.startswith(prefix) for path in schema["paths"])
         assert (await client.get(prefix)).status_code == 404
@@ -36,5 +35,11 @@ async def test_capabilities_do_not_claim_native_realtime(client: AsyncClient) ->
 
 async def test_auth_requires_a_real_session(client: AsyncClient) -> None:
     """Private conversation resources never fall back to local demo accounts."""
-    for path in ("/api/me", "/api/conversations", "/api/conversations/1/messages"):
+    for path in (
+        "/api/me",
+        "/api/me/profile",
+        "/api/me/avatar",
+        "/api/conversations",
+        "/api/conversations/1/messages",
+    ):
         assert (await client.get(path)).status_code == 401

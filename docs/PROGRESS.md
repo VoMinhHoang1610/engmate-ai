@@ -1,5 +1,246 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-18 — Màu tương tác và chữ dễ đọc hơn
+
+- **Yêu cầu/nhánh:** giao diện quá đơn điệu/khó nhìn; thêm màu có ý nghĩa và
+  tăng khả năng đọc. Nhánh `giao-dien/mau-sac-de-doc`, giữ thay đổi đang có,
+  chưa commit/push.
+- **Thay đổi:** palette sáng/tối riêng trong `workspace.css`: xanh dương cho
+  thao tác chính, tím cho học tập, xanh ngọc cho tiến độ và hổ phách cho từ
+  vựng/chặng. `data-tone` ở sidebar và ba thẻ trang chào đồng bộ icon, nền,
+  viền, hover và mục đang chọn. Chọn có thêm vạch/chữ đậm; focus rõ, không
+  làm dịch mục tiêu click. Tăng chữ menu 14px, mô tả 12–15px, ô nhập/tin nhắn
+  14–15px; tăng chữ nhỏ hồ sơ và footer. Màu trạng thái lớp học, micro và tin
+  người học rõ hơn; giữ bố cục/sidebar/luồng nghiệp vụ.
+- **Kiểm chứng:** **226/226 frontend tests qua**, 20 file; ESLint/TypeScript,
+  Prettier, build, smoke và diff whitespace qua. Không thêm test chỉ lặp CSS,
+  không chạy lại coverage cho thay đổi trình bày; lượt trước đạt các ngưỡng
+  80%. Build không chứa giá trị private từ `.env`.
+- **Browser:** script workspace qua tại 1440/900/390/320 px, sáng/tối/menu/
+  navigation/focus/ô nhập ổn định, không overflow/pageerror. Kiểm thêm mở bài
+  trên mobile với API/audio fixture; cập nhật script cũ để mở menu trước khi
+  chọn mục trên điện thoại. Audit computed color ở home/lộ trình/hồ sơ/cài
+  đặt, nút thường/hover và active nav không phát hiện lỗi trong mẫu: chữ
+  thường thấp nhất 5,01:1 sáng / 6,54:1 tối; nút chính 6,01:1 / 7,50:1.
+  Có focus ít nhất 2px, hover không đổi hình học. Đây là lấy mẫu, không phải
+  chứng nhận WCAG cho toàn bộ sản phẩm.
+- **Phạm vi/tài liệu:** cập nhật README, REQUIREMENTS, CHANGELOG, ARCHITECTURE,
+  TESTING và CLAUDE. Không đổi API/SQL, provider hoặc dữ liệu; không gọi AI trả
+  phí. Frontend 5174/backend 8010 tiếp tục chạy. Artifact bị ignore:
+  `workspace-color-audit.json`, `audit-workspace-colors.cjs`,
+  `workspace-color-tests.log`, ảnh `workspace-color-*` và `workspace-*`.
+
+## 2026-10-18 — Giao diện sau đăng nhập tối giản với thanh bên
+
+- **Yêu cầu/nhánh:** đổi `#hoi-thoai` theo mẫu sidebar người dùng cung cấp;
+  nhánh `giao-dien/thanh-ben-toi-gian`, giữ thay đổi đang có, chưa commit/push.
+- **Giao diện:** thêm `WorkspaceSidebar.tsx`, thay điều hướng ngang bằng rail
+  72 px mở lên 240 px khi hover/focus hoặc ghim. Nền trung tính sáng/tối, viền
+  mảnh, Mate nhỏ, ba lối vào bài học/phát âm/tiến độ. Chat có vùng cuộn riêng,
+  ô nhập trong viewport. `workspace.css` import cuối, scope `.workspace-shell`;
+  dùng React/CSS/icon hiện có, không thêm dependency.
+- **Tương tác:** mobile dưới 768 px dùng drawer có backdrop, inert, focus trap,
+  Escape và trả focus. Mở lịch sử từ menu chuyển focus sang lịch sử, đóng trả
+  về nút menu đang hiển thị. Footer sidebar có hồ sơ/cài đặt/theme/đăng xuất.
+  ThemeToggle và Cài đặt dùng chung `useSyncExternalStore`, đổi nơi nào cũng
+  đồng bộ ngay, kể cả khi trình duyệt chặn localStorage.
+- **Lỗi đã sửa:** sidebar đẩy nội dung khi blur có thể làm mất click giữa
+  pointerdown/up; đổi sang mở dạng overlay, giữ hình học nội dung cố định.
+  Bỏ nhánh bỏ đồng bộ URL riêng cho test để kiểm tra cùng logic runtime. Sửa
+  đối số tốc độ đọc và kiểu IntersectionObserver fixture trong landing hiện
+  có cho type-check/build; format CSS nhưng giữ thiết kế public hiện có.
+- **Kiểm thử:** frontend **226/226 qua, 20 file**, coverage **89,68% statements /
+  81,49% branches / 87,46% functions / 92,67% lines**, giữ ngưỡng 80%. Thêm
+  10 test sidebar, 2 App test cho navigation/draft/focus và 2 hồi quy theme.
+  ESLint/TypeScript, Prettier, build, smoke, kiểm tra secret trong dist và
+  diff whitespace qua. Backend không đổi; không chạy lại suite backend ở
+  tác vụ UI, lượt SQL trước đã có 155 tests qua.
+- **Browser:** Chrome/API fixture xác minh sidebar, nội dung không dịch,
+  sáng/tối đồng bộ, lộ trình/hồ sơ/cài đặt, menu/focus/composer ở
+  1440/900/390/320 px; không tràn ngang/pageerror hoặc tự gọi STT/TTS khi duyệt.
+  Kiểm lại lớp học trên shell mới: click bắt đầu, Blaze mở bài, ba lượt WAV
+  microphone qua AudioWorklet/HTMLAudio, lệnh chuyển bước, kiểm tra và mở lại
+  tiến độ; starts=1, STT=4, paired=3, completed=true, không native speech.
+  Lượt cuối chạy khi code ổn định, tránh HMR reload giữa phiên thoại.
+- **Runtime/tài liệu:** frontend 5174 và backend 8010 vẫn chạy, Gemini/Blaze,
+  API/SQL/dữ liệu giữ nguyên. Cập nhật README, REQUIREMENTS, CHANGELOG,
+  ARCHITECTURE, TESTING, DECISIONS và CLAUDE. Artifact/log/ảnh bị ignore trong
+  `.artifacts/workspace-*`, `check-workspace.cjs`, `learning-browser.json`.
+  Browser dùng audio/API fixture, chưa thay kiểm chứng micro/loa thật hay quota.
+
+## 2026-10-18 — Landing: scroll reveal hai chiều và sửa lỗi layout
+
+- **Yêu cầu:** trang giới thiệu (mở từ `#dang-nhap` qua “Trang chủ giới thiệu”)
+  còn nhiều lỗi; hiệu ứng xổ chỉ chạy một lần khi cuộn xuống.
+- **Reveal:** `IntersectionObserver` vừa thêm vừa gỡ `is-visible` theo viewport;
+  CSS thu vào nhanh hơn khi rời màn hình, delay chỉ khi hiện lại.
+- **Layout/avatar:** `TeacherMate` hỗ trợ `compact` (52px) cho thẻ hero/canvas;
+  trước đó prop bị bỏ qua nên avatar 330px phá khung. Fallback ảnh story khi
+  Unsplash lỗi; nút `.landing-btn-ghost`; chữ tiêu đề tiếng Việt bớt lệch do
+  `letter-spacing`.
+- **URL/title:** khi đang landing hash chuẩn `#trang-chu`; auth giữ
+  `#dang-nhap` / `#dang-ky`; title landing không bị ghi đè “Hội thoại”.
+- **Kiểm chứng:** Vitest `LandingPage` 2/2; browser xác nhận visible 1→4→1→4
+  khi cuộn xuống/lên/xuống lại; compact Mate = 2.
+
+## 2026-10-18 — Đồng bộ file SQL root với dự án và lộ trình TOEIC
+
+- **Yêu cầu/nhánh:** sửa `gemini-code-1791478978574.sql` cho khớp code hiện tại;
+  nhánh `chinh-sua/sql-khop-lo-trinh`, giữ toàn bộ thay đổi đang có, chưa commit/push.
+- **Đối chiếu:** chín bảng nền đã khớp tài khoản, hồ sơ, hội thoại và bảy mức CEFR.
+  Bổ sung đúng bốn bảng `engmate_learning_plans/progress/bindings/receipts` từ
+  metadata backend: kiểu, độ dài, nullable, khóa chính; không thêm FK/default/
+  auto-increment/trigger khác với metadata. Version kế hoạch do service tăng;
+  base schema giữ version 1 để tương thích readiness. Giáo án/đáp án ở JSON,
+  avatar ở filesystem, khóa API ở cấu hình riêng tư.
+- **SQL/hướng dẫn:** bootstrap mới tạo đủ 13 bảng/4 trigger. Cập nhật header,
+  mô tả version, README, database/mysql/README, ARCHITECTURE và CLAUDE; database
+  cũ thiếu bảng chỉ dùng installer bổ sung. Sửa docstring installer bỏ số bảng
+  cũ cố định, giữ nguyên logic. Không chạy bootstrap vào database ứng dụng.
+- **Kiểm chứng thực thi:** tạo schema mới `EngMateAI_schema_*_test` trên MySQL
+  local, thực thi trực tiếp file SQL với tên database test thay thế; không chạy
+  installer trước test. Xác nhận 13 bảng, 4 trigger, không seed tài khoản và
+  cả 9 truy vấn chỉ đọc ở `verify_chat.sql` qua. Schema test được giữ riêng để
+  tái kiểm tra; các fixture nghiệp vụ rollback.
+- **Kiểm thử:** thêm `test_mysql_schema.py` so sánh cấu trúc bảng lộ trình với
+  metadata và kiểm tra CEFR/base version. Full backend trên chính schema mới:
+  **155/155 qua, không skip, coverage 93,10%**; Ruff/Black/mypy 72 file, smoke và
+  diff whitespace qua. Một cảnh báo Starlette TestClient cũ. Chuẩn hóa collation
+  kế thừa khi so sánh kiểu MySQL trong test; vẫn kiểm đúng kiểu/độ dài/null/PK.
+  Frontend không đổi trong tác vụ SQL, dùng kết quả 211 tests/build đã qua ở
+  lượt trước, không coi là lần chạy mới.
+- **Tài liệu/giới hạn:** cập nhật REQUIREMENTS, TESTING, CHANGELOG và nhật ký.
+  Không đổi API/kiến trúc lưu giáo án hoặc schema SQL Server. Artifact riêng tư
+  bị ignore: `verify-sql-bootstrap.py`, `sql-bootstrap-result.json`,
+  `sql-bootstrap-backend-coverage.log`. Database ứng dụng và các khóa giữ nguyên.
+
+## 2026-10-18 — Lộ trình TOEIC chi tiết, học chủ yếu qua đối thoại giọng nói
+
+- **Yêu cầu/nhánh:** người dùng cho phép xây dựng giáo án đã bàn, chia nhỏ từ
+  cơ bản đến nâng cao và lấy hội thoại AI/người học làm chính. Nhánh
+  `tinh-nang/lo-trinh-toeic-giong-noi`; giữ các thay đổi giao diện, hồ sơ, cài đặt,
+  landing và Gemini/Blaze đang có; chưa commit/push.
+- **Giáo án:** `toeic-voice-v1` gồm 5 chặng, 25 cụm, 100 bài nhỏ dự kiến 10–14
+  phút/bài; 300 mục từ, 100 đoạn nghe, 100 đoạn đọc, 200 câu kiểm tra (100 nghe,
+  68 đọc, 32 ngữ pháp). Mỗi bài có mục tiêu, giải thích, cấu trúc, ví dụ/dịch,
+  tình huống, mở bài và ba gợi ý luyện nói. Bảng đủ 100 bài ở TOEIC_SYLLABUS.md.
+- **Lớp học:** năm bước khởi động/giảng/luyện/đóng vai/kiểm tra; Gemini nhận
+  giáo án chuẩn từ máy chủ, Blaze đọc mở bài rồi chờ người học. Thoại tự bật
+  sau thao tác chọn học bằng giọng nói; có dừng, chen lời, gõ thay thế và chọn
+  ngôn ngữ nhận lời. Mặc định nhận tiếng Anh trong bài. Lệnh `Mate next step`
+  và `Mate previous step` chuyển bước, không tăng số lượt luyện. Trên điện thoại
+  khung thoại đứng trước phần tài liệu; thầy Mate và câu mở bài hiện khi chưa có tin.
+- **API/dữ liệu:** catalog có auth, kế hoạch theo mục tiêu/chặng xuất phát/thời
+  lượng/ngày thi, tiến độ, mở/tiếp tục bài, chuyển bước và chấm kiểm tra. Khóa
+  đáp án không đi qua GET catalog hoặc prompt giảng. Version chống ghi đè,
+  UUID receipt chống lặp, kiểm ownership/transaction. Hoàn thành hoạt động khi
+  có ít nhất ba cặp trả lời hoàn tất và đúng cả hai câu; có lịch ôn 1/3 ngày.
+  Bài gợi ý giới hạn trong chặng xuất phát đến mục tiêu đã lưu.
+- **Cài đặt:** installer bổ sung bốn bảng `engmate_learning_*`, không chạy DDL
+  lúc startup. Đã cài vào MySQL ứng dụng và schema test hiện có; giữ các bảng
+  và dữ liệu cũ, không chạy lại bootstrap. Không thêm dependency.
+- **Kiểm thử:** backend **153/153 qua, không skip**, coverage **93,10%** trên
+  MySQL test riêng, rollback từng test; xác minh lại hai catalog tests sau khi
+  hoàn tất nội dung. Frontend cuối **211/211 qua** (gồm landing hiện có),
+  coverage **88,99% statements / 80,91% branches / 85,49% functions / 92,01%
+  lines**, giữ nguyên ngưỡng 80%. Ruff/Black/mypy, ESLint/TypeScript/Prettier,
+  build và OpenAPI export qua. Sửa lỗi kiểu props/tốc độ đọc và lint ở phần
+  landing/auth hiện có để build chung chạy được; không đổi bố cục trang đó.
+- **Browser:** Chrome dùng catalog thật, API fixture và WAV microphone giả lập;
+  chạy AudioWorklet/HTMLAudio thật, mở bài Blaze, ba lượt luyện, lệnh chuyển
+  bước, chấm bài và mở lại tiến độ; dọn microphone, không dùng native speech.
+  Kiểm tra 1440/900/390/320 px không tràn ngang. Kiểm riêng viewport mobile từ
+  đầu xác nhận header không che tiêu đề; ảnh fullPage lúc giữ scroll có thể làm
+  sticky header xuất hiện giữa ảnh. Artifact `check-learning*.cjs`,
+  `learning-browser.json`, `learning-*-coverage.log` trong `.artifacts` bị ignore.
+- **Runtime/tài liệu:** backend 8010 đã restart để nhận catalog cuối; frontend
+  5174 tiếp tục chạy. Smoke kiểm tra cả route học tập, status local cập nhật PID
+  và phiên bản giáo án. Build không chứa giá trị private từ `.env`. Cập nhật
+  README, API, ARCHITECTURE, REQUIREMENTS, TESTING, DECISIONS, CHANGELOG và CLAUDE.
+- **Giới hạn:** nội dung tự biên soạn cần giáo viên duyệt; chưa có placement
+  chuẩn hóa, ảnh Part 1 hay đề thi 200 câu đủ cấu trúc. Tiến độ không phải điểm
+  TOEIC, CEFR hoặc điểm phát âm. Chưa kiểm quota/generation tính phí hoặc chất
+  lượng sư phạm, giọng, echo/microphone/loa thật trong lượt này. SQL Server v1
+  vẫn chỉ nhận level A2/B1/B2; khóa học A1/C1 hiện kiểm chứng trên MySQL.
+
+## 2026-10-18 — Hoàn thiện giọng Blaze, Gemini chỉ xử lý nội dung
+
+- **Yêu cầu/nhánh:** tiếp tục phần đang dở tại `tinh-nang/giong-blaze-gemini`.
+  Giữ các thay đổi giao diện/hồ sơ/cài đặt đang có; chưa commit/push. Không code
+  giáo trình TOEIC, không migration hoặc sửa database người dùng.
+- **Luồng thoại:** thêm `voice/blaze.ts`, tái sử dụng worklet 16 kHz để tự nhận
+  lượt nói, đóng gói WAV → Blaze STT → Gemini chat SSE có UUID/lưu lịch sử →
+  Blaze TTS. Chia văn bản theo câu/ngôn ngữ, giới hạn job 2000 ký tự; có ngắt
+  lời, chờ cancel server, mute/đổi giọng/stop và chặn phản hồi đến muộn.
+  Không gọi Gemini Live hoặc giọng máy trong chế độ Blaze; nút nghe thủ công
+  bị khóa khi đang thoại/ghi âm để tránh hai âm thanh chồng nhau.
+- **Backend/cấu hình:** `VOICE_PROVIDER=blaze` mặc định, độc lập `LLM_PROVIDER`;
+  capabilities có `voice_provider`, cần cả hai khóa mới bật thoại. Catalog có
+  bearer gồm giọng Blaze Việt/Anh. Chặn signaling REST/WS native; giữ adapter
+  cũ khi chủ động chọn `native`. `.env.example`, Compose và CLAUDE cập nhật.
+- **Kiểm thử:** backend **145/145 qua, không skip**, coverage **92,87%** trên
+  `EngMateAI_tutor_test` riêng, mỗi test rollback. Frontend **183/183 qua**,
+  coverage **89,22% statements / 81,92% branches / 86,11% functions / 92,40%
+  lines**, giữ ngưỡng 80%. Test mới cho pipeline, WAV/VAD, silence/noise, chọn
+  đúng giọng, barge-in/cancel, mute/stop, lỗi/quyền mic, late callbacks và không
+  fallback. Hai cảnh báo backend cũ là Starlette TestClient và pytest cache.
+- **Browser:** Chrome headless dùng microphone/audio WAV giả lập và API fixture,
+  chạy AudioWorklet/VAD/HTMLAudio thật; xác nhận gửi WAV → text SSE → đọc Blaze,
+  không mở native voice/không dùng speechSynthesis, dừng tất cả tracks và đổi
+  selector. Không overflow/pageerror ở 1440/390 px. Artifact script, screenshot
+  và kết quả tại `.artifacts/check-blaze-voice.cjs`, `blaze-voice-*`.
+- **Runtime/giới hạn:** pin `.env` local `VOICE_PROVIDER=blaze`, giữ khóa riêng tư
+  và Gemini làm đầu não; khởi động lại đúng backend 8010. Capabilities thật xác
+  nhận Gemini + Blaze, frontend giữ 5174. Smoke/OpenAPI đã qua. Chưa gọi generation
+  tính phí hoặc kiểm chứng quota, giọng và echo/microphone/loa trên thiết bị thật.
+  STT/text/TTS có độ trễ cộng dồn; job Blaze có thể tiếp tục ở provider sau hủy.
+  Văn bản trộn ngôn ngữ/Việt không dấu vẫn có giới hạn nhận diện.
+- **Tài liệu:** cập nhật README, BLAZE_SPEECH, API, ARCHITECTURE, REQUIREMENTS,
+  TESTING, DECISIONS và CHANGELOG. Các thay đổi format ở CSS/trang cài đặt chỉ
+  chuẩn hóa Prettier, giữ nội dung đang có. Log kiểm chứng bị ignore trong
+  `.artifacts/blaze-backend-coverage.log`, `blaze-frontend-coverage.log`.
+- **Kiểm tra bàn giao:** Ruff/Black/mypy, ESLint/TypeScript, Prettier, build,
+  export OpenAPI, smoke và diff whitespace đã qua. Build không chứa giá trị
+  riêng tư từ `.env`; status local đã cập nhật PID backend và voice provider.
+
+## 2026-10-18 — Khôi phục hồ sơ cá nhân từ giao diện cũ
+
+- **Yêu cầu/nhánh:** đưa lại phần hồ sơ cũ trên giao diện thầy Mate; làm tại `tinh-nang/khoi-phuc-ho-so-ca-nhan`, giữ các thay đổi chưa commit từ lượt trước, chưa commit/push. Đọc `HoSo.tsx` và menu avatar từ lịch sử Git để khôi phục bố cục/chức năng tương ứng.
+- **Giao diện:** avatar → Hồ sơ học tập; thẻ ảnh/tên/email/trình độ và thống kê bên trái, biểu mẫu thông tin cá nhân/cá nhân hóa bên phải. Sửa họ tên, điện thoại, ngày sinh, giới tính, CEFR, mục tiêu và 10–60 phút/ngày; username/email chỉ đọc. Hỗ trợ sáng/tối/mobile, lưu/lỗi/stale version/tải lại, giữ nội dung khi lưu thất bại. Mục tiêu/trình độ/thời lượng đã lưu cập nhật phiên lớp học. Sửa hover rồi click avatar để menu không đóng ngay. Mã tại `frontend/src/profile/`, MenuNguoiDung, TutorWorkspace, curriculum, main và tests.
+- **API/lưu trữ:** khôi phục GET/PUT `/api/me/profile` trên bảng profile sẵn có với bearer owner/Version/lock; không migration/bootstrap database người dùng. Thêm GET/POST `/api/me/avatar`: xử lý ảnh raster trên trình duyệt, giới hạn 2 MiB/MIME ở server, lưu riêng theo UUID và trả ảnh có auth/no-store/nosniff. `AVATAR_STORAGE_DIR` mặc định `.artifacts/avatars`, Compose mount `/data/avatars`; không thêm dependency. API responses có danh sách trường công khai; không nhận forged owner/username/email. Mã mới `schemas/profile.py`, `services/profile.py`; cập nhật routes/config, `.env.example`, compose.
+- **Kiểm chứng cuối:** backend **135/135 qua, không skip**, coverage **92,82%** trên `EngMateAI_tutor_test` riêng và rollback; frontend **162/162 qua**, coverage **90,48% statements / 82,64% branches / 88,88% functions / 94,04% lines**, trên ngưỡng 80% giữ nguyên. Lint/format/type-check, build, smoke, export OpenAPI và diff whitespace qua. Backend TestClient/cache có hai cảnh báo cũ. Coverage frontend thấp hơn lượt trước do thêm xử lý ảnh và loader riêng, không hạ ngưỡng; encode ảnh thật được kiểm tra thêm bằng browser.
+- **Browser:** Chrome mock API kiểm tra lưu đủ trường, version conflict giữ nháp/tải lại, đổi ảnh thật encode JPEG, cập nhật avatar menu, đăng nhập lại, dark/light và không overflow/pageerror ở 1440/900/390/320 px. Sửa nhãn accessible của các select sau khi kiểm tra; sửa tương tác hover/click có test hồi quy. Artifact `.artifacts/check-profile.cjs`, `.artifacts/profile-browser.json`, `profile-*.png`, `profile-*-coverage.log`, `profile-backend-tests.log`, `profile-lint.log`, `profile-build.log`.
+- **Runtime/tài liệu:** đã restart backend Gemini, frontend tiếp tục chạy tại `http://127.0.0.1:5174`; OpenAPI có endpoints mới, truy cập profile/avatar không bearer trả 401. Không ghi tài khoản/dữ liệu thật hoặc gọi AI tính phí để test. Cập nhật README, API, ARCHITECTURE, REQUIREMENTS, TESTING, DECISIONS, CHANGELOG. Ảnh cần backup cùng dữ liệu khi chuyển máy; thống kê từ/bài vẫn theo dữ liệu trình duyệt của giao diện thầy Mate. Windows chặn pytest tmp mặc định: dùng thư mục cache trong repo; đường dẫn truyền qua PYTEST_ADDOPTS nên dùng dấu `/` để tránh shlex loại dấu `\`; thư mục test phát sinh đã chuyển vào `.cache` bị Git bỏ qua.
+
+## 2026-10-18 — Chuyển bản local từ OpenAI sang Gemini theo yêu cầu
+
+- Lưu khóa Gemini người dùng cung cấp vào `.env` backend, chọn `LLM_PROVIDER=gemini`; giữ chat `gemini-3.5-flash-lite`, live `gemini-3.8-live`, giọng Kore và prompt người thầy v5. Không ghi khóa vào frontend/Git/tài liệu.
+- GET thông tin cả hai model trả HTTP 200; chat hỗ trợ generateContent, live hỗ trợ bidiGenerateContent. Đây là kiểm tra xác thực/quyền đọc model, chưa chứng minh quota tạo câu trả lời hoặc cuộc gọi thật.
+- Khởi động lại đúng backend một worker tại 8010. Smoke qua; readiness/capabilities HTTP 200, provider Gemini, bật chat/streaming/realtime; frontend giữ cổng 5174. Không đổi mã ứng dụng, không chạy lại toàn bộ bộ test và không gọi generation tính phí. Artifact `.artifacts/local-setup/gemini-access-check.json`, log `backend-gemini.*.log`.
+
+## 2026-10-18 — Thiết kế lại giao diện lớp học cùng thầy Mate theo Figma
+
+- **Yêu cầu/nhánh:** người dùng yêu cầu thay toàn bộ giao diện theo Figma Tutor journey và dùng linh thú trang đăng nhập làm người thầy. Làm trên `tinh-nang/giao-dien-thay-mate`, giữ các mục thiết lập môi trường có sẵn; chưa commit/push.
+- **Thiết kế:** đọc metadata, high-fidelity design context/screenshot và motion context các màn trong file `HVCojKIt6s5jNrpUxCWKbO`. Thay sidebar bằng nav ngang Cùng Mate/Lộ trình/Bài học/Phát âm/Từ vựng/Tiến độ, lịch sử trong ngăn kéo có vòng focus bàn phím/Escape; nền xanh tím, orbit/ambient SVG local, linh thú `LinhThu` gốc thay orb theo yêu cầu. Đồng bộ nhận diện đăng nhập, hỗ trợ sáng/tối, màn hình nhỏ và reduced-motion. Mã mới tại `frontend/src/tutor/`, asset tại `frontend/public/tutor/`; tích hợp qua App/Chat/AuthForm/main/VoiceChat.
+- **Luồng học:** bốn chủ đề có cấu trúc/ví dụ/mẹo, chọn mục tiêu/thời lượng/mức bắt đầu, chuẩn bị bản nháp luyện tập/giải thích/đánh giá/ôn tập cho chat thật. Giữ bản nháp khi đổi tab và khôi phục hội thoại đã tạo trong phiên. Nghe mẫu/ghi âm chép lời dùng speech hiện có, hủy khi rời trang và bỏ lỗi đến muộn của request cũ. Từ đã nhớ/bài hoàn thành/ngày học do người học tự đánh dấu, lưu riêng từng username trên trình duyệt; lịch sử hội thoại vẫn từ MySQL. Không dùng điểm hoặc tiến độ mẫu trong Figma làm dữ liệu thật.
+- **Người thầy:** thêm `persona.v5.txt`, cập nhật ConversationService và integration assertions để dùng prompt giảng giải/làm mẫu/thực hành/nhận xét/ôn lại, chờ người học trả lời và không bịa đánh giá. Linh thú theo trạng thái nghe/suy nghĩ/nói từ transport thật; không đổi adapter/provider/model.
+- **Kiểm chứng cuối:** backend **133/133 qua, không skip**, coverage **92,57%**, dùng schema riêng `EngMateAI_tutor_test` bootstrap mới, rollback test và không bootstrap database người dùng. Frontend **152/152 qua**, coverage **92,52% statements / 84,79% branches / 92,09% functions / 96,28% lines**; giữ ngưỡng 80%. Ruff/Black/mypy, ESLint/TypeScript/Prettier, build, smoke, readiness/capabilities và diff whitespace qua. Build không chứa giá trị secret từ `.env`. Hai cảnh báo backend có sẵn là Starlette TestClient và pytest cache.
+- **Browser/runtime:** Chrome headless kiểm tra 6 màn ở 1440/900/390/320 px, không overflow ngang/ảnh hỏng/page errors; xem ảnh đăng nhập, bài giảng, sáng/tối và live nghe/suy nghĩ/hướng dẫn ở desktop/mobile. Phát hiện nút hero bị cắt bởi max-height cũ, đã sửa và thêm assertion; kiểm tra vòng focus/khôi phục focus lịch sử. API/voice transport được giả lập, không tạo tài khoản thật hoặc gọi AI tính phí. Artifact `.artifacts/check-tutor.cjs`, `.artifacts/tutor-browser.json`, `tutor-*.png`, `tutor-coverage-*.log`, `tutor-build.log`, `tutor-lint*.log`. Đã restart backend nhận prompt v5; ứng dụng tiếp tục chạy tại `http://127.0.0.1:5174`, backend 8010, OpenAI.
+- **Giới hạn/tài liệu:** tiến độ học mới chưa đồng bộ server/thiết bị; mức A1/A2 là tự chọn, không phải chứng nhận; chưa có bộ chấm phát âm hoặc kiểm chứng chất lượng sư phạm/microphone/loa thật. Cập nhật README, REQUIREMENTS, ARCHITECTURE, TESTING, DECISIONS và CHANGELOG theo phạm vi mới. Không cần migration hoặc đổi endpoint.
+
+## 2026-10-18 — Chuyển môi trường local sang OpenAI theo yêu cầu
+
+- **Cấu hình:** đổi `.env` local sang `LLM_PROVIDER=openai`, lưu `OPENAI_API_KEY` ở backend; giữ model đã có `gpt-4.1-mini` và `gpt-realtime`. Không ghi khóa vào frontend, tài liệu hoặc Git. Khởi động lại đúng backend một worker tại cổng 8010; giữ frontend và database hiện tại.
+- **Kiểm chứng:** health/readiness/capabilities HTTP 200, readiness xác nhận MySQL schema v1/provider OpenAI, capabilities bật chat/streaming/realtime. Smoke qua. Gọi GET thông tin từng model đến OpenAI đều HTTP 200, xác nhận khóa và quyền đọc hai model; chưa tạo phản hồi tính phí hoặc thử thoại/microphone. Không đổi mã ứng dụng, dùng kết quả lint/test/build của lượt thiết lập trước; giới hạn integration/coverage backend vẫn giữ nguyên.
+
+## 2026-10-18 — Thiết lập lại môi trường local trên Windows
+
+- **Phạm vi:** chạy dự án tại `D:\HKDN_1\engmate-ai` trên nhánh `chore/thiet-lap-moi-truong-local`; không commit/push. Máy không có Docker trong PATH, dùng Python 3.14.8 trong `.venv` và Node 24.15.0/npm 11.12.1.
+- **Thiết lập:** chạy setup bằng `.\.venv\Scripts\python.exe scripts/manage.py setup`; cài websockets 15.0.1 còn thiếu, đăng ký backend editable và cài frontend bằng npm ci (0 vulnerabilities). Lệnh `python` mặc định của máy trỏ WindowsApps và không chạy được; các lệnh quản lý dùng đường dẫn Python trong `.venv`.
+- **Cấu hình local:** bổ sung 19 biến thiếu từ `.env.example`, chuyển `LLM_PROVIDER=mock` sang `gemini`, tắt speech loopback. Giữ URL MySQL hiện có qua cổng 3307, JWT và khóa Blaze. `.env` bị Git bỏ qua. Database MySQL 8.0.45 kết nối được và các bảng ứng dụng tương thích; không bootstrap hoặc thay dữ liệu.
+- **Runtime:** backend một worker tại `http://127.0.0.1:8010`, frontend tại `http://127.0.0.1:5174`, chạy nền. Log trong `.artifacts/local-setup/`. Health, HTML, proxy, capabilities và OpenAPI smoke qua. Khi kiểm tra, Gemini API key vẫn trống; readiness trả 503 do chưa cấu hình AI. Cần lưu khóa tại `.env` root và khởi động lại backend; chưa gọi provider tính phí hoặc thử microphone thật.
+- **Kiểm chứng:** pip check, lint/type-check, build và task test qua; backend 123 passed/10 skipped vì chưa có `MYSQL_TEST_URL` riêng; frontend 137 passed. Backend coverage 69,71%, **không đạt** ngưỡng 80% do integration chưa chạy; không hạ ngưỡng. Chạy coverage frontend riêng đạt 92,64% statements / 84,24% branches / 93,22% functions / 96,68% lines. Có cảnh báo Starlette TestClient và pytest cache cũ. Không đổi mã ứng dụng.
+
 ## 2026-10-18 — Kiểm chứng và hợp nhất vào develop
 
 - **Yêu cầu/phạm vi:** kiểm tra kỹ rồi merge `tinh-nang/tich-hop-gemini` vào `develop`. Đã fetch `origin/develop`, xác nhận local/remote cùng `42f6b73`; ứng viên `2dbe1ff` gồm 3 commit kể từ develop, tổng chênh lệch 171 file. Hợp nhất bằng merge commit, không push.

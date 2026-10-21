@@ -7,6 +7,23 @@ beforeEach(() => vi.mocked(api).mockReset());
 const valid = { provider: 'gemini', default_voice: 'Kore', voices: [{ id: 'Kore', name: 'Kore' }] };
 
 describe('live voice catalog', () => {
+  it('accepts bilingual Blaze voices independently of the reasoning provider', async () => {
+    const catalog = {
+      provider: 'blaze',
+      default_voice: 'HN-Nam-1-BL',
+      voices: [
+        { id: 'HN-Nam-1-BL', name: 'Mate Vietnamese', language: 'vi' },
+        { id: 'UK-Nu-1-TM', name: 'Mate English', language: 'en' },
+      ],
+    };
+    vi.mocked(api).mockResolvedValue(catalog);
+    expect(await liveVoices(new AbortController().signal)).toEqual(catalog);
+    vi.mocked(api).mockResolvedValue({
+      ...catalog,
+      voices: [{ id: 'Kore', name: 'Wrong provider' }],
+    });
+    await expect(liveVoices(new AbortController().signal)).rejects.toThrow();
+  });
   it('loads the authenticated live catalog rather than the reading catalog', async () => {
     vi.mocked(api).mockResolvedValue(valid);
     const signal = new AbortController().signal;

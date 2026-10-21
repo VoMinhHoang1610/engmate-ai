@@ -1,4 +1,4 @@
-"""Private signaling/heartbeat controls; media flows directly over WebRTC."""
+"""Authenticated Blaze catalog and explicit legacy native voice controls."""
 
 import asyncio
 import json
@@ -20,6 +20,7 @@ from app.db.database import Record
 from app.schemas.chat import Input
 from app.services.gemini_voice import GeminiVoiceManager
 from app.services.realtime import RealtimeManager
+from app.services.speech import SpeechService
 
 router = APIRouter(prefix="/api", tags=["voice"])
 
@@ -32,10 +33,23 @@ class VoiceOffer(Input):
 
 
 @router.get("/voice/voices")
-def voice_catalog(user: User, request: Request) -> Record:
-    """Expose supported live voices, separately from the Blaze reading catalog."""
+async def voice_catalog(user: User, request: Request) -> Record:
+    """Expose only voices from the selected speech service, never credentials."""
     manager = request.app.state.voice
     settings = request.app.state.settings
+    if settings.voice_provider == "blaze":
+        service = SpeechService(settings)
+        vietnamese, english = await asyncio.gather(
+            service.voices("vi"), service.voices("en")
+        )
+        catalog = {voice.id: voice for voice in [*vietnamese, *english]}
+        return {
+            "provider": "blaze",
+            "default_voice": (
+                "HN-Nam-1-BL" if "HN-Nam-1-BL" in catalog else next(iter(catalog), None)
+            ),
+            "voices": [voice.model_dump() for voice in catalog.values()],
+        }
     voices = (
         manager.live.voices()
         if isinstance(manager, GeminiVoiceManager)
@@ -59,6 +73,12 @@ async def start_voice(
     identity: Identity, data: VoiceOffer, user: User, request: Request
 ) -> Record:
     """Check ownership/open state before any paid provider signaling call."""
+    if request.app.state.settings.voice_provider == "blaze":
+        raise HTTPException(
+            409,
+            "Mate dùng Blaze STT/TTS và chat văn bản; "
+            "thoại trực tiếp của Gemini/OpenAI đã tắt.",
+        )
     manager: RealtimeManager = request.app.state.voice
     if isinstance(manager, GeminiVoiceManager):
         return await manager.start(user["UserId"], identity, voice_id=data.voice_id)
@@ -78,7 +98,8 @@ async def gemini_audio(websocket: WebSocket, session_id: UUID) -> None:
     manager = websocket.app.state.voice
     settings = websocket.app.state.settings
     if (
-        not isinstance(manager, GeminiVoiceManager)
+        settings.voice_provider != "native"
+        or not isinstance(manager, GeminiVoiceManager)
         or websocket.headers.get("origin") not in settings.cors_origins
     ):
         await websocket.close(code=4403)

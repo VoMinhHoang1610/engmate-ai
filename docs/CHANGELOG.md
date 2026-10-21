@@ -1,5 +1,70 @@
 # Changelog
 
+## 2026-10-18 — Chọn giọng của Mate trong Cài đặt
+
+- Thêm lựa chọn giọng tiếng Anh và tiếng Việt trong **Cài đặt → Âm thanh & giọng đọc**, lấy danh sách từ dịch vụ Blaze.
+- Có nút nghe thử/dừng theo thao tác người học, trạng thái tải và thử lại khi danh sách hoặc âm thanh gặp lỗi.
+- Nhớ giọng và tốc độ riêng theo tài khoản trên trình duyệt hiện tại; dùng chung với menu âm thanh trong chat, giọng đọc mẫu và phiên thoại Blaze tiếp theo. Không đồng bộ sang thiết bị khác.
+- Giữ Gemini xử lý nội dung, Blaze phát giọng và ngôn ngữ nhận dạng hiện có; không thay schema database.
+
+## 2026-10-18 — Màu tương tác và chữ dễ đọc hơn
+
+- Bổ sung xanh dương cho thao tác chính, tím cho học tập, xanh ngọc cho tiến độ;
+  sidebar, thẻ và chặng học có màu phân nhóm ở cả giao diện sáng và tối.
+- Mục đang chọn có nền màu/vạch nhấn, hover đổi viền/nền, focus có vòng rõ;
+  nút gửi, micro, trạng thái thoại và câu trả lời được phân biệt dễ hơn.
+- Tăng cỡ và độ tương phản chữ mô tả, điều hướng, ô nhập và tin nhắn;
+  giữ bố cục ổn định khi tương tác và hỗ trợ điện thoại.
+
+## 2026-10-18 — Không gian học tối giản với thanh bên
+
+- Chuyển không gian sau đăng nhập sang bố cục thanh bên thu gọn/mở rộng theo mẫu người dùng cung cấp; trên điện thoại mở điều hướng bằng nút menu.
+- Dùng nền trung tính, viền mảnh và khoảng cách rõ ràng cho chat, lộ trình, lớp học, hồ sơ và cài đặt; giữ sáng/tối và linh vật Mate.
+- Giữ điều hướng bài học, phát âm, từ vựng, tiến độ và lịch sử hội thoại; hồ sơ/cài đặt vẫn dùng dữ liệu tài khoản hiện có.
+- Giữ luồng học TOEIC và đối thoại Gemini + Blaze; không thay API, database hay cách tính hoàn thành bài trong đợt chỉnh giao diện này.
+
+## 2026-10-18 — Đồng bộ SQL khởi tạo với dự án hiện tại
+
+- File SQL root tạo đủ 13 bảng/4 trigger, gồm bốn bảng lưu kế hoạch, tiến độ,
+  liên kết hội thoại và receipt của lộ trình TOEIC, khớp metadata backend.
+- Giữ base schema version 1, bảy mức CEFR và các bảng tài khoản/hồ sơ/hội thoại
+  hiện có. Giáo án vẫn dùng JSON của server, avatar lưu ở thư mục riêng.
+- Bản cài mới không cần chạy thêm installer. Database cũ thiếu bảng lộ trình
+  dùng installer bổ sung; không chạy lại bootstrap lên dữ liệu đang dùng.
+- Thêm kiểm thử cấu trúc MySQL và mở rộng SQL kiểm tra chỉ đọc.
+
+## 2026-10-18 — Lộ trình TOEIC đối thoại bằng giọng nói
+
+- Thay lộ trình bốn chủ đề bằng **5 chặng, 25 cụm, 100 bài học nhỏ** từ nền tảng đến các mục tiêu 450/650/800/900+. Mỗi bài có lời giảng, mẫu câu, ví dụ/dịch, từ vựng, tình huống đối thoại, thực hành nghe/đọc và câu kiểm tra.
+- Học cùng Mate qua năm bước: khởi động, nghe giảng, luyện cùng, đối thoại và tự kiểm tra. Giọng nói là cách học chính: Gemini xử lý nội dung, Blaze nhận và đọc lời nói; vẫn gõ được khi không bật micro. Giữ chat tự do riêng.
+- Kế hoạch, bước đang học, hội thoại, số lượt luyện thực tế, kết quả kiểm tra và lịch ôn lưu theo tài khoản trên máy chủ. Lưu mục tiêu có kiểm tra phiên bản; lỗi/xung đột giữ lựa chọn để người học kiểm tra và thử lại.
+- Kiểm tra chấm bằng đáp án chuẩn ở máy chủ; chỉ trả đáp án/giải thích sau khi nộp. Hoàn thành cần ít nhất 3 lượt đối thoại thực tế có phản hồi hoàn tất và đúng toàn bộ câu kiểm tra. Có gợi ý bài tiếp theo, bài đến lịch ôn và tiến độ theo bằng chứng đã lưu.
+- Các chặng là cách nhóm giáo trình đề xuất; số lượt/câu đúng không phải điểm TOEIC hay điểm phát âm. Chưa có placement test chuẩn hóa, ngân hàng ảnh Part 1 hoặc đề đủ 200 câu. Nội dung cần được đánh giá sư phạm với người học thật.
+
+## Giọng nói Mate: Blaze, nội dung: Gemini
+
+- Thoại tự nhận lượt nói, dùng Blaze chép lời và đọc câu trả lời Gemini.
+- Danh sách giọng đối thoại đổi sang catalog Blaze Việt/Anh; có ngắt lời, mute,
+  đổi giọng và dọn tài nguyên khi kết thúc/rời trang.
+- Bỏ nhánh đọc bằng giọng máy. Thiếu/lỗi Blaze báo lỗi thay vì phát giọng Gemini.
+- Mặc định `VOICE_PROVIDER=blaze`; Gemini Live/OpenAI Realtime chỉ còn adapter
+  tương thích khi chủ động chọn `native`. Không thay database hoặc giáo trình.
+
+## 2026-10-18 — Khôi phục hồ sơ cá nhân
+
+- Mở avatar → Hồ sơ học tập để dùng lại trang thông tin cá nhân từ giao diện cũ, phù hợp màu sáng/tối của lớp học hiện tại.
+- Đọc/lưu họ tên, điện thoại, ngày sinh, giới tính, trình độ, mục tiêu và thời lượng học vào tài khoản thật; báo xung đột khi hồ sơ đã được sửa từ phiên khác.
+- Đổi ảnh đại diện PNG/JPEG/WebP và cập nhật avatar menu; ảnh lưu riêng tư, truy cập có xác thực.
+- Sửa thao tác hover rồi click avatar để menu không đóng ngay trước khi chọn hồ sơ.
+
+## 2026-10-18 — Lớp học cùng thầy Mate
+
+- Thiết kế lại đăng nhập và không gian học theo Figma Tutor journey, dùng linh thú Mate gốc làm người thầy.
+- Thêm điều hướng Cùng Mate, Lộ trình, Bài học, Phát âm, Từ vựng và Tiến độ; giữ chat/voice thật, lịch sử trong ngăn kéo và theme sáng/tối.
+- Bốn chủ đề có bài giảng, ví dụ và yêu cầu thực hành; mục tiêu/thời lượng/mức bắt đầu có thể điều chỉnh.
+- Nghe mẫu, ghi âm chép lời, tự đánh dấu từ đã nhớ và bài hoàn thành; hiển thị dữ liệu thật do người học ghi nhận, không giả lập điểm. Dữ liệu học mới lưu trên trình duyệt riêng từng tài khoản.
+- Prompt v5 hướng dẫn Mate giảng giải, làm mẫu, chờ câu trả lời rồi nhận xét cho cả chat và thoại.
+
 ## 2026-10-18 — Link HTTPS chia sẻ tạm thời
 
 - Thêm Compose/proxy Nginx riêng phục vụ bản build qua HTTPS tunnel, hỗ trợ cấu hình SSE/WebSocket và giữ các cổng dev/database ở loopback.

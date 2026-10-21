@@ -25,7 +25,7 @@ export async function streamTurn(
       response.status === 429
         ? 'AI đang giới hạn lượt gọi. Hãy thử lại sau.'
         : response.status === 503
-          ? 'Kiểm tra khóa OpenAI và quyền truy cập model.'
+          ? 'Kiểm tra khóa API và quyền truy cập model đang dùng.'
           : 'Chưa kết nối được luồng phản hồi AI.',
     );
   if (!response.body || !response.headers.get('Content-Type')?.includes('text/event-stream'))

@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, hasSession, saveSession } from './api/database';
 import { AuthForm } from './AuthForm';
-import { Chat } from './Chat';
+import { LandingPage } from './landing/LandingPage';
+import { TutorWorkspace } from './tutor/TutorWorkspace';
 import { Logo } from './components/Logo';
-import { BieuTuong } from './components/BieuTuong';
-import { MenuNguoiDung } from './components/MenuNguoiDung';
-import { ThemeToggle } from './components/ThemeToggle';
 import { xoaBoNhoAmThanh } from './speech/audio';
 import type { Account, Capabilities, Conversation } from './types';
 
 export default function App() {
   const [signedIn, setSignedIn] = useState(hasSession);
+  const [showLanding, setShowLanding] = useState(() => window.location.hash === '#trang-chu');
+  const [authRegister, setAuthRegister] = useState(() => window.location.hash === '#dang-ky');
   const [account, setAccount] = useState<Account | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
@@ -20,7 +20,6 @@ export default function App() {
   const [loading, setLoading] = useState(hasSession);
   const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [menu, setMenu] = useState(false);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
   const lock = useRef(false);
@@ -29,7 +28,17 @@ export default function App() {
 
   useEffect(() => {
     const syncLocation = () => {
-      const hash = hasSession() ? '#hoi-thoai' : '#dang-nhap';
+      if (showLanding) {
+        if (window.location.hash !== '#trang-chu') {
+          window.history.replaceState(
+            window.history.state,
+            '',
+            `${window.location.pathname}${window.location.search}#trang-chu`,
+          );
+        }
+        return;
+      }
+      const hash = hasSession() ? '#hoi-thoai' : authRegister ? '#dang-ky' : '#dang-nhap';
       if (window.location.hash !== hash)
         window.history.replaceState(
           window.history.state,
@@ -45,23 +54,16 @@ export default function App() {
       window.removeEventListener('hashchange', syncLocation);
       window.removeEventListener('popstate', syncLocation);
     };
-  }, [signedIn]);
+  }, [signedIn, showLanding, authRegister]);
 
   useEffect(() => {
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenu(false);
-    };
-    window.addEventListener('keydown', escape);
-    return () => window.removeEventListener('keydown', escape);
-  }, []);
-
-  useEffect(() => {
-    document.title = 'Hội thoại · EngMate AI';
+    if (!showLanding) document.title = 'Hội thoại · EngMate AI';
     const change = () => {
       const active = hasSession();
       if (active === sessionState.current) return;
       sessionState.current = active;
       setSignedIn(active);
+      if (active) setShowLanding(false);
       setAccount(null);
       setConversations([]);
       setSelected(null);
@@ -72,7 +74,7 @@ export default function App() {
     };
     window.addEventListener('engmate-session', change);
     return () => window.removeEventListener('engmate-session', change);
-  }, []);
+  }, [showLanding]);
   useEffect(() => {
     const abort = new AbortController();
     void api<Capabilities>('/capabilities', 'GET', undefined, abort.signal)
@@ -127,7 +129,6 @@ export default function App() {
     setDraftIdentity(null);
     setWorkspace((n) => n + 1);
     setError('');
-    setMenu(false);
   }
   async function loadMore() {
     if (lock.current) return;
@@ -168,7 +169,23 @@ export default function App() {
       setBusy(false);
     }
   }
-  if (!signedIn) return <AuthForm />;
+  if (showLanding)
+    return (
+      <LandingPage
+        signedIn={signedIn}
+        onStartLogin={() => {
+          setAuthRegister(false);
+          setShowLanding(false);
+        }}
+        onStartRegister={() => {
+          setAuthRegister(true);
+          setShowLanding(false);
+        }}
+        onEnterWorkspace={() => setShowLanding(false)}
+      />
+    );
+  if (!signedIn)
+    return <AuthForm initialRegister={authRegister} onOpenLanding={() => setShowLanding(true)} />;
   if (!account)
     return (
       <main className="auth-page loading-screen">
@@ -189,137 +206,39 @@ export default function App() {
       </main>
     );
   return (
-    <div className="app-shell conversation-shell">
-      <a className="skip-link" href="#noi-dung">
-        Đến hội thoại
-      </a>
-      {menu && (
-        <button
-          className="menu-backdrop"
-          aria-label="Đóng danh sách hội thoại"
-          onClick={() => setMenu(false)}
-        />
-      )}
-      <aside
-        id="lich-su-hoi-thoai"
-        className={`sidebar conversation-history ${menu ? 'open' : ''}`}
-        aria-label="Lịch sử hội thoại"
-      >
-        <a className="brand" href="#hoi-thoai" aria-label="EngMate AI">
-          <Logo />
-        </a>
-        <button
-          className="btn primary full-width new-chat"
-          disabled={busy}
-          onClick={() => void create()}
-        >
-          <BieuTuong ten="plus" size={18} /> Hội thoại mới
-        </button>
-        <h2>Lịch sử hội thoại</h2>
-        <nav aria-label="Danh sách hội thoại">
-          {conversations.map((row) => (
-            <button
-              key={row.conversation_id}
-              aria-label={`${row.title}, ${new Date(row.created_at).toLocaleDateString('vi-VN')}${row.status !== 'in_progress' ? ', Đã kết thúc' : ''}`}
-              className={`history-item ${(selected?.conversation_id ?? draftIdentity) === row.conversation_id ? 'active' : ''}`}
-              aria-current={
-                (selected?.conversation_id ?? draftIdentity) === row.conversation_id
-                  ? 'page'
-                  : undefined
-              }
-              onClick={() => {
-                setSelected(row);
-                setDraftIdentity(null);
-                setMenu(false);
-              }}
-            >
-              <BieuTuong ten="chat" size={18} />
-              <span>
-                {row.title}
-                <small>
-                  {new Date(row.created_at).toLocaleDateString('vi-VN')}
-                  {row.status !== 'in_progress' ? ' · Đã kết thúc' : ''}
-                </small>
-              </span>
-            </button>
-          ))}
-          {more && (
-            <button
-              className="text-button full-width"
-              disabled={busy}
-              onClick={() => void loadMore()}
-            >
-              Tải thêm hội thoại
-            </button>
-          )}
-          {!conversations.length && <p className="muted">Chưa có hội thoại.</p>}
-        </nav>
-      </aside>
-      <div className="main-wrapper">
-        <header className="topbar">
-          <div className="breadcrumb">
-            <button
-              className="icon-button menu-toggle"
-              aria-label="Mở lịch sử hội thoại"
-              aria-expanded={menu}
-              aria-controls="lich-su-hoi-thoai"
-              onClick={() => setMenu(!menu)}
-            >
-              <BieuTuong ten="menu" />
-            </button>
-            <a className="mobile-brand" href="#hoi-thoai" aria-label="EngMate AI">
-              <Logo compact />
-            </a>
-            <h1>Hội thoại AI</h1>
-          </div>
-          <div className="topbar-right">
-            <span className="pill">
-              {capabilities?.is_mock
-                ? 'MOCK · KIỂM THỬ'
-                : capabilities?.provider === 'openai'
-                  ? 'OPENAI'
-                  : capabilities?.provider === 'gemini'
-                    ? 'GEMINI'
-                    : 'BLAZE AI'}
-            </span>
-            <span className="account-name">{account.username}</span>
-            <ThemeToggle />
-            <MenuNguoiDung account={account} busy={busy} onLogout={logout} />
-          </div>
-        </header>
-        <main id="noi-dung" tabIndex={-1} className="main-content">
-          {(!capabilities?.chat || error) && (
-            <div className="notice" role="alert">
-              {error || capabilities?.reason || 'Đang kiểm tra khả năng kết nối AI…'}
-              <button className="text-button" onClick={retryLoading}>
-                Kiểm tra lại
-              </button>
-            </div>
-          )}
-          <div className="chat-layout">
-            <Chat
-              key={selected?.conversation_id ?? `draft-${workspace}`}
-              conversation={selected}
-              capabilities={capabilities}
-              onCreated={(row) => {
-                setDraftIdentity(row.conversation_id);
-                setConversations((rows) => [
-                  row,
-                  ...rows.filter((item) => item.conversation_id !== row.conversation_id),
-                ]);
-              }}
-              onClose={(closed) => {
-                if (selected) setSelected(closed);
-                setConversations((rows) =>
-                  rows.map((row) =>
-                    row.conversation_id === closed.conversation_id ? closed : row,
-                  ),
-                );
-              }}
-            />
-          </div>
-        </main>
-      </div>
-    </div>
+    <TutorWorkspace
+      key={account.username}
+      account={account}
+      capabilities={capabilities}
+      conversations={conversations}
+      selected={selected}
+      draftIdentity={draftIdentity}
+      workspace={workspace}
+      busy={busy}
+      more={more}
+      error={error}
+      onNew={create}
+      onSelect={(row) => {
+        setSelected(row);
+        setDraftIdentity(null);
+      }}
+      onRetry={retryLoading}
+      onLoadMore={() => void loadMore()}
+      onLogout={logout}
+      onOpenLanding={() => setShowLanding(true)}
+      onCreated={(row) => {
+        setDraftIdentity(row.conversation_id);
+        setConversations((rows) => [
+          row,
+          ...rows.filter((item) => item.conversation_id !== row.conversation_id),
+        ]);
+      }}
+      onClose={(closed) => {
+        if (selected) setSelected(closed);
+        setConversations((rows) =>
+          rows.map((row) => (row.conversation_id === closed.conversation_id ? closed : row)),
+        );
+      }}
+    />
   );
 }

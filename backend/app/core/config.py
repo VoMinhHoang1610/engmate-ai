@@ -12,8 +12,14 @@ class Settings(BaseModel):
     """Validate credentials privately; mock is an explicit test configuration."""
 
     app_name: str = "EngMate-AI"
+    avatar_storage_dir: Path = Field(
+        default_factory=lambda: Path(__file__).resolve().parents[3]
+        / ".artifacts"
+        / "avatars"
+    )
     model_config = ConfigDict(hide_input_in_errors=True)
     llm_provider: Literal["mock", "blaze", "openai", "gemini"] = "gemini"
+    voice_provider: Literal["blaze", "native"] = "blaze"
     gemini_api_key: SecretStr | None = None
     gemini_chat_model: str = Field(
         default="gemini-3.5-flash-lite", pattern=r"^gemini-[a-zA-Z0-9._-]+$"
@@ -84,6 +90,13 @@ class Settings(BaseModel):
             self.llm_provider == "openai" and bool(self.openai_api_key)
         )
 
+    @property
+    def voice_configured(self) -> bool:
+        """Require the text brain and the selected speech service independently."""
+        return self.chat_configured and (
+            self.voice_provider == "native" or bool(self.blaze_api_key)
+        )
+
 
 def get_settings() -> Settings:
     """Read process environment without caching state across tests."""
@@ -94,7 +107,13 @@ def get_settings() -> Settings:
     return Settings.model_validate(
         {
             "app_name": os.getenv("APP_NAME", "EngMate-AI"),
+            **(
+                {"avatar_storage_dir": os.environ["AVATAR_STORAGE_DIR"]}
+                if os.getenv("AVATAR_STORAGE_DIR")
+                else {}
+            ),
             "llm_provider": os.getenv("LLM_PROVIDER", "gemini"),
+            "voice_provider": os.getenv("VOICE_PROVIDER", "blaze"),
             "gemini_api_key": os.getenv("GEMINI_API_KEY") or None,
             "gemini_chat_model": os.getenv(
                 "GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite"
