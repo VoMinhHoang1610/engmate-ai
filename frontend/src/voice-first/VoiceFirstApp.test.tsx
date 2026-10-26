@@ -35,24 +35,32 @@ describe('voice-first preview', () => {
     vi.useRealTimers();
   });
 
-  it('opens the current lesson and previews locked lessons across all 100 nodes', async () => {
+  it.each([0, 1, 2, 3, 4])('shows all 20 correctly numbered lessons in stage %i', async (index) => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: 'Học theo lộ trình' }));
     await screen.findByRole('heading', { name: 'Từng bước, mỗi ngày' });
     const level = screen.getByRole('combobox', { name: 'Chọn cấp độ' });
-    let total = 0;
-    for (let index = 0; index < 5; index++) {
-      fireEvent.change(level, { target: { value: String(index) } });
-      total += screen.getAllByRole('button', { name: /^Bài \d+:/ }).length;
-    }
-    expect(total).toBe(100);
-    fireEvent.change(level, { target: { value: '0' } });
-    fireEvent.click(screen.getByRole('button', { name: /Bài 7:.*Đang học/ }));
+    const roadmap = within(level.closest('.mate-roadmap-view') as HTMLElement);
+    fireEvent.change(level, { target: { value: String(index) } });
+    const nodes = roadmap.getAllByRole('button', { name: /^Bài \d+:/ });
+    expect(nodes).toHaveLength(20);
+    nodes.forEach((node, offset) => {
+      expect(node).toHaveAccessibleName(new RegExp(`^Bài ${index * 20 + offset + 1}:`));
+    });
+  });
+
+  it('opens the current lesson and previews a locked lesson without starting it', async () => {
+    renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'Học theo lộ trình' }));
+    await screen.findByRole('heading', { name: 'Từng bước, mỗi ngày' });
+    const level = screen.getByRole('combobox', { name: 'Chọn cấp độ' });
+    const roadmap = within(level.closest('.mate-roadmap-view') as HTMLElement);
+    fireEvent.click(roadmap.getByRole('button', { name: /Bài 7:.*Đang học/ }));
     const current = await screen.findByRole('dialog', { name: 'Gặp gỡ đồng nghiệp' });
     expect(within(current).getByRole('button', { name: 'Bắt đầu' })).toBeEnabled();
     fireEvent.click(within(current).getByRole('button', { name: 'Đóng' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: /Bài 8:.*Chưa mở khóa/ }));
+    fireEvent.click(roadmap.getByRole('button', { name: /Bài 8:.*Chưa mở khóa/ }));
     const locked = await screen.findByRole('dialog', { name: 'Ở văn phòng' });
     expect(within(locked).getByText('Hoàn thành bài trước để mở khóa.')).toBeInTheDocument();
     expect(within(locked).queryByRole('button', { name: 'Bắt đầu' })).not.toBeInTheDocument();

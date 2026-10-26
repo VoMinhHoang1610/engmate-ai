@@ -59,7 +59,7 @@ export function TeacherMate({
   return (
     <div
       className={`teacher-mate${compact ? ' teacher-mate--compact' : small ? ' teacher-mate--small' : ''}`}
-      aria-label="Thầy Mate, linh thú hướng dẫn học tiếng Anh"
+      aria-label="Mate, linh thú hướng dẫn học tiếng Anh"
       role="img"
     >
       {!compact && (

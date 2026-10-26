@@ -1,5 +1,106 @@
 # REST API EngMate-AI — hội thoại
 
+## Xưng hô theo giọng — 2026-10-23
+
+Chat JSON/SSE nhận thêm `voice_gender: "male" | "female" | null` (mặc định null).
+Chỉ truyền giới tính khi `voice=true`, nếu không trả 422. Frontend lấy giới tính
+từ catalog của giọng đang dùng; catalog cũ thiếu metadata dùng mã Blaze Nam/Nu,
+ID không xác định dùng null. Đây là giới tính giọng AI, không phải người học.
+Backend ghép `voice-identity.v1` vào prompt của từng lượt; null dùng “mình/Mate”.
+Retry cùng `client_request_id` phải giữ cả voice_gender, đổi trả 409. Metadata
+lưu trong ResultJson hiện có, không migration. Client cũ bỏ trường này vẫn hợp lệ.
+
+## Lỗi STT realtime có mã — 2026-10-23
+
+WebSocket STT có thể trả lỗi **trước ready** hoặc trong stream:
+`{type:"error",code:"...",phase:"setup"|"stream",message:"..."}`.
+Code nội bộ: `provider_auth`, `insufficient_credits`, `invoice_not_paid`,
+`subscription_missing`, `plan_upgrade_required`, `provider_rate_limited`,
+`provider_error`, `provider_timeout`, `provider_unavailable`, `protocol_error`,
+`audio_limit`, `transcript_limit`. Message là nội dung cố định, không raw upstream.
+Frontend whitelist code để hiển thị; backend cũ chỉ có type/message được coi là
+lỗi dịch vụ, không phải lỗi transcript. Backend ghi một warning
+`stt_failure code=<code> phase=<phase> trace_id=<UUID|none>` cho relay thất bại,
+không traceback hoặc payload provider. Xem `STT_FIX_PROMPT.md` để biết phạm vi xác minh.
+
+## Hợp đồng tối ưu — 2026-10-23
+
+- History giữ API offset cũ; thêm `latest=true`, `before_id=<MessageId>` hoặc
+  `after_id=<MessageId>`, chỉ một cursor/request, không kèm offset khác 0.
+  `limit` vẫn 1–100, response luôn thứ tự thời gian tăng dần. `latest`/`before_id`
+  lấy phần gần nhất; `after_id` lấy tail. Frontend mở 100 tin cuối và merge theo ID.
+- Chat JSON/SSE nhận `voice: boolean=false` và `voice_gender: "male"|"female"|null`
+  (chỉ hợp lệ khi `voice=true`); UUID đã dùng phải giữ cả nội dung, mode và
+  voice_gender. Voice ghi metadata delivery/identity trong
+  `AIEvaluations.ResultJson` đang có, không thêm schema. Text API/history vẫn trả
+  toàn bộ generated reply.
+- `POST /api/conversations/{identity}/messages/{response_id}/playback` nhận
+  `{heard_chars:0..12000}` tính **Unicode code points**, không phải UTF-16 units.
+  Cần bearer/ownership, assistant reply tạo bằng voice mode; trả `{heard_chars}`.
+  Prefix chỉ tăng, không vượt Content; khi chưa completed thì không tăng. Receipt
+  đến sau khi có message mới không thay đổi prefix. Frontend gửi sau queue xong
+  hoặc ngắt lời/dừng/lỗi và chờ receipt trước lượt kế tiếp. Chỉ clip có `ended`
+  mới tăng prefix; clip ngắt giữa chừng bị bỏ khỏi voice context, dù có thể đã
+  nghe một phần. Đây là receipt trình duyệt, không xác nhận vật lý tại loa.
+- REST chat/speech có admission fail-fast theo process/account; mặc định chat
+  16/2 và speech 16/4. Quá tải trả HTTP 429, `Retry-After: 2`, chưa gọi provider.
+  Có thể cấu hình `CHAT_MAX_JOBS[_PER_USER]`, `SPEECH_MAX_JOBS[_PER_USER]`.
+  Một worker; không phải hạn mức chi phí/ngày. Disconnect speech dừng local job,
+  không bảo đảm provider hủy job đã nhận. TTS chỉ retry POST khi `429` (tối đa hai
+  lần, 0,6/1,2 giây); lỗi generation/audio không replay.
+- Catalog giọng song ngữ dùng cache app-local TTL 300 giây, single-flight;
+  request vẫn xác thực. Catalog bài học serialize từ public schema một lần.
+  Restart app khi thay nội dung/config. HTTP API vẫn no-store.
+- `VOICE_TIMING_LOGS=true` gắn INFO handler cho số đo; thêm DB acquire/lock/
+  transaction và token count Gemini nếu provider gửi usage. Không lưu transcript
+  hay secret. Settings → Chẩn đoán độ trễ thoại thu tối đa 200 mẫu RAM khi bật,
+  tách STT mode, xóa khi logout/reload/tắt; không tự upload.
+
+## Blaze STT realtime thử nghiệm — 2026-10-22
+
+- Catalog `GET /api/voice/voices` khi provider Blaze thêm `stt_mode`: `batch`
+  (mặc định) hoặc `realtime`; chỉ là cấu hình, không xác nhận entitlement.
+- `POST /api/conversations/{identity}/speech-ticket?language=en|vi` cần bearer,
+  quyền hội thoại và trạng thái `in_progress`, cùng `BLAZE_STT_MODE=realtime`.
+  Trả `{session_id:<UUID>,ticket:<one-use secret>}`; chưa gọi Blaze. Nhận query
+  `voice_trace_id` UUID cho timing; không đặt secret trên URL.
+- `WS /api/speech/realtime/{session_id}` cần Origin trong CORS_ORIGINS. Frame đầu
+  trong 5 giây là JSON `{ticket:...}`, tối đa 256 ký tự. Ticket sống 10 giây,
+  dùng một lần. Chỉ sau xác minh mới kết nối Blaze. Ticket sai/hết hạn/replay
+  đóng 4401; sai Origin/mode đóng 4403.
+- Backend trả `{type:'ready'}` sau Blaze ready. Browser chỉ gửi binary PCM16
+  little-endian mono 16 kHz, đúng 3200 byte/frame 100 ms; không nhận transcript
+  hoặc lệnh tùy ý từ browser. Forward `{type:'partial'|'final',text:string}`;
+  lỗi có message chung, không lộ body lỗi provider.
+- Giới hạn 350 frame/relay (30 giây capture + tối đa 5 giây tail), 45 giây gồm
+  handshake, token bucket 32 KB/s và burst 160 KB cho backlog setup. 32 lease/process,
+  tối đa hai lease/account cho lượt đang hủy và lượt thay thế. Ticket hết hạn
+  được dọn khi cấp ticket mới; vẫn một worker.
+- Mỗi lượt một socket; disconnect/logout/shutdown hủy cả hai chiều và provider.
+  Cleanup đóng socket provider trước khi chờ cancel task con. Nếu setup/relay/final
+  lỗi hoặc timeout, frontend fallback batch **một lần** với chính WAV đã thu; không
+  promote partial. Fallback có thể phát sinh thêm phí. Lịch sử chỉ lưu qua chat
+  sau khi frontend nhận final và endpoint cục bộ.
+
+Blaze công bố init `{token,language,model:'stt-stream-1.5'}`, ready/partial/final
+và binary PCM; chưa mô tả flush/EOS ACK hay audio-offset để chứng minh final đã
+phủ frame cuối. Không tự chế lệnh end. Cần kiểm đoạn nói tiếp sau pause và final
+đến muộn trên provider thật trước khi bật mặc định.
+
+## Chẩn đoán độ trễ thoại — 2026-10-22
+
+STT, TTS và chat SSE nhận query tùy chọn `voice_trace_id=<UUID>` chỉ để liên kết
+log timing. Không đổi request body, response, JWT/ownership, idempotency hoặc giá.
+UUID không hợp lệ bị bỏ qua trong chẩn đoán, không phản chiếu vào log; không cấp
+quyền truy cập nào. ID này không được chuyển vào prompt hay tới provider.
+
+Logger `engmate.voice.latency` ở INFO chỉ ghi trace/span UUID, nhãn stage cố định và elapsed_ms
+trong span backend; không ghi audio, transcript, API key hoặc body lỗi. STT có
+`stt_final`; Gemini có `llm_first_text`/`llm_complete`; chat có `chat_prepared`;
+TTS có `tts_job_created`, `tts_job_ready`, `tts_first_audio`, `tts_download_complete`.
+Span bắt đầu riêng tại từng thành phần, không phải timestamp đồng bộ frontend.
+Xem cách đo và giới hạn tại `TESTING.md`.
+
 ## Lộ trình TOEIC học qua hội thoại, 2026-10-18
 
 Các endpoint sau đều cần bearer hiện tại. Catalog là nội dung tự biên soạn của
@@ -62,8 +163,8 @@ Gemini và Blaze được cấu hình. Đây là trạng thái cấu hình, chư
 catalog rỗng không cho bắt đầu thoại. Không trả khóa API.
 
 Trong chế độ Blaze, frontend gửi WAV vào `/api/speech/stt?language=vi|en`, gửi
-transcript vào `/api/conversations/{identity}/messages/stream`, rồi gửi nội dung
-Gemini đã hoàn tất vào `/api/speech/tts`. Hai tin nhắn được lưu bằng cơ chế chat
+transcript vào `/api/conversations/{identity}/messages/stream`, rồi gửi từng câu
+đủ nghĩa từ Gemini vào `/api/speech/tts`. Hai tin nhắn được lưu bằng cơ chế chat
 hiện có; không có session native, SDP hoặc WebSocket Gemini. Ngắt lời hủy request,
 dừng audio và gọi `/api/conversations/{identity}/cancel` nếu đang sinh văn bản.
 

@@ -1,11 +1,16 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { saveSession, hasSession } from './api/database';
 import { docVanBan, dungDoc } from './speech/audio';
 import type { Capabilities, Conversation, Message } from './types';
 import type { VoiceState } from './voice/session';
 import type { LearningLesson, LearningPlan, LessonProgress } from './learning/types';
+
+// Module transformation is test setup; keep UI interaction deadlines unchanged.
+beforeAll(async () => {
+  await Promise.all([import('./tutor/TutorWorkspace'), import('./landing/LandingPage')]);
+});
 
 const voice = vi.hoisted(() => ({
   callbacks: null as null | {
@@ -293,7 +298,12 @@ beforeEach(() => {
 });
 
 async function open(selectHistory = true) {
-  render(<App />);
+  await act(async () => {
+    render(<App />);
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
   await screen.findByRole('textbox', { name: 'Tin nhắn' });
   if (selectHistory && history.length) {
     fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
@@ -799,7 +809,7 @@ describe('conversation-only application', () => {
       ),
     );
     await screen.findByText('Generated first');
-    expect(screen.getAllByText('Thầy Mate')).toHaveLength(1);
+    expect(screen.getAllByText('Mate', { selector: '.message-author' })).toHaveLength(1);
     messages = [user, { ...reply, content: 'Generated first and second' }];
     act(() => {
       stream.enqueue(

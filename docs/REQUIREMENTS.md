@@ -1,5 +1,49 @@
 # Yêu cầu EngMate-AI — lớp học đối thoại TOEIC, 2026-10-18
 
+## Đồng nhất giọng và danh xưng — 2026-10-23
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| VOICE-ID-01 | Nữ xưng cô, nam xưng thầy; thay đổi theo giọng hiện tại thay vì danh xưng cũ trong history | Đã triển khai, đã test payload/prompt và chuyển phiên |
+| VOICE-ID-02 | Chỉ một giọng qua toàn bộ lời mở đầu và phản hồi, kể cả trộn tiếng Việt/Anh | Đã test 4 cấu hình giọng với opening và streaming TTS |
+| VOICE-ID-03 | “Xin chào” được đáp theo tiếng Việt, tránh lời giới thiệu lai Anh/Việt | Đã sửa persona.v6 và voice-identity.v1, cấm rõ câu lai; chưa đánh giá sinh lời trên Gemini thật |
+
+Kiểm thử dùng provider/audio doubles; chưa nghe và đánh giá phát âm Blaze thật
+trong lượt sửa này. Bản frontend HTTP và backend local đã xác nhận tải code mới.
+
+## Rà soát tối ưu toàn chương trình — 2026-10-22
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| OPT-AUDIT-01 | Rà frontend/backend/DB/AI/voice/deploy/test, chỉ rõ ưu tiên và bằng chứng | Đã rà soát code và kiểm thử offline; báo cáo tại `OPTIMIZATION_AUDIT.md` |
+| OPT-AUDIT-02 | Triển khai hạng mục tối ưu sau audit và đo hiệu quả thực | Đã duyệt và triển khai history cursor, scoped counts, admission, playback receipt, catalog/body timeout, lazy/static cache và diagnostics; trạng thái từng mục tại OPTIMIZATION_AUDIT; benchmark provider/thiết bị thật chưa làm |
+
+## Độ trễ P2 — STT realtime thử nghiệm, 2026-10-22
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| LAT-06 | Stream PCM trong lúc nói, giữ pre-roll, partial chỉ caption và final mới vào Gemini | Đã triển khai opt-in; test offline, chưa xác minh provider thật |
+| LAT-07 | Ticket JWT/owned-open conversation, Origin, một lần/TTL; quota audio và dọn logout/stop | Đã triển khai, test offline |
+| LAT-08 | Không fallback giọng hoặc replay job TTS đã lỗi; TTS chỉ retry POST khi `429` (tối đa hai lần), realtime STT lỗi/timeout fallback batch một lần (có thể thêm phí); mode batch rollback; giữ Gemini xử lý text và giọng Blaze hiện tại | Đã triển khai; không đổi model TTS |
+| LAT-09 | Phép đo riêng batch/realtime, thời gian STT chồng lấp và phần chờ sau endpoint | Đã triển khai proxy; chưa có p50/p95 thực |
+| LAT-10 | TTS realtime, VAD thích nghi, final coverage xác minh trên provider thật | Chưa làm/chưa xác minh, không bật mặc định realtime |
+
+## Độ trễ thoại P0–P1 — 2026-10-22
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| LAT-01 | Mốc endpoint/STT/LLM/TTS/playing, UUID liên kết và p50/p95 có số mẫu, không lưu nội dung riêng tư | Đã triển khai; chờ số đo provider/thiết bị thật |
+| LAT-02 | TTS câu đủ nghĩa từ Gemini delta, phát có thứ tự, chuẩn bị trước tối đa một clip; gom câu ngắn sau hai clip | Đã triển khai; kiểm thử transport giả lập |
+| LAT-03 | Hủy lượt/clip cũ, giữ cancellation xuyên body HTTP, không fallback giọng; TTS chỉ retry POST `429`, không replay job generation/audio | Đã triển khai; kiểm thử hủy và lỗi giữa luồng |
+| LAT-04 | Tái sử dụng pool HTTP Gemini/Blaze, không đóng pool khi hủy một lượt | Đã triển khai; kiểm thử vòng đời và hủy |
+| LAT-05 | Streaming STT/TTS thực, VAD thích nghi và xác nhận phần đã nghe trong lịch sử | STT opt-in tại LAT-06; playback receipt theo clip hoàn tất đã triển khai; TTS realtime/VAD thích nghi chưa triển khai |
+
+Chưa có baseline hay cam kết SLO. Endpoint hiện vẫn 900 ms danh nghĩa; mốc cuối
+frame RMS và event `playing` chỉ là proxy, chưa phải khoảng trễ người dùng nghe
+được đo vật lý. Giữ model, giọng và schema; chia nhỏ câu có thể tăng số job TTS,
+còn gom câu ngắn sau hai clip giảm job. Voice context 12 tin/12.000 ký tự; text
+chat 20 tin/32.000 ký tự. TTS/playback lỗi chỉ dừng audio và không kết thúc phiên.
+
 ## Chọn giọng trong Cài đặt — yêu cầu mới 2026-10-18
 
 | Mã           | Yêu cầu                                                                                                                                         | Trạng thái    |
@@ -15,7 +59,7 @@ Phạm vi lưu giọng là trình duyệt hiện tại, chưa đồng bộ thi�
 
 | Mã          | Yêu cầu                                                                   | Trạng thái                                          |
 | ----------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
-| UI-COLOR-01 | Màu chính/phân nhóm và trạng thái hover/focus/chọn rõ, giữ bố cục sidebar | Đã kiểm tra Chrome, hình học không dịch             |
+| UI-COLOR-01 | Màu chính/phân nhóm và trạng thái hover/focus/chọn rõ, giữ bố cục sidebar | Test tương tác qua; cần kiểm lại hình học sau thay đổi flex sidebar |
 | UI-COLOR-02 | Chữ mô tả/điều hướng/ô nhập dễ đọc, có bảng màu sáng/tối riêng            | Đã kiểm tra tương phản các trang/trạng thái lấy mẫu |
 | UI-COLOR-03 | Giữ menu, hội thoại và luồng học, không tràn màn hình nhỏ                 | 226 frontend tests qua; browser 1440/900/390/320 px |
 
@@ -25,7 +69,7 @@ Phạm vi này cập nhật không gian sau đăng nhập theo mẫu thanh bên 
 
 | Mã         | Yêu cầu                                                                                                               | Trạng thái                                          |
 | ---------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| UI-SIDE-01 | Thanh bên gọn trên desktop, mở rộng khi di chuột hoặc dùng bàn phím, có thao tác thu/mở rõ ràng và mục đang chọn      | Đã kiểm thử sidebar và browser, nội dung không dịch |
+| UI-SIDE-01 | Thanh bên gọn trên desktop, mở rộng khi di chuột hoặc dùng bàn phím, có thao tác thu/mở rõ ràng và mục đang chọn      | Test tương tác qua; bản hiện tại co giãn nội dung theo sidebar, cần nghiệm thu browser |
 | UI-SIDE-02 | Điện thoại dùng nút menu và ngăn điều hướng; hỗ trợ Escape, đóng khi chọn mục và trả focus về nút mở                  | Đã kiểm thử unit, App và Chrome mobile              |
 | UI-SIDE-03 | Điều hướng tới Cùng Mate, Lộ trình, Bài học, Phát âm, Từ vựng, Tiến độ; truy cập lịch sử, hồ sơ, cài đặt và tài khoản | Đã kiểm thử điều hướng và giữ bản nháp              |
 | UI-SIDE-04 | Nền trung tính, viền mảnh, bố cục thoáng, ít hiệu ứng; hỗ trợ sáng/tối, bàn phím và giảm chuyển động                  | Đã kiểm thử đồng bộ theme và browser 4 kích thước   |

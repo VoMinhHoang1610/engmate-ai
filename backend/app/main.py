@@ -1,8 +1,10 @@
 """Application factory and ASGI entry point."""
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,11 +16,15 @@ from app.api.learning_routes import router as learning_router
 from app.api.routes import router
 from app.api.speech_routes import router as speech_router
 from app.api.voice_routes import router as voice_router
+from app.core.admission import Admission
 from app.core.config import Settings, get_settings
 from app.core.request_limits import RequestLimits
+from app.core.voice_timing import VoiceTimingMiddleware
 from app.db.database import Database
+from app.services.blaze_stt import BlazeSTTManager
 from app.services.gemini_voice import GeminiVoiceManager
 from app.services.realtime import RealtimeManager
+from app.services.speech import VoiceCatalogCache
 
 
 def create_app(
@@ -32,14 +38,70 @@ def create_app(
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         """Release pools on shutdown; migrations remain an explicit operator action."""
-        yield
-        await application.state.voice.shutdown()
-        db.close()
+        latency_logger = logging.getLogger("engmate.voice.latency")
+        previous_level = latency_logger.level
+        handler = logging.StreamHandler() if config.voice_timing_logs else None
+        if handler is not None:
+            handler.setFormatter(logging.Formatter("%(message)s"))
+            latency_logger.addHandler(handler)
+            latency_logger.setLevel(logging.INFO)
+        async with (
+            httpx.AsyncClient(
+                base_url="https://api.blaze.vn",
+                timeout=30,
+                follow_redirects=False,
+                limits=httpx.Limits(
+                    max_connections=32,
+                    max_keepalive_connections=16,
+                    keepalive_expiry=60,
+                ),
+            ) as speech_http,
+            httpx.AsyncClient(
+                timeout=httpx.Timeout(30, connect=10),
+                follow_redirects=False,
+                trust_env=False,
+                limits=httpx.Limits(
+                    max_connections=32,
+                    max_keepalive_connections=16,
+                    keepalive_expiry=60,
+                ),
+            ) as gemini_http,
+        ):
+            application.state.speech_http = speech_http
+            application.state.gemini_http = gemini_http
+            try:
+                yield
+            finally:
+                try:
+                    await application.state.voice.shutdown()
+                finally:
+                    try:
+                        await application.state.blaze_stt.shutdown()
+                        await application.state.speech_admission.shutdown()
+                        await application.state.chat_admission.shutdown()
+                    finally:
+                        application.state.speech_http = None
+                        application.state.gemini_http = None
+                        db.close()
+                        if handler is not None:
+                            latency_logger.removeHandler(handler)
+                            latency_logger.setLevel(previous_level)
+                            handler.close()
 
     application = FastAPI(title=config.app_name, version="0.2.0", lifespan=lifespan)
     application.state.settings = config
     application.state.database = db
     application.state.chat_jobs = {}
+    application.state.chat_admission = Admission(
+        config.chat_max_jobs, config.chat_max_jobs_per_user
+    )
+    application.state.speech_admission = Admission(
+        config.speech_max_jobs, config.speech_max_jobs_per_user
+    )
+    application.state.speech_catalog = VoiceCatalogCache()
+    application.state.blaze_stt = BlazeSTTManager(config)
+    application.state.speech_http = None
+    application.state.gemini_http = None
     application.state.voice = (
         GeminiVoiceManager(config, db)
         if config.voice_provider == "native" and config.llm_provider == "gemini"
@@ -48,6 +110,7 @@ def create_app(
     application.add_middleware(
         RequestLimits, auth_limit=config.auth_requests_per_minute
     )
+    application.add_middleware(VoiceTimingMiddleware)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,

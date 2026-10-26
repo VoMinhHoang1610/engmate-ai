@@ -1,18 +1,59 @@
 # TTS/STT Blaze trong backend
 
+## STT realtime opt-in
+
+Đặt `BLAZE_STT_MODE=realtime`, restart backend và reload trang để dùng model
+`BLAZE_STT_REALTIME_MODEL=stt-stream-1.5`. Mặc định batch giữ model cũ. PCM thu
+qua Worklet đi theo từng frame tới backend rồi `wss://api.blaze.vn/v1/stt/realtime`;
+provider token chỉ trong init server-to-provider. Partial hiện phụ đề, không gửi
+Gemini; final được gom qua khoảng pause, chờ endpoint 900 ms trước khi gửi chat.
+Handshake thực tế xác minh ngày 2026-10-23 trả `successful-authentication` rồi
+`ready`. Backend chấp nhận tối đa một acknowledgement này trước ready, với cùng
+deadline 10 giây; vẫn hỗ trợ ready trực tiếp. Chỉ ready mới cho phép gửi PCM.
+Adapter đã kết nối tới ready trên Blaze thật sau sửa, không gửi audio; đây chưa
+phải kiểm chứng transcript hoặc chất lượng hội thoại.
+Nếu cần, gửi silence tail tối đa 5 giây để chờ auto-final, không đoán lệnh flush.
+Realtime là tối ưu, không phải phụ thuộc: nếu setup/relay/final lỗi hoặc timeout,
+frontend chép lại chính WAV đã thu bằng batch **một lần** rồi mới báo lỗi nếu batch
+cũng thất bại. Không promote partial thành final. Fallback này có thể phát sinh thêm
+một lượt STT trả phí, nên chỉ bật realtime khi đã chấp nhận chi phí thử nghiệm; batch
+vẫn là rollback.
+
+Model realtime cần xác minh quyền tài khoản, billing và độ chính xác với giọng
+người học. Chưa chạy STT realtime với audio thật để kiểm chứng; chưa chứng minh
+final coverage khi sự kiện provider trễ hoặc segmented. Dùng batch làm rollback, không
+giảm VAD để che latency. TTS vẫn job/MP3 theo câu; poll nhanh hơn nhưng chưa đổi
+model/giọng/tốc độ.
+Nguồn protocol: `https://app.blaze.vn/api/documentation/stt` và ví dụ
+WebSocket trong bundle tài liệu công khai Blaze (kiểm tra ngày 2026-10-22).
+
 ## Luồng Mate hiện tại
 
 Đặt `LLM_PROVIDER=gemini`, `VOICE_PROVIDER=blaze` và cấu hình hai khóa ở backend.
 Mate dùng Blaze để nghe/chép lời và phát giọng, Gemini chỉ sinh câu trả lời bằng
 văn bản. `voice/blaze.ts` tự phát hiện lượt nói, gửi WAV vào STT, gọi chat SSE có
-lưu lịch sử rồi đọc kết quả bằng TTS. Ngôn ngữ ghi âm chọn Việt/Anh; câu trả lời
-được tách theo câu/ngôn ngữ và giới hạn 2000 ký tự mỗi job TTS. Nhận diện ngôn
-ngữ theo dấu tiếng Việt còn hạn chế với câu trộn hoặc không dấu.
+lưu lịch sử; câu đủ nghĩa từ delta được TTS sớm, không chờ kết quả text cuối.
+Ngôn ngữ ghi âm chọn Việt/Anh; câu trả lời được tách theo câu, nhưng mệnh đề đầu
+tiên có thể được gửi TTS tại dấu phẩy/chấm phẩy/hai chấm sau ít nhất 32 ký tự và
+tối đa 96 ký tự nếu chưa có dấu kết câu. Các đoạn sau tối đa 600 ký tự mỗi job
+(API TTS vẫn nhận tối đa 2000); sau hai clip đầu, các câu ngắn được gom tới ít nhất
+120 ký tự để giảm số job trả phí mà vẫn phát sớm clip đầu. Hàng đợi phát tuần tự
+và chỉ chuẩn bị trước tối đa một clip. Phiên thoại giữ nguyên speaker_id và ngôn
+ngữ TTS của giọng đã chọn cho mọi đoạn, gồm lời mở đầu và câu song ngữ.
+Không đổi người đọc khi chuyển Anh/Việt. Giới tính từ catalog (hoặc mã Nam/Nu
+của catalog cũ) được gửi cho Gemini ở từng lượt để xưng cô/thầy; không rõ dùng
+mình/Mate. Chất lượng phát âm hai ngôn ngữ phụ thuộc giọng Blaze đã chọn.
+Voice context dùng 12 tin gần nhất/tối đa 12.000 ký tự; text chat vẫn 20 tin/32.000
+ký tự. Prompt thoại yêu cầu trả lời 1–2 câu ngắn, tối đa một câu hỏi, trừ khi người
+học yêu cầu giải thích dài.
 
 Nói chen dừng audio và hủy phản hồi trước khi xử lý lượt mới. Kết thúc thoại,
 đổi giọng, đổi trang/logout dừng micro và thu hồi tài nguyên. Không gọi Gemini
-Live, không dùng speechSynthesis và không tự fallback sang giọng khác. Ghi âm
-từng lượt vẫn chỉ điền bản nháp; chế độ thoại gửi transcript và đọc tự động.
+Live, không dùng speechSynthesis và không tự fallback sang giọng khác. Nếu TTS
+hoặc phát MP3 lỗi (kể cả lời mở đầu), frontend dừng audio, hiển thị lỗi nhưng **không kết thúc phiên
+thoại** và không hủy Gemini đang stream; câu trả lời vẫn được lưu để đọc. Lỗi
+Gemini thì dừng audio của lượt đó. Ghi âm từng lượt vẫn chỉ điền bản nháp; chế độ
+thoại gửi transcript và đọc tự động.
 
 Backend gọi `https://api.blaze.vn` bằng Bearer token. Tham chiếu: [Swagger Blaze](https://api.blaze.vn/docs), [TTS](https://app.blaze.vn/api/documentation/tts), [STT](https://app.blaze.vn/api/documentation/stt).
 
@@ -41,7 +82,7 @@ Body JSON:
 
 `text` 1–2000 ký tự sau trim; `language` en/vi (mặc định en); `speed` 0.5–2. Bỏ speaker_id sẽ dùng UK-Nu-1-TM cho tiếng Anh, HN-Nam-1-BL cho tiếng Việt.
 
-Response 200 là MP3 với Content-Type `audio/mpeg`. Backend tạo một job qua `/v1/tts`, poll `/v1/tts/{id}/info`, rồi tải `/download`. Không chuyển token hoặc URL cần Bearer xuống trình duyệt. Giới hạn chờ job 90 giây, request mạng 30 giây, output 8 MiB. Không tự retry POST tạo job; mỗi lần gọi mới có thể tính thêm phí. Job ở Blaze có thể vẫn chạy khi client timeout/disconnect; backend chưa lưu job để khôi phục.
+Response 200 là MP3 với Content-Type `audio/mpeg`. Backend tạo một job qua `/v1/tts`, poll `/v1/tts/{id}/info` (0,2 giây trong 1 giây đầu, sau đó 0,35 giây rồi 0,5 giây), rồi tải `/download`. Không chuyển token hoặc URL cần Bearer xuống trình duyệt. Giới hạn chờ job 90 giây, request mạng 30 giây, output 8 MiB. Chỉ khi tạo job bị `429` mới thử lại tối đa hai lần sau 0,6/1,2 giây; lỗi tạo job khác, job `failed/error/cancelled`, audio sai hoặc lỗi mạng không được replay để tránh nhân phí. Log lỗi chỉ gồm operation/status/reason/số byte, không có job ID, URL, body, token hay nội dung câu. Job ở Blaze có thể vẫn chạy khi client timeout/disconnect; backend chưa lưu job để khôi phục.
 
 Kiểm tra thực tế: Blaze trả MP3 dù yêu cầu WAV và header audio/wav. Adapter yêu cầu MP3 và kiểm tra chữ ký trước khi trả audio/mpeg.
 
@@ -64,6 +105,13 @@ Test dùng httpx.MockTransport, không dùng key thật/credit. Chạy `python s
 Trong Swagger local, tìm tag **speech**, thử TTS với câu ngắn, tải MP3 rồi upload lại qua STT. Request thật có thể dùng credit Blaze.
 
 Ngày 2026-10-08 đã kiểm tra HTTP backend tại 8011: TTS `Hello.` trả 200 audio/mpeg, 19.200 bytes; STT trả 200 với text `Hello.`. Đây là smoke kết nối, không đánh giá độ chính xác cho mọi giọng/định dạng.
+
+Ngày 2026-10-23 đo 3 job batch mỗi model qua kết nối HTTP dùng lại, cùng câu
+`Xin chào, mình là Mate.` và speaker mặc định: median `v2.0_pro` 1,30 giây,
+`v2.0_flash` 1,57 giây. Flash không nhanh hơn nên tiếp tục dùng pro. Một probe
+WebSocket `2.0-realtime` trả byte audio đầu sau 0,595 giây và hoàn tất sau 1,312
+giây, nhưng chưa tích hợp vì frontend vẫn phát MP3 trọn clip. Đây là smoke một
+lượt, không phải p50/p95 hoặc đánh giá chất lượng/thiết bị thật.
 
 ## Chọn giọng trong Cài đặt
 

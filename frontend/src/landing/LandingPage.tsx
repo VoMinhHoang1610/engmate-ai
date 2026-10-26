@@ -3,6 +3,7 @@ import { Logo } from '../components/Logo';
 import { BieuTuong } from '../components/BieuTuong';
 import { TeacherMate, Waveform } from '../tutor/TutorScene';
 import { docVanBan, dungDoc } from '../speech/audio';
+import './landing.css';
 
 interface LandingPageProps {
   signedIn?: boolean;

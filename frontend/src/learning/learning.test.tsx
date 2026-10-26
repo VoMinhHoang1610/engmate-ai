@@ -126,6 +126,7 @@ function routes(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  window.dispatchEvent(new Event('engmate-account-changed'));
   vi.mocked(apiFetch).mockReset();
   vi.mocked(docVanBan).mockReset().mockResolvedValue(undefined);
   vi.mocked(dungDoc).mockClear();

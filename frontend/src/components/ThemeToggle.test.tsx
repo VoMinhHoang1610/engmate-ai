@@ -87,21 +87,19 @@ describe('theme preference', () => {
     );
     const dark = screen.getByRole('button', { name: 'Nền Đen' });
     const light = screen.getByRole('button', { name: 'Nền Trắng' });
+    const toggle = screen.getByRole('button', { name: 'Chuyển sang giao diện tối' });
     expect(light).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(dark);
-    expect(screen.getByRole('button', { name: 'Chuyển sang giao diện sáng' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Chuyển sang giao diện sáng' }));
+    expect(toggle).toHaveAccessibleName('Chuyển sang giao diện sáng');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(toggle);
     expect(light).toHaveAttribute('aria-pressed', 'true');
     expect(dark).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(screen.getByRole('button', { name: 'Chuyển sang giao diện tối' }));
+    expect(toggle).toHaveAccessibleName('Chuyển sang giao diện tối');
+    fireEvent.click(toggle);
     expect(dark).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(light);
-    expect(screen.getByRole('button', { name: 'Chuyển sang giao diện tối' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    expect(toggle).toHaveAccessibleName('Chuyển sang giao diện tối');
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
   });
 });

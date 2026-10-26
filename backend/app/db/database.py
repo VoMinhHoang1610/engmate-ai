@@ -10,6 +10,7 @@ from sqlalchemy import Connection, Engine, create_engine, select, text
 from sqlalchemy.engine import URL, make_url
 
 from app.core.config import Settings
+from app.core.voice_timing import VoiceTimings
 from app.models.catalog import ModelCatalog
 
 
@@ -74,13 +75,17 @@ class Database:
             with self.external_connection.begin_nested():
                 yield self.external_connection
         else:
+            timing = VoiceTimings()
             with self.get_engine().begin() as connection:
+                timing.mark("db_connection_acquired")
                 if not self.mysql:
                     connection.exec_driver_sql("SET ARITHABORT ON; SET XACT_ABORT OFF;")
                 yield connection
+            timing.mark("db_transaction_complete")
 
     def lock_user(self, connection: Connection, user_id: int) -> None:
         """Serialize retries, refresh rotation and sequenced writes for one owner."""
+        timing = VoiceTimings()
         if self.mysql:
             table = self.models.table("Users", connection)
             connection.execute(
@@ -88,6 +93,7 @@ class Database:
                 .where(table.c.UserId == user_id)
                 .with_for_update()
             ).first()
+            timing.mark("db_lock_acquired")
             return
         connection.execute(
             text(
@@ -95,6 +101,7 @@ class Database:
             ),
             {"id": user_id},
         ).first()
+        timing.mark("db_lock_acquired")
 
     def version_value(self, token: str) -> int | bytes:
         """Decode the opaque 64-bit concurrency token for the selected database."""

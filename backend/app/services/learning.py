@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import Connection, Table, and_, select
 
+from app.core.prompts import read_prompt
 from app.db.database import Database, Record
 from app.db.learning import bindings, plans, progress, receipts
 from app.db.repository import Repository
@@ -105,7 +106,9 @@ def bind_lesson(
         )
 
 
-def practice_counts(repo: Repository, user_id: int) -> dict[int, int]:
+def practice_counts(
+    repo: Repository, user_id: int, conversation_id: int | None = None
+) -> dict[int, int]:
     """Count only paired completed learner/assistant turns, never pending replies."""
     messages = repo.database.models.table("Messages", repo.connection)
     learner = messages.alias("learning_learner")
@@ -127,6 +130,14 @@ def practice_counts(repo: Repository, user_id: int) -> dict[int, int]:
                 bindings.c.ConversationId == learner.c.ConversationId,
             ),
         )
+        .join(
+            progress,
+            and_(
+                progress.c.UserId == bindings.c.UserId,
+                progress.c.LessonId == bindings.c.LessonId,
+                progress.c.ConversationId == learner.c.ConversationId,
+            ),
+        )
         .where(
             learner.c.UserId == user_id,
             learner.c.Role == "user",
@@ -137,6 +148,8 @@ def practice_counts(repo: Repository, user_id: int) -> dict[int, int]:
             teacher.c.Content != "",
         )
     )
+    if conversation_id is not None:
+        statement = statement.where(learner.c.ConversationId == conversation_id)
     counts: dict[int, int] = {}
     for identity, content in repo.connection.execute(statement):
         if _command(content) not in (*NEXT_COMMANDS, *PREVIOUS_COMMANDS):
@@ -185,7 +198,7 @@ def learning_context(
     payload = {"phase": phase, "lesson": material}
     return (
         "\n"
-        + LESSON_PROMPT_PATH.read_text(encoding="utf-8")
+        + read_prompt(LESSON_PROMPT_PATH)
         + "\n"
         + json.dumps(payload, ensure_ascii=False)
     )
@@ -356,7 +369,9 @@ class LearningService(PersistenceService):
                 "conversation": ConversationResponse.model_validate(
                     conversation
                 ).model_dump(mode="json"),
-                "progress": _progress(row, practice_counts(repo, user_id)),
+                "progress": _progress(
+                    row, practice_counts(repo, user_id, row["ConversationId"])
+                ),
             }
             self._save_receipt(repo, user_id, request_id, "start", digest, result)
             return result
@@ -385,7 +400,7 @@ class LearningService(PersistenceService):
                 repo.connection, progress, user_id, LessonId=lesson_id, Phase=data.phase
             )
             row["Phase"] = data.phase
-            return _progress(row, practice_counts(repo, user_id))
+            return _progress(row, practice_counts(repo, user_id, data.conversation_id))
 
     def check(self, user_id: int, lesson_id: str, data: CheckSubmission) -> Record:
         """Grade canonical choices; mastery also requires three real dialogue turns."""
@@ -408,7 +423,7 @@ class LearningService(PersistenceService):
             row = _row(repo.connection, progress, UserId=user_id, LessonId=lesson_id)
             if row is None:
                 raise HTTPException(409, "Start this lesson before submitting a check.")
-            counts = practice_counts(repo, user_id)
+            counts = practice_counts(repo, user_id, row["ConversationId"])
             correct = sum(choices[item.id] == item.answer for item in lesson.checks)
             passed = (
                 correct == len(lesson.checks)

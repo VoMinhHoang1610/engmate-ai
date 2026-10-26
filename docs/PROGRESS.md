@@ -1,5 +1,365 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-26 — Rà soát trước commit và hợp nhất develop
+
+- **Phạm vi:** rà soát thay đổi backend/frontend, tài khoản và quyền sở hữu,
+  history cursor/SSE, ngữ cảnh thoại và playback receipt, Blaze STT/TTS,
+  lifecycle/cancellation/admission, lộ trình, cache, cấu hình và tài liệu.
+  Giữ các thay đổi đã có trên `fix/voice-persona-single-speaker-20261023`.
+- **Sửa tài liệu:** `.env.example` mô tả đúng fallback realtime STT sang batch
+  một lần và khả năng thêm phí; `ARCHITECTURE.md`/`REQUIREMENTS.md` phản ánh đúng
+  sidebar flex hiện tại, không dùng kết quả hình học overlay cũ cho bản mới.
+- **Backend:** 223/223 test qua, không skip; coverage 92,97%. Dùng cấu hình
+  `.artifacts/chat-test.env` và schema `_test` riêng, bổ sung bốn bảng học tập
+  bằng `scripts/install_learning.py --test`; fixture xác nhận không có tài khoản
+  và rollback từng test. Không thay database ứng dụng.
+- **Frontend:** 383/383 test, 33 file qua. Coverage statements 89,11%, branches
+  81,64%, functions 84,42%, lines 92,28%. Lệnh kiểm chứng:
+  `npm run test:coverage -- --pool=threads --maxWorkers=1 --testTimeout=15000`.
+  Lượt mặc định trước đó lỗi timeout 5 giây/khởi tạo fork trên máy Windows;
+  không đổi timeout trong repo, assertion, skip hoặc ngưỡng coverage.
+- **Kiểm tra khác:** Ruff, Black (83 file), mypy (83 file), ESLint, tsc,
+  Prettier, Vite production build (2477 module), Compose config và export
+  OpenAPI qua. Quét 91 file thay đổi không khớp bí mật trong `.env` local.
+  Smoke HTTP qua backend/frontend loopback, proxy, capabilities và chat/learning
+  OpenAPI đều qua; các server kiểm tra được dừng sau chạy và không có API key.
+- **Git:** sáu nhánh công việc cùng bắt đầu tại `6072b56`; nội dung mới được
+  commit trên nhánh hiện tại, push các nhánh liên quan và kiểm CI qua PR trước
+  khi merge. Nhánh `backup/mixed-work-20261007-122058` là snapshot lưu trước khi
+  tách topic, đã có remote và không phải phần triển khai cần đưa trở lại.
+- **Giới hạn:** Docker Desktop daemon chưa chạy tại lúc rà soát local; chưa
+  kiểm micro/loa, chất lượng provider thật, benchmark tải hoặc hình học sidebar
+  mới trên browser. Không gọi AI/STT/TTS trả phí trong lượt rà soát này.
+
+## 2026-10-23 — Không để lỗi âm thanh kết thúc phiên thoại
+
+- **Yêu cầu:** người dùng báo phản hồi chậm, hội thoại thường xuyên dừng đột ngột
+  và báo lỗi; cần tối ưu tốt nhất có thể mà giữ danh tính giọng.
+- **Nguyên nhân đã xác định:** conversation 30 có 3 lượt text hoàn tất nhưng cả 3
+  TTS `502`, và frontend cũ coi lỗi TTS/playback là lỗi kết thúc phiên. Log cũng
+  có TTS `429`→`503`, 6–9 job TTS/lượt, first-TTS 10–13 giây và Gemini có lượt tới
+  ~17,9 giây. Chưa xác định được nguyên nhân từng job `502` vì body provider chưa
+  được log.
+- **Sửa:** tách AbortController cho audio; TTS/playback lỗi chỉ dừng audio, hiện
+  thông báo và giữ Gemini/phiên; realtime STT lỗi/timeout fallback batch một lần;
+  TTS create retry `429` tối đa hai lần; log lỗi an toàn; voice context 12 tin/
+  12.000 ký tự; prompt trả lời ngắn; gom câu ngắn sau hai clip tới 120 ký tự.
+- **Kiểm chứng:** frontend 383/383 qua (33 file) trên Windows; backend 223/223 qua
+  với MySQL test riêng. Đóng socket provider trước khi chờ cancel task con để
+  cleanup relay không bị cancellation bỏ qua. Ruff/Black/mypy, ESLint/tsc/Prettier
+  và Vite build 2477 module qua. Chưa chạy p50/p95 hoặc kiểm micro/loa thật.
+- **Tiếp theo:** restart backend, reload frontend, thử một lượt giọng nữ và một
+  lượt giọng nam; xác nhận “cô”/“thầy”, một giọng/phản hồi, first-audio, khoảng hở
+  clip và không còn dừng phiên khi TTS lỗi. Bật `VOICE_TIMING_LOGS=true` nếu cần
+  thu p50/p95; chỉ gọi provider thật trong ngân sách đã duyệt.
+
+## 2026-10-23 — Giảm chờ TTS theo mệnh đề đầu
+
+- `SpokenText` nhả mệnh đề đầu tại dấu phẩy/chấm phẩy/hai chấm sau ít nhất 32 ký
+  tự, hoặc tối đa 96 ký tự khi model stream câu dài/không có dấu kết câu; các
+  đoạn sau vẫn tối đa 600 ký tự. TTS bắt đầu trước khi câu đầu kết thúc.
+- `SpeechQueue` được đẩy chunk trước khi render transcript; Blaze poll info 0,2
+  giây/5 lần, 0,35 giây/5 lần, sau đó 0,5 giây thay vì 0,5 giây cố định.
+- Đo smoke ngày 2026-10-23: TTS batch pro median 1,30 giây, flash 1,57 giây
+  (3 job/model, cùng câu ngắn); Gemini first text ấm median 0,81 giây (5 mẫu,
+  không history); realtime WS first byte 0,595 giây, hoàn tất 1,312 giây (1 mẫu).
+  Vì flash không nhanh hơn, giữ `v2.0_pro`; realtime chưa tích hợp vì chưa stream
+  PCM ra trình duyệt.
+- Giữ VAD 900 ms, model/giọng và giao thức job/MP3. Frontend 381/381 test (33
+  file) qua trên runner Linux container; backend 220/220 qua với MySQL test riêng.
+  Ruff/Black/mypy, ESLint/tsc/Prettier và Vite build 2477 module đều qua. Chưa
+  kiểm micro/loa thật hoặc p50/p95 100 lượt.
+
+## 2026-10-23 — Sửa xưng hô theo giới tính và giữ một giọng phản hồi
+
+- Nguyên nhân: `persona.v5` cố định Thầy Mate; `voice/blaze.ts` chọn lại speaker
+  theo ngôn ngữ từng chunk nên một phản hồi có thể đổi cả giới tính/người đọc.
+- `persona.v6` dùng tên Mate, quy tắc chào cùng ngôn ngữ; `voice-identity.v1`
+  gắn cô/thầy/mình theo giọng ở mỗi lượt, ưu tiên hơn danh xưng cũ trong history.
+  MessageCreate/ConversationService nhận enum voice_gender, giữ metadata trong
+  ResultJson và kiểm retry cùng identity. Không thêm migration.
+- Frontend giữ một speaker/language TTS xuyên suốt phiên; catalog metadata và
+  fallback mã Nam/Nu dùng chung qua `speech/identity.ts`. VoiceChat truyền metadata
+  khi đổi giọng; mẫu nghe thử nữ giới thiệu cô Mate, nhãn tác giả chat dùng Mate.
+  Catalog cũ thiếu `gender` vẫn được `api/voices.ts` chấp nhận và chuẩn hóa null,
+  để fallback mã giọng vẫn hoạt động; có test hợp đồng mới.
+- Test hồi quy: frontend 379/379 (33 file) qua trên runner Linux container với
+  `--maxWorkers=1 --testTimeout=15000`; coverage 89,01% statements, 81,7% branches,
+  84,43% functions, 92,15% lines. Repo vẫn giữ timeout 5 giây; 5 test UI vượt 5 giây
+  trên máy đang tải do coverage, không phải lỗi assertion. Backend coverage với
+  MySQL test riêng `engmate_longvoice_test` (schema `_test`, 0 người dùng): 219
+  qua, 0 skip, coverage 93,04%.
+- Lint cuối qua: Ruff, Black check 83 file, mypy 83 file, ESLint 0 warning, tsc,
+  Prettier. Build Vite 2477 module qua; export OpenAPI, Compose config và smoke
+  health/frontend/proxy/capabilities/chat/learning đều qua. Backend container đã
+  restart để nạp `voice-identity.v1` cuối (có câu cấm trộn ngôn ngữ).
+- Chưa gọi Gemini/TTS trả phí hoặc kiểm chất lượng qua micro/loa thật. Tiếp theo:
+  tải lại trang và mở phiên mới, thử chào tiếng Việt với giọng nữ/nam và đổi giọng
+  giữa hội thoại.
+
+## 2026-10-23 — Xác định và sửa handshake Blaze STT thực tế
+
+- Người dùng nhận thông báo protocol mới; log xác định `phase=setup`,
+  `reason=expected_ready`, `exception=STTError`.
+- Probe bắt tay có xác thực, không audio, chỉ xuất loại event allowlist: Blaze trả
+  `successful-authentication` rồi `ready`. Code cũ bắt buộc frame đầu là ready nên
+  tự đóng socket sau khi xác thực thành công. Ví dụ tài liệu công khai đã thiếu
+  bước acknowledgement này; các doubles trước đó cũng chưa mô phỏng bước đó.
+- Sửa open_provider nhận tối đa một `successful-authentication` trước ready với
+  deadline chung 10 giây. Không xem auth ack là ready, không gửi PCM sớm, không
+  bỏ qua event tùy ý, không tự reconnect hoặc đổi provider/model.
+- Test route thực nay đi qua init → auth ack → ready → PCM → partial/final với
+  provider giả. Thêm kiểm chờ ready, lỗi billing/protocol sau ack, timeout/cancel
+  cleanup. 59 test backend STT/voice/timing qua; Ruff/Black/mypy qua.
+- Restart backend và gọi chính adapter mới trong container: đạt ready với Blaze
+  thật, 0 frame audio gửi. Smoke health/frontend/proxy/capabilities/OpenAPI qua.
+  Chưa chạy paid audio benchmark hoặc xác minh transcript/micro/loa thật.
+
+## 2026-10-23 — Sửa Vite Docker vẫn phục vụ module STT cũ
+
+- Người dùng vẫn nhận đúng thông báo cũ sau bản sửa. Kiểm tra HTTP cổng 5174 cho
+  thấy module realtimeSTT được Vite transform/cache vẫn thiếu `STT_ERRORS` và
+  `insufficient_credits`, dù file `/app/src/voice/realtimeSTT.ts` trong container
+  đã có bản mới. Việc bind mount source chưa đủ bảo đảm Vite nhận thay đổi.
+- Restart frontend làm HTTP trả handler mới. Bổ sung `CHOKIDAR_USEPOLLING=true`
+  và interval 300 ms trong Compose, recreate riêng frontend. Dùng module probe
+  tạm để xác nhận cùng URL chuyển từ nội dung before sang after sau edit trên
+  Windows, không restart; đã xóa probe. Không thay đổi cấu hình provider.
+- Log gần lần kiểm tra có bốn `protocol_error phase=setup`; chưa có lý do đủ
+  chi tiết để kết luận provider gửi sai event hay exception nội bộ. Bổ sung
+  reason cố định và whitelist tên exception vào log, không payload/secret.
+- 35 test STT backend qua, Ruff/Black/mypy qua. Đây là sửa deployment/cache và
+  bổ sung chẩn đoán; chưa xác nhận kết nối STT có xác thực/audio thật thành công.
+- Đính chính ghi chú trước: source frontend mới trên bind mount không đồng nghĩa
+  HTTP dev server đã phục vụ bản mới; kiểm tra asset share 5180 trước đó không
+  xác minh module Vite tại 5174.
+
+## 2026-10-23 — Sửa lỗi STT realtime che mất nguyên nhân
+
+- **Yêu cầu:** rà lỗi không nhận giọng, hiển thị “Blaze chưa chốt được bản chép lời
+  hợp lệ”; tạo prompt và tự thực hiện sau khi chuyển Build.
+- **Prompt/bằng chứng:** `docs/STT_FIX_PROMPT.md`. Mode thực là realtime; backend
+  trước đây gom lỗi upstream, frontend coi cả error envelope trước ready là
+  transcript không hợp lệ. Đây là lỗi phân loại đã xác định, chưa chứng minh lỗi
+  microphone hay credit/quyền model cụ thể của lần người dùng gặp.
+- **Sửa:** parser/classification backend cho auth, billing/gói, timeout, transport,
+  rate limit, protocol/audio/transcript limits; error code/phase và log an toàn.
+  Frontend xử lý error trước ready, whitelist thông báo, tương thích backend cũ,
+  không echo raw payload. Không tự đổi mode/model hoặc gửi lại audio tính phí.
+- **Kiểm chứng:** 47 backend và 62 frontend test mục tiêu qua; gồm route WS thật
+  với upstream giả, lỗi trước/sau ready, cleanup và restart chủ động thành công.
+  Ruff/Black/mypy, ESLint/TypeScript/Prettier/build qua; diff whitespace qua.
+- **Áp dụng:** restart `engmate-ai-backend-1`; source frontend bind mount được
+  cập nhật, `frontend/dist` build lại cho share. Smoke health/proxy/capabilities/
+  OpenAPI qua; asset share tại 5180 khớp byte build và chứa error handler mới.
+- **Giới hạn:** log cũ đã mất nguyên nhân upstream; chưa gọi paid provider hoặc
+  kiểm micro/loa thật. Lần lỗi tiếp theo dùng mã mới để xác định đúng nguyên nhân.
+
+## 2026-10-23 — Build và chạy lại Docker thành công
+
+- **Yêu cầu:** build và chạy lại chương trình bằng Docker sau lần bị xung đột cổng.
+- **Thực hiện:** `docker compose config --quiet`, `docker compose build`, `docker compose up -d --wait --wait-timeout 180 backend frontend` đều thành công. Backend và frontend ở trạng thái `healthy`, lần lượt tại `http://127.0.0.1:8010` và `http://127.0.0.1:5174`.
+- **Kiểm chứng:** `scripts/smoke.py` PASS health, HTML frontend, proxy, capabilities và OpenAPI chat/learning; `/api/ready` trả HTTP 200 với MySQL, schema version 1, provider Gemini. `docker compose exec -T frontend npm run build` qua TypeScript và Vite, 2476 module được xử lý.
+- **Phạm vi:** chỉ cập nhật nhật ký; không đổi mã nguồn hoặc `.env`. Chưa chạy lại unit/integration/coverage hay kiểm thử chat/thoại với provider thật trong lượt này. Build frontend tạo `dist` bên trong container.
+- **Tiếp theo:** sử dụng ứng dụng tại cổng 5174; kiểm thử micro/loa và chất lượng phản hồi thật riêng khi cần.
+
+## 2026-10-23 — Build image Docker backend và frontend
+
+- **Yêu cầu:** build chương trình bằng Docker với mã nguồn hiện tại.
+- **Kết quả:** `docker compose config --quiet` và `docker compose build` thành công; tạo image `engmate-ai-backend:latest` và `engmate-ai-frontend:latest`.
+- **Khởi chạy:** `docker compose up -d --wait --wait-timeout 180 backend frontend` chưa thành công vì cổng local 8010 đang được sử dụng; kiểm tra TCP xác nhận cả 8010 và 5174 có tiến trình lắng nghe. Đề xuất dùng 8011/5175 chưa thực thi do người dùng từ chối quyền chạy lệnh.
+- **Phạm vi:** không sửa mã nguồn, cấu hình Docker hoặc `.env`; chỉ cập nhật nhật ký này. Chưa chạy smoke/readiness hay bộ test trong lượt build này. Compose có cảnh báo container share cũ nằm ngoài cấu hình đang dùng; không xóa container hoặc dữ liệu.
+- **Tiếp theo:** khi cần chạy stack, giải phóng cổng mặc định hoặc chọn cổng khác được người dùng cho phép, rồi kiểm tra health/readiness/proxy.
+
+## 2026-10-23 — Sửa layout Sidebar desktop không chồng Chat
+
+- **Mục tiêu:** khắc phục hành vi Sidebar cố định/overlay trên desktop trong khu vực học tập, khiến Chat không co giãn theo chiều rộng sidebar.
+- **Thay đổi:** chuyển `WorkspaceSidebar`/`workspace.css` sang layout nằm trong normal document flow với `display: flex` và `flex-basis/width` theo biến `--sidebar-width`; bỏ margin/offset thủ công và giữ hover/focus/pin như trước. Mobile vẫn dùng drawer overlay riêng.
+- **Kiểm chứng:** chạy kiểm thử sidebar frontend tập trung; xác nhận hover vẫn mở rộng/thu gọn và layout không còn đè lên Chat trên desktop.
+- **Định hướng tiếp theo:** nếu cần, kiểm tra thêm giao diện trên màn hình thực tế để tinh chỉnh độ rộng 240–280px và khoảng cách giữa sidebar với topbar.
+
+## 2026-10-22/23 — Triển khai tối ưu toàn chương trình
+
+- **Phê duyệt:** người dùng yêu cầu triển khai toàn bộ và xác nhận gồm Docker/
+  proxy, giới hạn tác vụ theo account. Nhánh `toi-uu/toan-bo-20261022`; giữ toàn
+  bộ thay đổi đang có, chưa commit/push. Không đổi `.env` thật hoặc gọi paid API.
+- **Chat/DB:** history cursor latest/before/after, mở tối đa 100 tin gần nhất,
+  merge Turn thay full reload, voice/recovery chỉ đọc tail; memo row và follow-tail
+  scroll. Practice count scope theo conversation hiện tại. Argon2 chạy ngoài DB
+  connection, sau đó lock/revalidate trước cấp session; prompt versioned cache.
+- **Voice:** gate process/account cho chat/speech, 429 trước provider, slot giữ
+  tới hết SSE/job và dọn lỗi/hủy/disconnect/logout. Playback receipt ghi prefix
+  Unicode chỉ của clip kết thúc; voice context không chứa cả đoạn chưa nghe,
+  history text vẫn đầy đủ. Clip ngắt giữa chừng không suy progress từ thời lượng.
+- **Cache/body/UI/deploy:** catalog giọng song ngữ single-flight TTL 5 phút;
+  public lesson DTO serialize một lần, frontend catalog cache session-scoped với
+  subscriber cancellation. JSON body deadline/cap và SSE idle watchdog. Lazy
+  landing/workspace, tách landing CSS. Compose truyền mode/model STT/admission/
+  logging. Share nginx gzip, asset hash immutable, HTML/API no-store.
+- **Chẩn đoán:** Settings có collector opt-in 200 mẫu RAM, tách batch/realtime,
+  sample count/error/cancel/p50/p95; xóa logout/reload. Logging backend opt-in,
+  DB spans và usage token chỉ khi Gemini trả metadata, không transcript/secret.
+- **Test infrastructure:** tạo đúng container MySQL test
+  `engmate-opt-test-20261022`, schema `EngMateAI_opt_test`, data ở tmpfs, loopback
+  port 13316; import schema test riêng. Không dùng database ứng dụng. Đã phát hiện
+  polling `Request.is_disconnected()` có thể nuốt task cancellation; sửa bằng
+  receive trực tiếp sau body đã consume, có regression test disconnect/logout.
+- **Backend cuối:** full coverage **187 passed, 0 skipped, 93,05%**; gồm MySQL
+  integration và regression admission/disconnect/logout/SSE. Ruff/Black/mypy qua
+  80 file. Một cảnh báo deprecation Starlette/httpx vẫn còn.
+- **Frontend cuối:** Linux container, cùng package-lock SHA-256 và cấu hình
+  `npm run test:coverage -- --maxWorkers=1`: **354 passed / 31 file**, statements
+  **88,70%**, branches **81,29%**, functions **84,25%**, lines **91,80%**. Report ở
+  `.artifacts/optimization-20261023/frontend-coverage`. Giữ ngưỡng 80%/timeout
+  5 giây; tách test 100 bài thành năm case độc lập (20 bài/chặng, kiểm thêm đúng
+  số thứ tự) và một case modal. Theme test giữ node và kiểm accessible-name thay
+  vì lặp tìm toàn DOM; lazy module transform nằm trong setup.
+- **Windows:** các lượt coverage trước vẫn timeout UI không ổn định; lượt cuối
+  trước khi tách test roadmap là 339 passed/10 failed trên 349 test (9 timeout
+  và một lỗi DOM sau timeout), không coi Linux pass là chứng minh Windows đã ổn.
+  Chưa xác minh độ ổn định nhiều lượt liên tiếp trên máy Windows.
+- **Thay đổi đồng thời:** source workspace/sidebar tiếp tục được chỉnh trong lúc
+  test; đã giữ các thay đổi đó. Sau full coverage, snapshot mới của
+  TutorWorkspace/WorkspaceSidebar/workspace.css được build lại và chạy riêng
+  App + WorkspaceSidebar trên Linux: **54/54 qua**. Full coverage ở trên thuộc
+  snapshot ngay trước các thay đổi này, không gán số coverage cho snapshot mới.
+  Lint frontend đầy đủ ESLint/TypeScript/Prettier đã qua; `git diff --check` qua.
+  Lượt lint cuối từng vượt deadline shell 120 giây, chạy lại với deadline shell
+  300 giây đã qua; không thay timeout test hoặc cấu hình lint trong repo.
+- **Build/nginx:** LiveApp CSS 186,68 kB (gzip estimate 35,55 kB), landing chunk
+  CSS 29,55 kB. Container nginx biệt lập port 18088 đã xác minh HTML no-store,
+  hashed asset immutable/gzip, giải nén khớp byte build, ETag 304 và missing 404
+  không immutable. Compose resolve với `.env.example` đúng defaults batch/quota.
+- **Dọn môi trường:** đã xóa đúng bốn container test tự tạo (MySQL, nginx và hai
+  frontend runner); MySQL tmpfs test không lưu lại. Báo cáo coverage đã chép ra
+  `.artifacts/optimization-20261023/frontend-coverage` trước khi xóa runner.
+- **Còn lại:** trạng thái từng OPT-01–16 tại `OPTIMIZATION_AUDIT.md`; chưa provider
+  benchmark, final-coverage/WER/CER realtime STT, realtime TTS cùng speaker, SQL
+  EXPLAIN/load lớn, trusted proxy nhiều client, multiworker hoặc p50/p95 thật.
+  Browser tool không kết nối desktop trong phiên này nên chưa visual/device smoke.
+
+## 2026-10-22 — Rà soát tối ưu toàn chương trình, chưa sửa runtime
+
+- **Phạm vi:** theo yêu cầu kiểm tra toàn chương trình; rà frontend/backend,
+  DB/query, tài khoản/học tập/chat/voice, Docker/proxy và test. Nhánh riêng
+  `audit/toi-uu-tong-the-20261022`, giữ mọi thay đổi P0–P2 chưa commit.
+- **Tài liệu:** thêm `docs/OPTIMIZATION_AUDIT.md` với 16 hạng mục, vị trí code,
+  mức ưu tiên, rủi ro và tiêu chí nghiệm thu; cập nhật mục audit trong REQUIREMENTS.
+  Không sửa source/config/.env/DB, không migration, commit/push hoặc gọi paid API.
+- **Phát hiện nổi bật:** tải toàn bộ history sau lượt mới; đếm practice đọc lại
+  Content mọi hội thoại bài học; thiếu gate tổng/account cho REST speech/chat;
+  cần playback receipt và xác minh final-coverage của STT realtime; Compose thiếu
+  biến mode/model realtime. Các mục khác: catalog giọng trùng GET/cache, catalog
+  bài học/payload, timeout body, render/CSS/cache static, DB lock/pool, observability
+  và policy trusted proxy/multiworker.
+- **Bằng chứng offline:** MockTransport xác nhận một catalog route gọi hai GET
+  `/v1/tts/options`. Public catalog 100 bài = 263494 byte JSON UTF-8, gzip thử
+  offline 60675 byte. Build CSS LiveApp 230,46 kB (gzip estimate 43,75 kB);
+  14 file CSS nguồn tổng 353044 byte. Không coi đây là phép đo LCP/latency thật.
+- **Kiểm chứng mới:** build qua; lint backend Ruff/Black/mypy qua; frontend
+  ESLint/TypeScript qua, format vẫn fail `src/landing/landing.css` cũ.
+  Coverage backend **158 passed/20 skipped, 68,80%**, lệnh exit 1 vì dưới 80%;
+  integration cần MYSQL_TEST_URL schema riêng. Frontend `npm.cmd test --
+  --maxWorkers=1`: **293 test/27 file qua, một unhandled worker-start timeout**
+  cho App.test.tsx, exit 1; không tuyên bố toàn 337 test hoặc coverage frontend qua.
+- **Giới hạn:** chưa SQL EXPLAIN, load/browser/audio/device/provider benchmark,
+  kiểm CVE hiện hành hoặc có số p50/p95 thật. Không tăng timeout/giảm coverage
+  hoặc sửa CSS ngoài phạm vi để làm xanh test. Chờ duyệt nhóm triển khai tiếp.
+
+## 2026-10-22 — P2: STT realtime opt-in, chưa bật trên tài khoản thật
+
+- **Yêu cầu/nhánh:** người dùng xác nhận tối ưu thêm sau thử thoại thấy chậm;
+  nhánh `toi-uu/stt-realtime-p2`, giữ nguyên thay đổi P0–P1 chưa commit. Không
+  commit/push, đổi provider/giọng/model TTS, database hoặc gọi API trả phí.
+- **Triển khai:** thêm `services/blaze_stt.py` và `voice/realtimeSTT.ts`. Stream
+  PCM16 16 kHz theo frame 100 ms ngay từ VAD speech-start, giữ pre-roll và backlog
+  bounded. Partial chỉ caption; gom final segments, chờ endpoint 900 ms rồi vào
+  Gemini. Chờ auto-final bằng silence tail tối đa 5 giây, không bịa lệnh flush,
+  không tự promote partial hoặc gọi batch lại sau lỗi.
+- **Bảo vệ:** `voice_routes.py` cấp ticket sau JWT/ownership/open-state; WebSocket
+  kiểm Origin, ticket hash một lần/10 giây. Giới hạn frame/rate/bytes/thời gian,
+  32 lease/process và hai/account cho turnover. Mute/ngắt lời/stop/logout/
+  disconnect/shutdown hủy socket/task/backlog, kể cả handshake provider đang chờ,
+  bỏ callbacks muộn. `chat_routes.py`
+  và `main.py` tích hợp dọn manager; không đổi cơ chế JWT hoặc schema dữ liệu.
+- **Cấu hình:** `BLAZE_STT_MODE=batch|realtime`,
+  `BLAZE_STT_REALTIME_MODEL=stt-stream-1.5` tại config/.env.example. Catalog truyền
+  mode qua `catalog.ts`/`VoiceChat.tsx` vào Blaze session. **Không sửa `.env` thật**;
+  mặc định batch để chờ xác minh entitlement/billing/accuracy. Muốn thử: đặt mode
+  realtime, restart backend và reload trang; đặt batch tương tự để rollback.
+- **Đo đạc:** UUID từ STT-start dùng chung ticket/relay/chat/TTS. Report thêm
+  sttMode và sttAfterEndpointMs; giữ offset STT âm thay vì cắt về 0 để thể hiện
+  STT chạy trong lúc người dùng nói. Relay log ready/first_partial/first_final,
+  không có nội dung speech/token. sttMs bao gồm cả thời gian nói, cần phân tích
+  riêng phần chờ sau endpoint và không trộn mẫu hai mode.
+- **Kiểm chứng:** build/TypeScript qua. `coverage-backend`: **158 passed,
+  20 skipped**, một cảnh báo Starlette/httpx; coverage **68,80%**, dưới ngưỡng
+  80% do chưa có MYSQL_TEST_URL cho bộ SQL integration. Module `blaze_stt.py`
+  đạt **94%** coverage. Thêm 17 test backend và 20 test frontend so với P0–P1;
+  có test vòng WebSocket ready/PCM/partial/final qua route thật với upstream giả.
+- **Frontend:** targeted năm file liên quan **71/71 qua**. Full coverage một
+  worker chạy hai lần: lần đầu **334 qua/3 timeout**, lần sau chạy riêng không
+  tác vụ nặng đồng thời **335 qua/2 timeout**, tổng 337 test/28 file. Hai timeout
+  cuối 5000 ms ở `App.test.tsx:1047` và `voice-first/VoiceFirstApp.test.tsx:38`
+  trùng các test từng fail baseline. Lượt đầu thêm `App.test.tsx:930`. Không
+  sửa timeout/assertion/skip/ngưỡng; không báo full suite hay coverage frontend đạt.
+- **Lint/smoke:** Ruff/Black/mypy và ESLint/TypeScript qua; full lint vẫn fail
+  Prettier file cũ `frontend/src/landing/landing.css`. Smoke mặc định ban đầu
+  connection refused vì không có dev server. Khởi chạy server test riêng trên
+  18010/15174, smoke health/frontend/proxy/capabilities/OpenAPI **qua**, sau đó
+  dừng đúng process đã tự tạo; không gọi provider hoặc dùng DB thật. Diff
+  whitespace qua. Chưa có browser/micro/loa E2E trong đợt này.
+- **Tài liệu:** cập nhật README, BLAZE_SPEECH, API, ARCHITECTURE, DECISIONS,
+  REQUIREMENTS, CHANGELOG, TESTING và cấu hình mẫu; nêu rõ rollout opt-in.
+- **Giới hạn/tiếp theo:** tài liệu Blaze chưa có flush ACK/audio-offset; final
+  coverage với provider lag/segment/nói tiếp sau pause chưa chứng minh bằng
+  fixture. Cần test thật có ngân sách để kiểm WER/CER, tỷ lệ cắt lời, billing,
+  p50/p95 và onset loa trước khi bật mặc định. TTS realtime, giảm VAD và playback
+  receipts chưa triển khai. Không cam kết mức giảm ms hoặc khẳng định hết độ trễ.
+
+## 2026-10-22 — Tối ưu độ trễ hội thoại P0–P1
+
+- **Yêu cầu/nhánh:** bắt đầu thực hiện tối ưu phản hồi thoại theo phân tích;
+  nhánh `toi-uu/do-tre-hoi-thoai-p0-p1`, chưa commit/push. Giữ Gemini/Blaze,
+  không đổi model, VAD, database, xác thực, hạ tầng hoặc gọi API tính phí.
+- **Pipeline:** `voice/blaze.ts`, `spokenText.ts`, `speechQueue.ts` gom delta
+  thành câu, TTS ngay khi còn sinh văn bản, phrase tối đa 600 ký tự, giữ phần
+  chưa hoàn tất và kiểm terminal prefix để không đọc lặp. Một clip phát/một clip
+  chuẩn bị trước; lỗi một phía hủy Gemini/audio còn lại (quy tắc 2026-10-23: lỗi
+  audio chỉ dừng audio, không hủy Gemini). Bỏ sync done trùng và
+  sửa hủy mở bài không đóng lượt người dùng mới. `api/database.ts` giữ tín hiệu
+  hủy body sau headers bằng AbortSignal.any; TTS có deadline cả phần tải body.
+- **Kết nối:** `main.py` sở hữu HTTPX pool riêng cho Blaze/Gemini, 32 connection,
+  16 keepalive, idle expiry 60 giây, đóng trong finally kể cả khi voice shutdown
+  lỗi. `services/speech.py`, `llm/gemini.py`, `api/dependencies.py`,
+  `speech_routes.py`, `voice_routes.py` mượn pool; không đóng theo từng request.
+- **Đo đạc:** `voice/latency.ts` phát report số theo UUID, dùng `playing`, giữ
+  khoảng endpointing, tính interval/p50/p95 với số mẫu; không tự lưu nội dung.
+  `core/voice_timing.py` dùng ContextVar qua SSE, chỉ UUID hợp lệ, log stage/span
+  monotonic không chứa payload. `chatStream.ts` và các request speech gửi UUID;
+  `chat_routes.py`, Gemini/speech adapter ghi mốc prepare/first text/STT/TTS.
+- **Kiểm chứng:** build/TypeScript và smoke health/frontend/proxy/capabilities/
+  OpenAPI qua. Backend `test-backend`: **141 passed, 20 skipped**, 1 cảnh báo
+  Starlette/httpx. Ruff/Black/mypy qua, 74 file. Backend coverage **66,48%**, chưa
+  đạt 80% vì chưa cấu hình MYSQL_TEST_URL và các luồng SQL bị skip; không hạ ngưỡng.
+- **Frontend:** toàn suite mặc định hai worker gặp một timeout 5000 ms ở test
+  lộ trình cũ `voice-first/VoiceFirstApp.test.tsx:38` (đã từng timeout ở baseline).
+  Chạy `npm.cmd run test:coverage -- --maxWorkers=1`, không đổi timeout/assertion:
+  **317/317 test qua, 27 file**, coverage **89,06% statements / 81,57% branches /
+  85,05% functions / 91,91% lines**, đạt cả bốn ngưỡng 80%. Thêm 18 test frontend
+  và 6 test backend cho luồng mới. ESLint/TypeScript qua; format toàn frontend
+  vẫn báo file cũ `src/landing/landing.css`; tất cả file TS đã thay đổi format qua.
+- **Tài liệu:** README, API, ARCHITECTURE, BLAZE_SPEECH, CHANGELOG, DECISIONS,
+  REQUIREMENTS và TESTING mô tả luồng mới, cách thu mẫu và các giới hạn. Diff
+  whitespace qua. Không sửa CSS/test cũ hoặc làm yếu ngưỡng để báo xanh.
+- **Giới hạn/tiếp theo:** chưa có p50/p95 provider/thiết bị thật, chưa browser
+  micro/loa/echo E2E. Frame RMS cuối và `playing` chỉ là proxy; cần waveform/
+  loopback/onset vật lý để đo đúng từ cuối lời nói tới âm nghe được. STT vẫn batch,
+  TTS vẫn job/poll/MP3 đủ, chia câu có thể tăng số job và phí; job đã tạo có thể
+  tiếp tục ở provider sau hủy. Lịch sử vẫn text-completed trước khi nghe hết,
+  chưa có playback receipts. Tiếp theo thu baseline có ngân sách được duyệt,
+  streaming STT/TTS Blaze, endpointing và trạng thái heard; không cam kết dưới 1s.
+
 ## 2026-10-18 — Màu tương tác và chữ dễ đọc hơn
 
 - **Yêu cầu/nhánh:** giao diện quá đơn điệu/khó nhìn; thêm màu có ý nghĩa và

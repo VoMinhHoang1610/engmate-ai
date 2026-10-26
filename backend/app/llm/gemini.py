@@ -2,11 +2,13 @@
 
 import json
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import HTTPException
 
 from app.core.config import Settings
+from app.core.voice_timing import VoiceTimings
 from app.llm.base import ContextMessage
 from app.schemas.ai import Level
 
@@ -40,11 +42,30 @@ class GeminiLLMClient:
     """Implement the same conversation interface without a provider SDK."""
 
     def __init__(
-        self, settings: Settings, transport: httpx.AsyncBaseTransport | None = None
+        self,
+        settings: Settings,
+        transport: httpx.AsyncBaseTransport | None = None,
+        *,
+        http_client: httpx.AsyncClient | None = None,
     ) -> None:
         """Support isolated HTTP transport tests and real backend credentials."""
         self.settings = settings
         self.transport = transport
+        self.http_client = http_client
+
+    @asynccontextmanager
+    async def connection(self) -> AsyncIterator[httpx.AsyncClient]:
+        """Borrow the lifespan pool without closing other concurrent requests."""
+        if self.http_client is not None:
+            yield self.http_client
+            return
+        async with httpx.AsyncClient(
+            transport=self.transport,
+            timeout=httpx.Timeout(30, connect=10),
+            follow_redirects=False,
+            trust_env=False,
+        ) as client:
+            yield client
 
     async def generate(
         self,
@@ -82,13 +103,9 @@ class GeminiLLMClient:
         }
         total = 0
         completed = False
+        timing = VoiceTimings()
         try:
-            async with httpx.AsyncClient(
-                transport=self.transport,
-                timeout=httpx.Timeout(30, connect=10),
-                follow_redirects=False,
-                trust_env=False,
-            ) as client:
+            async with self.connection() as client:
                 async with client.stream(
                     "POST",
                     API_ORIGIN
@@ -107,6 +124,12 @@ class GeminiLLMClient:
                         if not line.startswith("data:"):
                             continue
                         event = json.loads(line[5:].strip())
+                        usage = event.get("usageMetadata")
+                        if isinstance(usage, dict):
+                            timing.count("input_tokens", usage.get("promptTokenCount"))
+                            timing.count(
+                                "output_tokens", usage.get("candidatesTokenCount")
+                            )
                         if "error" in event:
                             raise provider_error(int(event["error"].get("code", 502)))
                         if event.get("promptFeedback", {}).get("blockReason"):
@@ -124,6 +147,8 @@ class GeminiLLMClient:
                             total += len(delta)
                             if total > MAX_REPLY_CHARS:
                                 raise ValueError("Oversized reply")
+                            if delta:
+                                timing.mark("llm_first_text")
                             yield delta
                         finish = candidate.get("finishReason")
                         if finish:
@@ -136,6 +161,7 @@ class GeminiLLMClient:
                             break
             if not completed or not total:
                 raise ValueError("Incomplete or empty stream")
+            timing.mark("llm_complete")
         except httpx.TimeoutException:
             raise HTTPException(
                 504, "Gemini phản hồi quá thời gian cho phép."

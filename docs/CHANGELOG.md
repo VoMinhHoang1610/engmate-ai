@@ -1,5 +1,77 @@
 # Changelog
 
+## 2026-10-23 — Lỗi âm thanh không còn dừng phiên thoại
+
+- TTS hoặc phát MP3 lỗi (kể cả lời mở đầu) chỉ dừng audio và báo lỗi; Gemini vẫn
+  stream, câu trả lời vẫn được lưu, mic/phiên vẫn mở. Không đổi giọng, không dùng
+  giọng máy và không replay job TTS đã lỗi.
+- STT realtime lỗi setup/relay/final hoặc timeout sẽ chép lại WAV bằng batch **một
+  lần**; không gửi partial. Fallback có thể phát sinh thêm phí nên realtime vẫn
+  opt-in, batch là rollback.
+- Tạo job TTS chỉ retry khi Blaze trả `429` (tối đa hai lần, 0,6/1,2 giây). Job
+  `failed/error/cancelled`, audio sai và lỗi mạng không replay. Log lỗi chỉ có
+  operation/status/reason/số byte, không có ID/URL/body/token/nội dung câu.
+- Voice context giảm còn 12 tin/12.000 ký tự; prompt thoại yêu cầu 1–2 câu ngắn,
+  tối đa một câu hỏi. Sau hai clip đầu, câu ngắn được gom tới ít nhất 120 ký tự để
+  giảm số job TTS.
+- Đóng socket provider STT trước khi chờ cancel các task con, tránh rò rỉ kết nối
+  khi browser/TestClient hủy relay đúng lúc cleanup.
+- Kiểm chứng offline: frontend 383/383; backend 223/223 với MySQL test riêng.
+  Ruff/Black/mypy, ESLint/tsc/Prettier và Vite build qua. Chưa có p50/p95 hoặc
+  kiểm micro/loa thật.
+
+## 2026-10-23 — Giảm chờ phát âm đầu tiên
+
+- Mệnh đề đầu được gửi TTS tại dấu phẩy/chấm phẩy/hai chấm sau ít nhất 32 ký tự,
+  hoặc tối đa 96 ký tự khi câu đầu dài/không có dấu kết câu; các đoạn sau vẫn tối
+  đa 600 ký tự.
+- Đẩy chunk vào hàng đợi TTS trước khi render transcript; poll job Blaze nhanh
+  0,2 giây trong 1 giây đầu, sau đó 0,35 rồi 0,5 giây thay vì 0,5 giây cố định.
+- Giữ model `v2.0_pro`, VAD 900 ms, speaker và giao thức job/MP3. Đo thử cho thấy
+  flash không nhanh hơn pro; realtime WS có byte đầu sớm nhưng chưa có streaming
+  PCM ra trình duyệt. Chưa có p50/p95 100 lượt hoặc kiểm âm thanh thật.
+
+## 2026-10-23 — Một giọng xuyên suốt, xưng hô đúng giọng
+
+- Phiên Blaze giữ đúng giọng đã chọn qua cả đoạn tiếng Việt và tiếng Anh.
+- Giọng nữ xưng cô Mate, giọng nam xưng thầy Mate; đổi giọng cập nhật cách xưng
+  hô ở lượt tiếp theo, không kế thừa danh xưng cũ từ lịch sử.
+- Prompt mới yêu cầu chào tiếng Việt khi người học nói “xin chào”, tránh lời
+  giới thiệu lai “I'm thầy Mate”. Nghe thử giọng nữ cũng giới thiệu là cô Mate.
+- Catalog giọng cũ thiếu `gender` vẫn được chấp nhận; giới tính suy ra từ mã
+  Nam/Nu, không làm hỏng lựa chọn giọng đã lưu.
+
+## 2026-10-23 — Tối ưu toàn chương trình
+
+- History cursor/tail merge, tải cũ theo yêu cầu, memo message row và follow-tail.
+- Scope practice query, cache catalog/prompt, tách Argon2 khỏi connection pool.
+- Gate chat/speech theo process/account; hủy local speech khi browser disconnect.
+- Playback receipt giữ context thoại theo clip đã phát xong, history text đầy đủ.
+- JSON body deadline/cap, SSE idle watchdog; lazy landing/workspace, gzip/static
+  immutable cache, Compose parity cho realtime STT và giới hạn tác vụ.
+- Settings diagnostics opt-in, INFO timing/DB/token metrics không nội dung riêng tư.
+- MySQL test biệt lập đã chạy; trạng thái coverage và các hạng mục còn chờ tại
+  `PROGRESS.md`/`OPTIMIZATION_AUDIT.md`. Chưa benchmark API trả phí/thiết bị thật.
+
+## 2026-10-22 — STT realtime thử nghiệm
+
+- Có thể bật `BLAZE_STT_MODE=realtime` để gửi audio trong lúc nói và xem phụ đề
+  tạm; chỉ gửi final cho Gemini sau khi kết thúc lời nói.
+- Ticket một lần, giới hạn audio/backlog và hủy khi ngắt lời/mute/stop/logout;
+  không tự gửi lại WAV hoặc đổi giọng khi lỗi.
+- Mặc định batch cho đến khi xác minh model/quyền tài khoản/độ chính xác/chi phí;
+  chưa có benchmark thực hoặc TTS realtime, không cam kết mức giảm thời gian.
+
+## 2026-10-22 — Giảm khoảng chờ giọng nói P0–P1
+
+- Bắt đầu TTS theo câu đủ nghĩa trong lúc Gemini còn sinh phản hồi; phát theo
+  thứ tự và chuẩn bị trước tối đa một clip, không đọc lặp phần đã stream.
+- Ngắt lời/lỗi dừng cả pipeline và bỏ audio cũ; giữ cancellation khi đang tải
+  body HTTP. Bỏ lượt đồng bộ lịch sử trùng sau terminal done.
+- Tái sử dụng kết nối Gemini/Blaze và bổ sung chẩn đoán độ trễ không chứa nội dung.
+- Chưa thay STT/TTS sang realtime, chưa có p50/p95 thực hoặc cam kết thời gian;
+  chia câu có thể tạo nhiều job TTS hơn. Không đổi provider/model/giọng.
+
 ## 2026-10-18 — Chọn giọng của Mate trong Cài đặt
 
 - Thêm lựa chọn giọng tiếng Anh và tiếng Việt trong **Cài đặt → Âm thanh & giọng đọc**, lấy danh sách từ dịch vụ Blaze.

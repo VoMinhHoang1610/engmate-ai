@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, apiFetch } from '../api/database';
+import { readJSON } from '../api/readJSON';
 
 export const levels = ['Pre-A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export type EnglishLevel = (typeof levels)[number];
@@ -33,7 +34,7 @@ export async function saveProfile(data: ProfileInput): Promise<Profile> {
     throw new Error('Thông tin hồ sơ chưa hợp lệ. Kiểm tra họ tên, số điện thoại và ngày sinh.');
   if (!response.ok)
     throw new Error('Chưa lưu được hồ sơ. Hãy thử lại; nội dung bạn nhập vẫn được giữ.');
-  return (await response.json()) as Profile;
+  return await readJSON<Profile>(response);
 }
 
 export async function uploadAvatar(image: Blob) {

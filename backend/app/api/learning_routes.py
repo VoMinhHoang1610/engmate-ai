@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Request
+from fastapi import APIRouter, Depends, Path, Request, Response
 
 from app.api.chat_routes import User
 from app.db.database import Record
@@ -18,7 +18,7 @@ from app.schemas.learning import (
     PlanUpdate,
     ProgressResponse,
 )
-from app.services.curriculum import public_catalog
+from app.services.curriculum import public_catalog_json
 from app.services.learning import LearningService
 
 router = APIRouter(prefix="/api/learning", tags=["learning"])
@@ -36,9 +36,9 @@ Learning = Annotated[LearningService, Depends(learning_service)]
 
 
 @router.get("/catalog", response_model=CatalogResponse)
-def catalog(user: User) -> CatalogResponse:
+def catalog(user: User) -> Response:
     """Browse the complete authored course without exposing check answer keys."""
-    return public_catalog()
+    return Response(public_catalog_json(), media_type="application/json")
 
 
 @router.get("/plan", response_model=PlanResponse)

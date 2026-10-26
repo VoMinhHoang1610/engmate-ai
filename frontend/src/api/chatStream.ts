@@ -1,5 +1,6 @@
 import { apiFetch } from './database';
 import type { Message, Turn } from '../types';
+import type { VoiceGender } from '../speech/identity';
 
 export type ChatEvent =
   | { type: 'start'; response_id: number; message: Message; reply: Message }
@@ -10,11 +11,18 @@ export type ChatEvent =
 /** Consume incremental SSE without buffering the complete AI reply. */
 export async function streamTurn(
   identity: number,
-  payload: { client_request_id: string; message: string },
+  payload: {
+    client_request_id: string;
+    message: string;
+    voice?: boolean;
+    voice_gender?: VoiceGender | null;
+  },
   signal: AbortSignal,
   onEvent: (event: ChatEvent) => void,
+  traceId?: string,
 ): Promise<Turn> {
-  const response = await apiFetch(`/api/conversations/${identity}/messages/stream`, {
+  const trace = traceId ? `?voice_trace_id=${encodeURIComponent(traceId)}` : '';
+  const response = await apiFetch(`/api/conversations/${identity}/messages/stream${trace}`, {
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
@@ -37,18 +45,28 @@ export async function streamTurn(
   let result: Turn | undefined;
   let expired = false;
   const cancel = () => {
-    void reader.cancel();
+    void reader.cancel().catch(() => undefined);
   };
   signal.addEventListener('abort', cancel, { once: true });
   const timeout = window.setTimeout(() => {
     expired = true;
     cancel();
   }, 45000);
+  let idle: ReturnType<typeof setTimeout>;
+  const resetIdle = () => {
+    clearTimeout(idle);
+    idle = setTimeout(() => {
+      expired = true;
+      cancel();
+    }, 30000);
+  };
+  resetIdle();
   try {
     if (signal.aborted) throw signal.reason;
     while (true) {
       const chunk = await reader.read();
       if (chunk.done) break;
+      resetIdle();
       buffer += decoder.decode(chunk.value, { stream: true });
       if (buffer.length > 262144) throw new Error('Sự kiện phản hồi AI quá lớn.');
       const frames = buffer.split(/\r?\n\r?\n/);
@@ -80,6 +98,7 @@ export async function streamTurn(
     return result;
   } finally {
     window.clearTimeout(timeout);
+    clearTimeout(idle!);
     signal.removeEventListener('abort', cancel);
     await reader.cancel().catch(() => undefined);
     reader.releaseLock();

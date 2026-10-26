@@ -185,6 +185,9 @@ export function VoiceChat({
       const preferences = getSpeechPreferences();
       return new BlazeVoiceSession(id, events, selectedVoice || undefined, {
         ...speechOptions,
+        sttMode: catalog?.stt_mode ?? 'batch',
+        voiceLanguage: selected?.language,
+        voiceGender: selected?.gender,
         voiceEn: preferences.voiceEn,
         voiceVi: preferences.voiceVi,
         ...(selected?.language === 'en' ? { voiceEn: selectedVoice } : {}),

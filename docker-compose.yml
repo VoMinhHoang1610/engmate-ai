@@ -23,6 +23,13 @@ services:
       BLAZE_API_KEY: ${BLAZE_API_KEY:-}
       BLAZE_TTS_MODEL: ${BLAZE_TTS_MODEL:-v2.0_pro}
       BLAZE_STT_MODEL: ${BLAZE_STT_MODEL:-stt-async-1.5}
+      BLAZE_STT_MODE: ${BLAZE_STT_MODE:-batch}
+      BLAZE_STT_REALTIME_MODEL: ${BLAZE_STT_REALTIME_MODEL:-stt-stream-1.5}
+      SPEECH_MAX_JOBS: ${SPEECH_MAX_JOBS:-16}
+      SPEECH_MAX_JOBS_PER_USER: ${SPEECH_MAX_JOBS_PER_USER:-4}
+      CHAT_MAX_JOBS: ${CHAT_MAX_JOBS:-16}
+      CHAT_MAX_JOBS_PER_USER: ${CHAT_MAX_JOBS_PER_USER:-2}
+      VOICE_TIMING_LOGS: ${VOICE_TIMING_LOGS:-false}
       BLAZE_LOCAL_DEMO: "false"
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5174,http://127.0.0.1:5174}
       DATABASE_MYSQL_URL: ${DOCKER_DATABASE_MYSQL_URL:-${DATABASE_MYSQL_URL:-}}
@@ -37,6 +44,9 @@ services:
     build: ./frontend
     environment:
       BACKEND_URL: http://backend:8000
+      # Windows bind mounts can miss filesystem events, leaving Vite's modules stale.
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
     ports: ["127.0.0.1:${FRONTEND_PORT:-5174}:5174"]
     volumes: ["./frontend/src:/app/src:ro"]
     depends_on:

@@ -14,5 +14,7 @@ def get_llm_client(request: Request) -> LLMClient:
             503, "Configure the selected AI provider credentials for chat."
         )
     if request.app.state.settings.llm_provider == "gemini":
-        return GeminiLLMClient(request.app.state.settings)
+        return GeminiLLMClient(
+            request.app.state.settings, http_client=request.app.state.gemini_http
+        )
     return OpenAILLMClient(request.app.state.settings)

@@ -131,7 +131,7 @@ describe('voice settings for learners', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Nghe thử giọng tiếng Việt' }));
     expect(docVanBan).toHaveBeenCalledWith(
-      expect.stringContaining('Xin chào! Mình là thầy Mate.'),
+      expect.stringContaining('Xin chào! Mình là cô Mate.'),
       1,
       expect.any(AbortSignal),
       expect.any(Function),

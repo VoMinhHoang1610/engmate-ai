@@ -52,6 +52,12 @@ def public_catalog() -> CatalogResponse:
     return CatalogResponse.model_validate(course().model_dump())
 
 
+@lru_cache(maxsize=1)
+def public_catalog_json() -> str:
+    """Serialize the public whitelist once, without answer keys."""
+    return public_catalog().model_dump_json()
+
+
 def all_lessons() -> list[tuple[Stage, Lesson]]:
     """Return the canonical ordering used for plan recommendations."""
     return [

@@ -10,6 +10,7 @@ describe('live voice catalog', () => {
   it('accepts bilingual Blaze voices independently of the reasoning provider', async () => {
     const catalog = {
       provider: 'blaze',
+      stt_mode: 'realtime',
       default_voice: 'HN-Nam-1-BL',
       voices: [
         { id: 'HN-Nam-1-BL', name: 'Mate Vietnamese', language: 'vi' },
@@ -35,6 +36,7 @@ describe('live voice catalog', () => {
     {},
     { ...valid, voices: [] },
     { ...valid, default_voice: 'Missing' },
+    { ...valid, stt_mode: 'unknown' },
     { ...valid, voices: [{ id: '<script>', name: 'Bad' }] },
     { ...valid, voices: [{ id: 'Kore', name: '' }] },
   ])('rejects malformed catalog %j', async (data) => {

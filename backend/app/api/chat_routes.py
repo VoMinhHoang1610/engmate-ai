@@ -22,6 +22,7 @@ from sqlalchemy import func, select
 
 from app.api.dependencies import get_llm_client
 from app.core.config import Settings
+from app.core.voice_timing import VoiceTimings
 from app.db.database import Record
 from app.llm.base import LLMClient
 from app.schemas.chat import (
@@ -29,6 +30,7 @@ from app.schemas.chat import (
     ConversationCreate,
     Login,
     MessageCreate,
+    PlaybackReceipt,
     Refresh,
     Register,
 )
@@ -81,6 +83,12 @@ def current_user(
 User = Annotated[Record, Depends(current_user)]
 
 
+async def chat_slot(user: User, request: Request) -> AsyncIterator[None]:
+    """Hold admission until the response body, including SSE, is finished."""
+    async with request.app.state.chat_admission.slot(user["UserId"]):
+        yield
+
+
 @router.get("/ready", tags=["health"])
 def ready(request: Request) -> Record:
     """Check only chat tables; provider readiness is separate from liveness."""
@@ -130,6 +138,8 @@ async def logout(
 ) -> Response:
     """Revoke the selected account's current or all sessions."""
     await request.app.state.voice.shutdown(user["UserId"])
+    await request.app.state.blaze_stt.shutdown(user["UserId"])
+    await request.app.state.speech_admission.shutdown(user["UserId"])
     for key, task in list(request.app.state.chat_jobs.items()):
         if key[0] == user["UserId"]:
             task.cancel()
@@ -232,15 +242,25 @@ def messages(
     service: Conversations,
     offset: Offset = 0,
     limit: Limit = 50,
+    after_id: Annotated[int | None, Query(ge=0, le=MAX_ID)] = None,
+    before_id: Annotated[int | None, Query(gt=0, le=MAX_ID)] = None,
+    latest: bool = False,
 ) -> list[Record]:
     """Read a chronological page after checking ownership."""
-    return service.messages(user["UserId"], identity, offset, limit)
+    if sum((after_id is not None, before_id is not None, latest)) > 1 or (
+        offset and (after_id is not None or before_id is not None or latest)
+    ):
+        raise HTTPException(422, "Use one history cursor without offset.")
+    return service.messages(
+        user["UserId"], identity, offset, limit, after_id, before_id, latest
+    )
 
 
 @router.post(
     "/conversations/{identity}/messages",
     tags=["conversations"],
     response_model=TurnResponse,
+    dependencies=[Depends(chat_slot)],
 )
 async def send_message(
     identity: Identity,
@@ -265,7 +285,11 @@ async def send_message(
             request.app.state.chat_jobs.pop(key, None)
 
 
-@router.post("/conversations/{identity}/messages/stream", tags=["conversations"])
+@router.post(
+    "/conversations/{identity}/messages/stream",
+    tags=["conversations"],
+    dependencies=[Depends(chat_slot)],
+)
 async def stream_message(
     identity: Identity,
     data: MessageCreate,
@@ -277,7 +301,9 @@ async def stream_message(
     """Authenticate and reserve before headers, then deliver SSE with durable IDs."""
     uid = user["UserId"]
     request.app.state.voice.ensure_text_available(uid, identity)
+    timing = VoiceTimings()
     turn = await run_in_threadpool(service.prepare, uid, identity, data)
+    timing.mark("chat_prepared")
 
     async def events() -> AsyncIterator[str]:
         task = asyncio.current_task()
@@ -312,6 +338,20 @@ def close_conversation(
     """Close an owned conversation idempotently."""
     request.app.state.voice.ensure_text_available(user["UserId"], identity)
     return service.close(user["UserId"], identity, False)
+
+
+@router.post(
+    "/conversations/{identity}/messages/{response_id}/playback", tags=["conversations"]
+)
+def playback_receipt(
+    identity: Identity,
+    response_id: Annotated[int, Path(gt=0, le=MAX_ID)],
+    data: PlaybackReceipt,
+    user: User,
+    service: Conversations,
+) -> Record:
+    """Store played progress separately from generated text, without trusting text."""
+    return service.playback(user["UserId"], identity, response_id, data.heard_chars)
 
 
 @router.post("/conversations/{identity}/cancel", tags=["conversations"])

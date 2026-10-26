@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../api/database';
+import { readJSON } from '../api/readJSON';
+import { Resource } from '../api/resource';
 import type {
   CheckResult,
   LearningCatalog,
@@ -32,11 +34,14 @@ async function request<T>(path: string, method = 'GET', body?: unknown, signal?:
     throw new Error(
       'Chưa kết nối được với lộ trình học. Hãy thử lại; nội dung đã nhập vẫn được giữ.',
     );
-  return (await response.json()) as T;
+  return await readJSON<T>(response, signal);
 }
 
-export const getLearningCatalog = (signal?: AbortSignal) =>
-  request<LearningCatalog>('/catalog', 'GET', undefined, signal);
+const catalog = new Resource(
+  (signal) => request<LearningCatalog>('/catalog', 'GET', undefined, signal),
+  300000,
+);
+export const getLearningCatalog = (signal?: AbortSignal) => catalog.get(signal);
 export const getLearningPlan = (signal?: AbortSignal) =>
   request<LearningPlan>('/plan', 'GET', undefined, signal);
 export const getLearningProgress = (signal?: AbortSignal) =>
@@ -115,6 +120,7 @@ export function useLearningRoadmap() {
     return () => controller.abort();
   }, [revision]);
   function reload() {
+    catalog.clear();
     setLoading(true);
     setError('');
     setRevision((old) => old + 1);

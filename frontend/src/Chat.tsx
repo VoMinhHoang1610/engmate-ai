@@ -3,10 +3,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  memo,
+  useCallback,
   type FormEvent,
   type ReactNode,
 } from 'react';
 import { api } from './api/database';
+import { mergeMessages, messageCursor } from './api/messages';
 import { layGiongDoc, type GiongDoc } from './api/voices';
 import { useThuAm } from './hooks/useThuAm';
 import { docVanBan, dungDoc } from './speech/audio';
@@ -21,6 +24,47 @@ import type { VoiceState } from './voice/session';
 import { MateOrb } from './components/MateOrb';
 import { Mic } from 'lucide-react';
 import { TeacherMate } from './tutor/TutorScene';
+
+const MessageRow = memo(function MessageRow({
+  message,
+  speech,
+  disabled,
+  speak,
+}: {
+  message: Message;
+  speech: boolean;
+  disabled: boolean;
+  speak: (message: Message) => Promise<void>;
+}) {
+  return (
+    <article className={`message-row ${message.role === 'user' ? 'ban' : 'mate-message'}`}>
+      <span className={`avatar ${message.role === 'assistant' ? 'bot-avatar' : ''}`}>
+        {message.role === 'user' ? <BieuTuong ten="user" size={18} /> : <LinhThu size={42} />}
+      </span>
+      <div>
+        <span className="message-author">{message.role === 'user' ? 'Bạn' : 'Mate'}</span>
+        <p className="message-bubble">
+          {message.content ||
+            (message.status === 'pending'
+              ? 'Đang tạo câu trả lời…'
+              : message.status === 'cancelled'
+                ? 'Đã hủy phản hồi.'
+                : 'Chưa tạo được câu trả lời.')}
+        </p>
+        {message.role === 'assistant' && message.content && speech && (
+          <button
+            className="text-button message-audio"
+            disabled={disabled}
+            onClick={() => void speak(message)}
+          >
+            <BieuTuong ten="volume" size={15} />
+            Nghe câu trả lời
+          </button>
+        )}
+      </div>
+    </article>
+  );
+});
 
 export function Chat({
   conversation,
@@ -52,6 +96,15 @@ export function Chat({
   const [created, setCreated] = useState<Conversation | null>(null);
   const currentConversation = conversation ?? created;
   const [messages, setMessages] = useState<Message[]>([]);
+  const messagesRef = useRef<Message[]>([]);
+  const [moreMessages, setMoreMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderLock = useRef(false);
+  const syncRequest = useRef<AbortController | null>(null);
+  const followTail = useRef(true);
+  useLayoutEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   const [text, setText] = useState(initialDraft);
   useEffect(() => {
     onDraftChange?.(text);
@@ -101,17 +154,20 @@ export function Chat({
     input.style.height = `${text ? Math.max(46, Math.min(input.scrollHeight, 120)) : 46}px`;
   }, [text]);
 
-  async function load(id: number, signal: AbortSignal) {
+  async function load(id: number, signal: AbortSignal, after = messageCursor(messagesRef.current)) {
     const rows: Message[] = [];
-    for (let offset = 0; ; offset += 100) {
+    while (true) {
       const page = await api<Message[]>(
-        `/conversations/${id}/messages?limit=100&offset=${offset}`,
+        `/conversations/${id}/messages?limit=100&after_id=${after}`,
         'GET',
         undefined,
         signal,
       );
       rows.push(...page);
       if (page.length < 100) return rows;
+      const next = Math.max(...page.map((row) => row.message_id));
+      if (next <= after) throw new Error('Lịch sử chưa đồng bộ. Hãy tải lại tin nhắn.');
+      after = next;
     }
   }
   useEffect(() => {
@@ -120,9 +176,18 @@ export function Chat({
     controller.current = abort;
     const loadIdentity = historyIdentity ?? createdRef.current?.conversation_id;
     if (loadIdentity) {
-      void load(loadIdentity, abort.signal)
+      void api<Message[]>(
+        `/conversations/${loadIdentity}/messages?limit=100&latest=true`,
+        'GET',
+        undefined,
+        abort.signal,
+      )
         .then((rows) => {
-          if (current === generation.current) setMessages(rows);
+          if (current === generation.current) {
+            setMessages(mergeMessages([], rows));
+            setMoreMessages(rows.length === 100);
+            followTail.current = true;
+          }
         })
         .catch((e: unknown) => {
           if (!abort.signal.aborted)
@@ -135,14 +200,16 @@ export function Chat({
     return () => {
       generation.current = current + 1;
       abort.abort();
+      syncRequest.current?.abort();
       dungDoc();
     };
   }, [historyIdentity, reload]);
 
   useEffect(() => {
     const pane = messagePane.current;
-    pane?.scrollTo?.({ top: pane.scrollHeight, behavior: 'smooth' });
-  }, [messages, busy]);
+    if (followTail.current)
+      pane?.scrollTo?.({ top: pane.scrollHeight, behavior: streaming ? 'auto' : 'smooth' });
+  }, [messages, busy, streaming]);
 
   async function ensureConversation(): Promise<number> {
     if (identity) return identity;
@@ -231,9 +298,8 @@ export function Chat({
       const result = capabilities.streaming
         ? await streamTurn(target, payload, signal, update)
         : await api<Turn>(`/conversations/${target}/messages`, 'POST', payload, signal);
-      const rows = await load(target, signal!);
       if (current !== generation.current) return;
-      setMessages(rows);
+      setMessages((old) => mergeMessages(old, [result.message, result.reply]));
       if (result.reply.status !== 'completed') {
         setFailed(result.reply.status !== 'pending');
         setError(
@@ -253,7 +319,7 @@ export function Chat({
         if (!target) return;
         const rows = await load(target, signal!);
         if (current === generation.current) {
-          setMessages(rows);
+          setMessages((old) => mergeMessages(old, rows));
           setFailed(rows.at(-1)?.status === 'failed' || rows.at(-1)?.status === 'cancelled');
         }
       } catch {
@@ -272,14 +338,19 @@ export function Chat({
 
   async function stopReply() {
     if (!identity) return;
+    const current = generation.current;
     activeResponse.current = null;
     streamAbort.current?.abort();
     try {
       await api(`/conversations/${identity}/cancel`, 'POST');
-      setMessages(await load(identity, controller.current!.signal));
+      if (current !== generation.current) return;
+      const rows = await load(identity, controller.current!.signal);
+      if (current !== generation.current) return;
+      setMessages((old) => mergeMessages(old, rows));
       setFailed(true);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Chưa hủy được phản hồi.');
+      if (current === generation.current)
+        setError(error instanceof Error ? error.message : 'Chưa hủy được phản hồi.');
     }
   }
 
@@ -287,12 +358,16 @@ export function Chat({
     onLearningSync?.();
     if (!identity || !controller.current) return;
     const current = generation.current;
-    void load(identity, controller.current.signal)
+    syncRequest.current?.abort();
+    const sync = new AbortController();
+    syncRequest.current = sync;
+    void load(identity, AbortSignal.any([controller.current.signal, sync.signal]))
       .then((rows) => {
-        if (current === generation.current) setMessages(rows);
+        if (current === generation.current && !sync.signal.aborted)
+          setMessages((old) => mergeMessages(old, rows));
       })
       .catch(() => {
-        if (current === generation.current)
+        if (current === generation.current && !sync.signal.aborted)
           setError('Chưa đồng bộ được lịch sử thoại. Hãy tải lại tin nhắn.');
       });
   }
@@ -315,7 +390,10 @@ export function Chat({
         const closed: Conversation = { ...currentConversation, status: 'completed' };
         setCreated(closed);
         onClose(closed);
-      } else setMessages(await load(identity, controller.current!.signal));
+      } else {
+        const rows = await load(identity, controller.current!.signal);
+        if (current === generation.current) setMessages((old) => mergeMessages(old, rows));
+      }
     } catch (e) {
       if (current === generation.current)
         setError(e instanceof Error ? e.message : 'Không thực hiện được.');
@@ -327,7 +405,7 @@ export function Chat({
     }
   }
 
-  async function speak(message: Message) {
+  const speak = useCallback(async (message: Message) => {
     setError('');
     setSpeaking(message.message_id);
     try {
@@ -335,6 +413,35 @@ export function Chat({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Chưa phát được âm thanh.');
       setSpeaking(null);
+    }
+  }, []);
+
+  async function loadOlder() {
+    if (!identity || olderLock.current || !messages.length) return;
+    olderLock.current = true;
+    setLoadingOlder(true);
+    const current = generation.current;
+    const pane = messagePane.current;
+    const oldHeight = pane?.scrollHeight ?? 0;
+    followTail.current = false;
+    try {
+      const rows = await api<Message[]>(
+        `/conversations/${identity}/messages?limit=100&before_id=${messages[0].message_id}`,
+        'GET',
+        undefined,
+        controller.current.signal,
+      );
+      if (current !== generation.current) return;
+      setMessages((old) => mergeMessages(old, rows));
+      setMoreMessages(rows.length === 100);
+      requestAnimationFrame(() => {
+        if (pane && current === generation.current) pane.scrollTop += pane.scrollHeight - oldHeight;
+      });
+    } catch {
+      if (current === generation.current) setError('Chưa tải được tin nhắn cũ. Hãy thử lại.');
+    } finally {
+      olderLock.current = false;
+      if (current === generation.current) setLoadingOlder(false);
     }
   }
   async function getVoices() {
@@ -509,6 +616,10 @@ export function Chat({
         id="mate-conversation-transcript"
         className="chat-messages"
         ref={messagePane}
+        onScroll={(event) => {
+          const pane = event.currentTarget;
+          followTail.current = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 80;
+        }}
         aria-busy={loading}
         tabIndex={0}
         aria-label="Tin nhắn hội thoại"
@@ -549,38 +660,19 @@ export function Chat({
             <p>{lessonOpening ?? 'Nhắn tin hoặc bắt đầu thoại bằng tiếng Việt hay tiếng Anh.'}</p>
           </div>
         )}
+        {moreMessages && (
+          <button className="text-button" disabled={loadingOlder} onClick={() => void loadOlder()}>
+            {loadingOlder ? 'Đang tải tin nhắn cũ…' : 'Tải tin nhắn cũ'}
+          </button>
+        )}
         {messages.map((message) => (
-          <article
+          <MessageRow
             key={message.message_id}
-            className={`message-row ${message.role === 'user' ? 'ban' : 'mate-message'}`}
-          >
-            <span className={`avatar ${message.role === 'assistant' ? 'bot-avatar' : ''}`}>
-              {message.role === 'user' ? <BieuTuong ten="user" size={18} /> : <LinhThu size={42} />}
-            </span>
-            <div>
-              <span className="message-author">
-                {message.role === 'user' ? 'Bạn' : 'Thầy Mate'}
-              </span>
-              <p className="message-bubble">
-                {message.content ||
-                  (message.status === 'pending'
-                    ? 'Đang tạo câu trả lời…'
-                    : message.status === 'cancelled'
-                      ? 'Đã hủy phản hồi.'
-                      : 'Chưa tạo được câu trả lời.')}
-              </p>
-              {message.role === 'assistant' && message.content && capabilities?.speech && (
-                <button
-                  className="text-button message-audio"
-                  disabled={voiceActive || recording.active}
-                  onClick={() => void speak(message)}
-                >
-                  <BieuTuong ten="volume" size={15} />
-                  Nghe câu trả lời
-                </button>
-              )}
-            </div>
-          </article>
+            message={message}
+            speech={Boolean(capabilities?.speech)}
+            disabled={voiceActive || recording.active}
+            speak={speak}
+          />
         ))}
         {busy && (
           <p className="typing-indicator" role="status">

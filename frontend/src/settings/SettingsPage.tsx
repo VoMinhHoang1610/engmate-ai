@@ -6,6 +6,7 @@ import type { LearningState } from '../tutor/curriculum';
 import { setSpeechRate, useSpeechPreferences } from '../speech/preferences';
 import { dungDoc } from '../speech/audio';
 import { VoiceSettings } from './VoiceSettings';
+import { VoiceDiagnostics } from './VoiceDiagnostics';
 
 interface Props {
   account: Account;
@@ -88,6 +89,7 @@ export function SettingsPage({
   return (
     <div className="settings-page">
       <div className="settings-grid">
+        <VoiceDiagnostics />
         {/* Section 1: Giao diện & Trải nghiệm */}
         <section className="tutor-card settings-card">
           <div className="settings-section-head">
@@ -145,7 +147,7 @@ export function SettingsPage({
             <span className="eyebrow violet">
               <i /> ÂM THANH & GIỌNG ĐỌC
             </span>
-            <h2>Thầy Mate & Phát âm</h2>
+            <h2>Mate & Phát âm</h2>
             <p>Điều chỉnh nhịp độ phản hồi và giọng nói của trợ lý AI.</p>
           </div>
 
@@ -154,7 +156,7 @@ export function SettingsPage({
           <div className="settings-item">
             <div className="settings-item-copy">
               <strong>Tốc độ đọc câu mẫu</strong>
-              <span>Tốc độ khi thầy Mate đọc bài giảng và câu ví dụ.</span>
+              <span>Tốc độ khi Mate đọc bài giảng và câu ví dụ.</span>
             </div>
             <div className="settings-pill-selector">
               {[

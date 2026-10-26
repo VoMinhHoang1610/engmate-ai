@@ -1,5 +1,117 @@
 # Quyết định kỹ thuật
 
+## 2026-10-23 — Lỗi âm thanh không kết thúc phiên, fallback STT có kiểm soát
+
+Khi TTS hoặc phát MP3 lỗi, frontend dừng queue/clip hiện tại và báo lỗi nhưng giữ
+phiên, mic và phần text Gemini đang stream; không đổi giọng và không gọi lại job
+TTS đã thất bại. Lỗi Gemini vẫn dừng audio của lượt đó. Đây thay thế quy tắc cũ
+“lỗi bên nào hủy cả pipeline”: audio là kênh phụ, còn câu trả lời text vẫn hữu ích
+và đã/đang được lưu.
+
+Realtime STT chỉ là tối ưu: lỗi setup/relay/final hoặc timeout được fallback sang
+batch **một lần** với chính WAV đã thu; không promote partial. Fallback có thể phát
+sinh thêm phí, nên realtime vẫn opt-in và chỉ dùng khi ngân sách thử nghiệm cho phép.
+Batch vẫn là rollback. TTS chỉ retry POST khi `429` (tối đa hai lần, 0,6/1,2 giây);
+không retry lỗi generation/audio để tránh nhân phí. Log chỉ ghi operation/status/
+reason/số byte, không ghi job ID, URL, body, token hoặc nội dung câu.
+
+Voice context giảm còn 12 tin/12.000 ký tự; text chat giữ 20 tin/32.000 ký tự. Sau
+hai clip đầu, câu ngắn được gom tới ít nhất 120 ký tự để giảm job TTS nhưng không
+trì hoãn clip đầu. Prompt thoại yêu cầu 1–2 câu ngắn, tối đa một câu hỏi, trừ khi
+người học yêu cầu giải thích dài. Chưa có p50/p95 hoặc kiểm micro/loa thật.
+
+## 2026-10-23 — Giữ batch TTS và VAD 900 ms sau đo thử
+
+Tách mệnh đề đầu (32–96 ký tự) và poll TTS 0,2/0,35/0,5 giây để giảm chờ mà
+không đổi chất lượng giọng. Đo 3 job mỗi model trên cùng câu cho median
+`v2.0_pro` 1,30 giây, `v2.0_flash` 1,57 giây; flash không nhanh hơn nên giữ pro.
+Probe WebSocket `2.0-realtime` có byte audio đầu sau 0,595 giây nhưng frontend
+vẫn phát MP3 trọn clip, nên chưa tích hợp streaming PCM. Giữ VAD 900 ms vì giảm
+xuống 700 ms có thể cắt lời người học; endpoint thích nghi/provider final cần
+test riêng. Các phép đo này là smoke ngắn, không thay thế p50/p95 100 lượt hoặc
+kiểm micro/loa thật.
+
+## 2026-10-23 — Cố định người đọc và danh xưng theo phiên thoại
+
+Chọn một speaker_id và ngôn ngữ TTS từ catalog ngay khi mở phiên, giữ qua mọi
+chunk. Cách cũ dò dấu tiếng Việt rồi chọn cặp giọng Anh/Việt làm đổi người nói
+ngay giữa phản hồi. Khi người học đổi giọng, lifecycle stop/start tạo identity
+mới; ngôn ngữ STT độc lập. Một giọng có thể phát âm ngôn ngữ thứ hai kém hơn giọng
+chuyên dụng, nhưng đáp ứng yêu cầu chỉ một người đọc; không tự chuyển giọng.
+
+Giới tính catalog (fallback mã Blaze Nam/Nu, không rõ dùng trung tính) là enum
+trong request mỗi lượt. Prompt phiên bản mới dùng danh xưng hiện tại thay vì
+hard-code Thầy Mate hoặc thay chữ trong output, tránh sửa nhầm lời trích dẫn.
+Giữ metadata trong ResultJson để retry khác identity bị từ chối, không đổi SQL.
+
+## 2026-10-23 — Giảm công việc lặp, bảo toàn context khi ngắt lời
+
+Theo phê duyệt toàn chương trình và riêng Docker/proxy/quota: chọn cursor/tail
+sync, scope practice, TTL catalog, admission fail-fast và body deadline trước
+khi đổi model hoặc VAD. Slot theo job chứ không theo connection HTTP, không có
+queue chờ vô hạn hoặc retry paid POST. Giới hạn chỉ có hiệu lực trong một process.
+
+Giữ generated reply để xem lại; voice context dùng Unicode prefix của clip đã
+ended, giới hạn 12 tin/12.000 ký tự (text: 20 tin/32.000 ký tự). Không tính clip
+đang phát dở: duration MP3 không ánh xạ chắc chắn tới ký tự. Receipt lưu trong
+ResultJson hiện có, monotonic và không đổi context sau lượt mới; client chờ receipt
+trước lượt tiếp theo. Không coi receipt là bằng chứng người học nghe vật lý hoặc
+bằng chứng chấm điểm học tập.
+
+Cache catalog/frontend chỉ có TTL/byte tối thiểu cần thiết; plan/progress và
+auth revocation tiếp tục đọc DB. Argon2 giữ nguyên độ khó, chạy ngoài connection
+pool rồi revalidate dưới lock. Chưa thêm index/schema/ORM hoặc worker mới.
+STT realtime/TTS realtime/quality benchmark vẫn cần xác minh protocol, speaker
+và ngân sách; không dùng số đo mocked để cam kết chất lượng hay ms cải thiện.
+
+## 2026-10-22 — P2 STT realtime trước, rollout có kiểm soát
+
+Người dùng xác nhận tối ưu thêm sau thử thoại thấy còn chờ lâu. Triển khai nhận
+dạng song song với lời nói, giữ Gemini và TTS hiện tại. Không tự đổi model của
+REST STT: realtime dùng model riêng `stt-stream-1.5`, bật bằng BLAZE_STT_MODE.
+Mặc định batch vì chưa xác minh entitlement, phí và chất lượng trên tài khoản thật.
+
+Một socket/lượt bắt đầu sau VAD, giữ pre-roll/backlog có giới hạn; chưa duy trì
+kết nối tính phí suốt 10 phút im lặng. Tái sử dụng pattern ticket một lần của
+native adapter, không đưa API key/JWT vào URL. JWT, quyền hội thoại và trạng thái
+open kiểm tra qua REST trước khi trả ticket; Origin/ticket kiểm tra trước upstream.
+Giới hạn toàn process/account, audio rate/bytes/time; logout và shutdown đóng relay.
+
+Không cho partial kích hoạt Gemini; gom final qua pause và giữ endpoint 900 ms.
+Provider chưa công bố flush/EOS ACK hoặc audio-offset: chỉ dùng binary silence
+tail có timeout, không tự chế lệnh hoặc khẳng định đã kiểm chứng đầy đủ frame cuối.
+Đây là điểm cần test thật trước rollout. Quyết định ngày 2026-10-23 bổ sung fallback
+batch một lần khi realtime lỗi/timeout; fallback có thể phát sinh phí nên vẫn opt-in.
+TTS realtime và VAD ngắn hơn để giai đoạn sau, cần kiểm model/giọng và accuracy.
+
+## 2026-10-22 — P0–P1 giảm độ trễ nhưng giữ Gemini và giọng Blaze
+
+Ưu tiên chồng lấp sinh văn bản/TTS thay vì đổi provider hoặc tự giảm VAD. Gom
+delta theo câu, chờ khoảng trắng sau dấu câu để tránh cắt số thập phân, giữ phần
+chưa hoàn tất và đối chiếu terminal content với prefix đã nhận. Chặn tổng text
+12000 ký tự như Gemini adapter, chia phrase tối đa 600 ký tự. Câu đầu không bị
+ghép thành job 2000 ký tự. Hàng đợi chỉ phát một clip và chuẩn bị trước một clip;
+không tạo hàng loạt job. Từ 2026-10-23 chỉ retry POST khi `429`, không replay job
+generation/audio đã lỗi. Chi phí có thể tăng theo số job; chưa có phép đo thực để
+khẳng định mức giảm độ trễ hoặc giá.
+
+TTS/playback và Gemini chạy đồng thời; quy tắc hiện hành (2026-10-23) là lỗi audio
+chỉ dừng audio, còn lỗi Gemini mới dừng audio của lượt. Giữ barrier cancel server
+trước lượt text mới và bỏ callbacks cũ. Không phát lại nội dung đã đọc; lỗi Gemini
+sau khi phát một phần không thể thu hồi phần đã nghe.
+Không đổi mô hình hoàn tất lịch sử/tiến độ trong P1; playback receipts/đánh dấu
+heard cần thiết kế riêng. VAD, REST STT, job/poll/MP3 TTS giữ nguyên cho đợt này.
+
+Pool HTTP riêng theo provider do FastAPI lifespan sở hữu, có giới hạn và đóng
+trong finally. Không lưu khóa trong shared client Gemini; request speech gắn
+Bearer riêng. Không mở nhiều backend worker. Test inject pool/transport và không
+gọi provider thật. AbortSignal.any giữ tín hiệu hủy body sau headers; yêu cầu
+trình duyệt hiện đại, không thay timeout/assertion để làm test qua.
+
+Telemetry chỉ có UUID/stage/thời gian, không tự lưu hoặc tải đi. Log backend
+opt-in theo trace và logging INFO. Mốc cuối voiced frame tại main thread và
+`playing` là proxy được đặt tên rõ; không trình bày như ground truth vật lý.
+
 ## 2026-10-18 — Sidebar tối giản cho không gian sau đăng nhập
 
 Theo mẫu người dùng, chọn rail điều hướng trung tính thu/mở và menu trượt trên
@@ -44,8 +156,9 @@ kiểm tra nhỏ được chữa ngay để phục vụ học, không dùng làm
 Người dùng yêu cầu giữ Gemini làm đầu não và bắt buộc giọng Blaze. Chọn mặc định
 `VOICE_PROVIDER=blaze`, tái sử dụng SpeechService và chat SSE có persistence; thêm
 VAD/capture và điều phối lượt nói trong `BlazeVoiceSession`. Không thêm dependency
-hoặc migration. Chấp nhận độ trễ STT → text → TTS; không tự retry job tính phí và
-không thay giọng khi lỗi. Giữ native adapter để tương thích khi chủ động chọn
+hoặc migration. Chấp nhận độ trễ STT → text → TTS; không tự retry job generation
+tính phí và không thay giọng khi lỗi. Từ 2026-10-23, TTS chỉ retry POST khi `429`;
+realtime STT lỗi có fallback batch một lần. Giữ native adapter để tương thích khi chủ động chọn
 `VOICE_PROVIDER=native`; chặn signaling native trong chế độ Blaze. Browser
 speechSynthesis bị bỏ để bảo đảm toàn bộ giọng đọc là Blaze. Test dùng doubles;
 không suy ra chất lượng sư phạm, độ chính xác phát âm hoặc quota từ kết quả test.

@@ -87,14 +87,14 @@ async def test_gemini_stream_retry_voice_context_and_owned_history(
         system = calls[0]["systemInstruction"]
         assert isinstance(system, dict)
         text_prompt = system["parts"][0]["text"]
-        assert "Version: 5." in text_prompt
+        assert "Version: 6." in text_prompt
         assert "a patient English teacher" in text_prompt
         assert "wait for the learner before evaluating" in text_prompt
         assert (
             "reply in Vietnamese to Vietnamese, and in English to English"
             in text_prompt
         )
-        assert "Version: 5." in session.prompt
+        assert "Version: 6." in session.prompt
         assert "a patient English teacher" in session.prompt
         assert (
             "reply in Vietnamese to Vietnamese, and in English to English"

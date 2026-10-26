@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { api, hasSession, saveSession } from './api/database';
 import { AuthForm } from './AuthForm';
-import { LandingPage } from './landing/LandingPage';
-import { TutorWorkspace } from './tutor/TutorWorkspace';
 import { Logo } from './components/Logo';
 import { xoaBoNhoAmThanh } from './speech/audio';
 import type { Account, Capabilities, Conversation } from './types';
+
+const LandingPage = lazy(() =>
+  import('./landing/LandingPage').then((module) => ({ default: module.LandingPage })),
+);
+const TutorWorkspace = lazy(() =>
+  import('./tutor/TutorWorkspace').then((module) => ({ default: module.TutorWorkspace })),
+);
 
 export default function App() {
   const [signedIn, setSignedIn] = useState(hasSession);
@@ -171,18 +176,20 @@ export default function App() {
   }
   if (showLanding)
     return (
-      <LandingPage
-        signedIn={signedIn}
-        onStartLogin={() => {
-          setAuthRegister(false);
-          setShowLanding(false);
-        }}
-        onStartRegister={() => {
-          setAuthRegister(true);
-          setShowLanding(false);
-        }}
-        onEnterWorkspace={() => setShowLanding(false)}
-      />
+      <Suspense fallback={<p role="status">Đang mở trang giới thiệu…</p>}>
+        <LandingPage
+          signedIn={signedIn}
+          onStartLogin={() => {
+            setAuthRegister(false);
+            setShowLanding(false);
+          }}
+          onStartRegister={() => {
+            setAuthRegister(true);
+            setShowLanding(false);
+          }}
+          onEnterWorkspace={() => setShowLanding(false)}
+        />
+      </Suspense>
     );
   if (!signedIn)
     return <AuthForm initialRegister={authRegister} onOpenLanding={() => setShowLanding(true)} />;
@@ -206,39 +213,41 @@ export default function App() {
       </main>
     );
   return (
-    <TutorWorkspace
-      key={account.username}
-      account={account}
-      capabilities={capabilities}
-      conversations={conversations}
-      selected={selected}
-      draftIdentity={draftIdentity}
-      workspace={workspace}
-      busy={busy}
-      more={more}
-      error={error}
-      onNew={create}
-      onSelect={(row) => {
-        setSelected(row);
-        setDraftIdentity(null);
-      }}
-      onRetry={retryLoading}
-      onLoadMore={() => void loadMore()}
-      onLogout={logout}
-      onOpenLanding={() => setShowLanding(true)}
-      onCreated={(row) => {
-        setDraftIdentity(row.conversation_id);
-        setConversations((rows) => [
-          row,
-          ...rows.filter((item) => item.conversation_id !== row.conversation_id),
-        ]);
-      }}
-      onClose={(closed) => {
-        if (selected) setSelected(closed);
-        setConversations((rows) =>
-          rows.map((row) => (row.conversation_id === closed.conversation_id ? closed : row)),
-        );
-      }}
-    />
+    <Suspense fallback={<p role="status">Đang mở không gian học…</p>}>
+      <TutorWorkspace
+        key={account.username}
+        account={account}
+        capabilities={capabilities}
+        conversations={conversations}
+        selected={selected}
+        draftIdentity={draftIdentity}
+        workspace={workspace}
+        busy={busy}
+        more={more}
+        error={error}
+        onNew={create}
+        onSelect={(row) => {
+          setSelected(row);
+          setDraftIdentity(null);
+        }}
+        onRetry={retryLoading}
+        onLoadMore={() => void loadMore()}
+        onLogout={logout}
+        onOpenLanding={() => setShowLanding(true)}
+        onCreated={(row) => {
+          setDraftIdentity(row.conversation_id);
+          setConversations((rows) => [
+            row,
+            ...rows.filter((item) => item.conversation_id !== row.conversation_id),
+          ]);
+        }}
+        onClose={(closed) => {
+          if (selected) setSelected(closed);
+          setConversations((rows) =>
+            rows.map((row) => (row.conversation_id === closed.conversation_id ? closed : row)),
+          );
+        }}
+      />
+    </Suspense>
   );
 }

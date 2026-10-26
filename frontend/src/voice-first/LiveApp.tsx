@@ -2,7 +2,6 @@ import App from '../App';
 import '../index.css';
 import '../tutor/tutor.css';
 import '../profile/profile.css';
-import '../landing/landing.css';
 import '../tutor/workspace.css';
 import '../components/mate-listens.css';
 

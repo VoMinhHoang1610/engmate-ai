@@ -3,6 +3,7 @@ import { layGiongDoc, type GiongDoc } from '../api/voices';
 import { BieuTuong } from '../components/BieuTuong';
 import { docVanBan, dungDoc } from '../speech/audio';
 import { setSpeechVoice, useSpeechPreferences } from '../speech/preferences';
+import { voiceGender } from '../speech/identity';
 import './voice-settings.css';
 
 type Language = 'en' | 'vi';
@@ -12,7 +13,7 @@ type Preview = { language: Language; status: 'loading' | 'playing' } | null;
 const LANGUAGE_LABELS = { en: 'tiếng Anh', vi: 'tiếng Việt' } as const;
 const SAMPLES = {
   en: "Hello! I'm Mate, your English teacher. Let's practise speaking together.",
-  vi: 'Xin chào! Mình là thầy Mate. Hôm nay, chúng ta cùng luyện nói tiếng Anh nhé.',
+  vi: 'Xin chào! Mình là {name}. Hôm nay, chúng ta cùng luyện nói tiếng Anh nhé.',
 } as const;
 
 function validCatalog(voices: GiongDoc[], language: Language): boolean {
@@ -26,7 +27,10 @@ function validCatalog(voices: GiongDoc[], language: Language): boolean {
         typeof voice.name === 'string' &&
         voice.name.trim() &&
         voice.language === language &&
-        (voice.gender === null || voice.gender === 'male' || voice.gender === 'female'),
+        (voice.gender === undefined ||
+          voice.gender === null ||
+          voice.gender === 'male' ||
+          voice.gender === 'female'),
     ) &&
     new Set(voices.map((voice) => voice.id)).size === voices.length
   );
@@ -39,7 +43,7 @@ interface VoiceChoiceProps {
   previewError: string;
   notice: string;
   onSelect: (language: Language, id: string) => void;
-  onPreview: (language: Language) => void;
+  onPreview: (language: Language, voice: GiongDoc) => void;
   onStop: () => void;
 }
 
@@ -131,7 +135,11 @@ function VoiceChoice({
           data-active={playing || undefined}
           disabled={!playing && (catalog.status !== 'ready' || !available)}
           aria-label={`${playing ? 'Dừng nghe thử' : 'Nghe thử giọng'} ${label}`}
-          onClick={() => (playing ? onStop() : onPreview(language))}
+          onClick={() => {
+            const selected = catalog.voices.find((voice) => voice.id === value);
+            if (playing) onStop();
+            else if (selected) onPreview(language, selected);
+          }}
         >
           <BieuTuong ten={playing ? 'stop' : 'volume'} size={17} />
           {playing ? 'Dừng nghe thử' : 'Nghe thử'}
@@ -214,7 +222,7 @@ export function VoiceSettings() {
     }));
   }
 
-  async function previewVoice(language: Language) {
+  async function previewVoice(language: Language, voice: GiongDoc) {
     stop();
     const request = new AbortController();
     active.current = request;
@@ -231,7 +239,9 @@ export function VoiceSettings() {
         }));
     };
     try {
-      await docVanBan(SAMPLES[language], 1, request.signal, finish);
+      const gender = voiceGender(voice.id, voice.gender);
+      const name = gender === 'female' ? 'cô Mate' : gender === 'male' ? 'thầy Mate' : 'Mate';
+      await docVanBan(SAMPLES[language].replace('{name}', name), 1, request.signal, finish);
       if (active.current === request && !request.signal.aborted)
         setPreview({ language, status: 'playing' });
     } catch {
@@ -260,13 +270,14 @@ export function VoiceSettings() {
           previewError={errors[language]}
           notice={notices[language]}
           onSelect={select}
-          onPreview={(next) => void previewVoice(next)}
+          onPreview={(next, voice) => void previewVoice(next, voice)}
           onStop={stop}
         />
       ))}
       <p className="voice-settings-note">
         Lựa chọn được lưu riêng cho tài khoản trên trình duyệt này. Giọng hội thoại sẽ dùng giọng
-        bạn chọn gần nhất từ phiên nói tiếp theo.
+        bạn chọn gần nhất từ phiên nói tiếp theo, giữ một giọng xuyên suốt cả tiếng Việt và tiếng
+        Anh.
       </p>
     </div>
   );

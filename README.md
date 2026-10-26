@@ -1,5 +1,46 @@
 # EngMate-AI
 
+## Tối ưu chương trình — 23/10/2026
+
+Lịch sử mở 100 tin gần nhất và có nút **Tải tin nhắn cũ**; lượt mới đồng bộ phần
+thay đổi. Catalog giọng/bài học được cache, phản hồi có deadline đọc body, và
+backend giới hạn tác vụ AI đồng thời. Voice lưu riêng phần clip đã phát xong để
+ngắt lời không đưa toàn bộ đoạn chưa nghe vào context lượt sau.
+
+Trong **Cài đặt → Chẩn đoán độ trễ thoại**, có thể bật thu số đo cho phiên hiện
+tại rồi quay lại trò chuyện. Chỉ giữ tối đa 200 mẫu số trong RAM, không lưu âm
+thanh/nội dung hoặc tự upload. Backend bật log số đo bằng `VOICE_TIMING_LOGS=true`.
+Giới hạn mặc định: 16 chat/16 speech mỗi process; 2 chat/4 speech mỗi account,
+cấu hình qua `.env.example`. Chạy một worker. Restart backend khi thay cấu hình.
+
+Chi tiết triển khai và phần cần đo tiếp: [OPTIMIZATION_AUDIT](docs/OPTIMIZATION_AUDIT.md).
+TTS vẫn là job/MP3, nhưng mệnh đề đầu được gửi sớm và poll nhanh hơn; VAD 900 ms,
+model/giọng Blaze hiện tại được giữ. TTS/playback lỗi chỉ dừng audio, không kết thúc
+phiên hay hủy Gemini đang stream; realtime STT lỗi có fallback batch một lần. Tạo
+job TTS chỉ retry khi gặp `429`. Voice context dùng 12 tin/12.000 ký tự. Chưa có
+p50/p95 provider/loa thật.
+
+## STT realtime thử nghiệm (Blaze)
+
+Để nhận dạng trong lúc nói thay vì đợi tải WAV, đặt trong `.env`, khởi động lại
+backend và tải lại trang trước khi mở phiên thoại mới:
+
+```dotenv
+BLAZE_STT_MODE=realtime
+BLAZE_STT_REALTIME_MODEL=stt-stream-1.5
+```
+
+Mặc định vẫn `BLAZE_STT_MODE=batch` để không tự chuyển tài khoản sang model chưa
+xác minh quyền sử dụng. Realtime cần JWT/hội thoại đang mở và proxy WebSocket
+(`/api` ở Vite đã có `ws: true`); không hỗ trợ demo speech không đăng nhập. Khóa
+Blaze chỉ ở backend. Không tự kiểm quota bằng API trả phí; nếu realtime lỗi/timeout,
+frontend gửi lại chính WAV bằng batch **một lần** rồi mới báo lỗi nếu batch cũng
+thất bại. Fallback có thể phát sinh thêm phí. Đặt lại `batch`, restart và tải lại
+trang để quay về luồng cũ.
+Gemini, giọng/tốc độ TTS và khoảng im lặng 900 ms giữ nguyên. Đây chưa phải TTS
+realtime hoặc cam kết độ trễ; cần kiểm độ chính xác, ngập ngừng, mạng chậm và chi
+phí trên tài khoản Blaze thật trước khi dùng mặc định. Xem `docs/TESTING.md`.
+
 ## Lộ trình TOEIC đối thoại cùng Mate — 18/10/2026
 
 Lộ trình gồm **5 chặng, 25 cụm bài, 100 bài học nhỏ**, đi từ nền tảng đến các mục tiêu 450, 650, 800 và 900+. Mỗi bài có mục tiêu, phần giảng ngắn, mẫu câu, ví dụ/dịch, từ vựng, tình huống, ba gợi ý thực hành, bài nghe/đọc và câu kiểm tra có đáp án ở máy chủ. Đây là cách tổ chức giáo trình do EngMate đề xuất, không phải cấp độ chính thức của ETS hay cam kết đạt điểm.
@@ -29,7 +70,7 @@ Linh thú gốc ở trang đăng nhập tiếp tục làm người thầy trong 
 - **Phát âm:** nghe mẫu qua speech hiện có, ghi âm thành bản chép lời để đối chiếu và xem hướng dẫn từng âm. Chưa có bộ chấm phát âm; không hiển thị điểm mẫu 86/100.
 - **Từ vựng:** các cụm giao tiếp cũ vẫn cho tự đánh dấu đã nhớ trên trình duyệt. Từ của bài TOEIC nằm trong nội dung bài. **Tiến độ TOEIC** đọc kế hoạch, lượt luyện, kết quả kiểm tra, hoàn thành và lịch ôn từ máy chủ; không dùng dấu hoàn thành cũ trong localStorage. Không tạo tài khoản demo hoặc giả lập AI.
 
-Prompt `persona.v5` dùng chung cho chat và thoại: giải thích → làm mẫu → thực hành → nhận xét → ôn lại. Nội dung hội thoại vẫn theo tiếng Việt/Anh và yêu cầu của người học. Các đoạn mô tả phạm vi hội thoại ngày 16–18/10 dưới đây ghi lại nền tảng trước đợt thiết kế này; yêu cầu lớp học mới được ưu tiên.
+Prompt `persona.v6` dùng chung cho chat và thoại: giải thích → làm mẫu → thực hành → nhận xét → ôn lại. Nội dung hội thoại vẫn theo tiếng Việt/Anh và yêu cầu của người học. Các đoạn mô tả phạm vi hội thoại ngày 16–18/10 dưới đây ghi lại nền tảng trước đợt thiết kế này; yêu cầu lớp học mới được ưu tiên.
 
 Trên máy hiện tại, nếu lệnh `python` trỏ vào WindowsApps, dùng `.\.venv\Scripts\python.exe scripts/manage.py dev-backend` và `.\.venv\Scripts\python.exe scripts/manage.py dev-frontend` từ root. Provider local đang chọn Gemini; cấu hình khóa và model qua `.env` backend.
 
@@ -45,7 +86,7 @@ Khung chat nằm trong chiều cao màn hình; tin nhắn và lịch sử cuộn
 
 Chọn **Giọng đối thoại** trong icon tai nghe ở khung nhập để chọn giọng Blaze tiếng Việt/Anh trước hoặc trong cuộc gọi. Khi đổi giữa cuộc gọi, app dừng âm thanh và nối lại tuần tự trong cùng hội thoại, giữ lịch sử đã lưu và trạng thái tắt micro. Icon sóng âm bắt đầu/kết thúc thoại, icon micro ghi âm thành bản nháp. Ngôn ngữ nhận dạng dùng lựa chọn tiếng Việt/Anh trong menu âm thanh; Gemini vẫn theo yêu cầu ngôn ngữ, dịch hoặc luyện tập của người học. Prompt mới áp dụng cho cả hội thoại cũ khi gửi lượt mới.
 
-Menu tai nghe chứa lựa chọn giọng Blaze cho **Nghe câu trả lời**, dùng chung lựa chọn với **Cài đặt**, và ngôn ngữ **Ghi âm** (mặc định tiếng Việt). Chọn giọng không đổi ngôn ngữ nhận dạng lời nói. Giọng đọc nhận diện dấu tiếng Việt trong văn bản để chọn giọng Việt/Anh tương ứng; văn bản không dấu hoặc pha trộn có thể nhận diện chưa chính xác. Không dùng giọng trình duyệt thay Blaze khi TTS chậm hoặc lỗi.
+Menu tai nghe chứa lựa chọn giọng Blaze cho **Nghe câu trả lời**, dùng chung lựa chọn với **Cài đặt**, và ngôn ngữ **Ghi âm** (mặc định tiếng Việt). Chọn giọng không đổi ngôn ngữ nhận dạng lời nói. Mỗi phiên giữ đúng một speaker/ngôn ngữ TTS đã chọn cho cả câu Việt/Anh; không tự đổi người đọc theo nội dung. Không dùng giọng trình duyệt thay Blaze khi TTS chậm hoặc lỗi.
 
 **Phân công AI theo yêu cầu mới:** `LLM_PROVIDER=gemini`, `VOICE_PROVIDER=blaze`. Luồng thoại là **micro → Blaze STT → Gemini sinh lời giảng dạng chữ → Blaze TTS → loa**. Gemini phụ trách nội dung; giọng nói của Mate do Blaze tạo. Chat và thoại dùng chung lịch sử MySQL/prompt người thầy. Không mở Gemini Live trong chế độ này. Gemini Live/OpenAI Realtime chỉ còn là lựa chọn tương thích `VOICE_PROVIDER=native`, không tự bật khi Blaze lỗi. Kiểm chứng micro/loa/echo/ngắt lời và chất lượng giọng thực tế cần thực hiện riêng; tests tự động dùng transport doubles, không gọi API tính phí.
 
@@ -89,9 +130,9 @@ Web: http://127.0.0.1:5174 · Swagger: http://127.0.0.1:8010/docs · health: `/a
 
 Chat hiển thị phản hồi từng phần, có nút Dừng phản hồi; retry vẫn dùng cùng UUID. Micro từng lượt chép lời vào bản nháp qua Blaze để sửa trước khi gửi. Nút Nghe đọc phản hồi bằng Blaze; chế độ thoại tự chuyển bản chép lời qua Gemini rồi đọc câu trả lời bằng Blaze.
 
-Chọn **Bắt đầu thoại trực tiếp**, cấp quyền micro, nói rồi ngừng để hệ thống nhận hết lượt. Trình duyệt dùng AudioWorklet/VAD thu PCM16 mono 16 kHz, đóng gói WAV gửi Blaze STT; transcript gửi vào API chat streaming hiện có để Gemini trả lời và lưu lịch sử; văn bản hoàn tất chuyển sang Blaze TTS và phát MP3. Nói chen dừng âm thanh, hủy lượt xử lý cũ và bắt đầu lượt nghe mới. **Kết thúc thoại**, đổi trang hoặc logout dừng micro/audio/request; không phát phản hồi đến muộn. Cần Web Audio/AudioWorklet và secure context (HTTPS hoặc localhost). Giao diện khóa gửi chữ trong khi đang thoại.
+Chọn **Bắt đầu thoại trực tiếp**, cấp quyền micro, nói rồi ngừng để hệ thống nhận hết lượt. Trình duyệt dùng AudioWorklet/VAD thu PCM16 mono 16 kHz; gửi PCM realtime nếu bật, hoặc đóng gói WAV gửi Blaze batch (và gửi lại WAV một lần khi realtime lỗi); transcript gửi vào API chat streaming hiện có để Gemini trả lời và lưu lịch sử. Các câu đủ nghĩa chuyển sang Blaze TTS ngay khi Gemini còn đang sinh phần sau, rồi phát MP3 theo thứ tự; chuẩn bị trước tối đa một clip khi đang phát. Nói chen dừng âm thanh, hủy lượt xử lý cũ và bỏ clip đang chờ. **Kết thúc thoại**, đổi trang hoặc logout dừng micro/audio/request; không phát phản hồi đến muộn. Cần Web Audio/AudioWorklet, AbortSignal.any và secure context (HTTPS hoặc localhost). Giao diện khóa gửi chữ trong khi đang thoại.
 
-Luồng Blaze xử lý lần lượt STT → Gemini text → TTS nên có thời gian chờ qua từng dịch vụ, không phải native audio streaming. STT chỉ chép lời, chưa chấm phát âm. Job Blaze đã được tạo có thể vẫn chạy phía nhà cung cấp sau khi trình duyệt hủy. Backend tiếp tục chạy **một worker** vì registry hủy reply/native voice chưa phân tán. Các giới hạn registry 32 phiên/process, một phiên/account, heartbeat/TTL và reconnect của adapter native chỉ áp dụng khi chọn `VOICE_PROVIDER=native`; không phải phép đo khả năng phục vụ của luồng Blaze. Quyền micro, echo/speaker và ngắt lời cần kiểm chứng trên thiết bị thật.
+Ở chế độ batch, Blaze vẫn chờ STT theo file; cả hai chế độ vẫn chờ mỗi clip TTS hoàn chỉnh, chưa phải streaming audio xuyên suốt. Gemini và TTS nay chồng lấp theo câu, các kết nối HTTP tới Gemini/Blaze tái sử dụng trong vòng đời backend. Chia câu có thể tăng số job/chi phí so với một đoạn dài; sau hai clip đầu, câu ngắn được gom tới 120 ký tự. TTS chỉ retry tạo job khi `429`; lỗi generation/audio không replay. STT chỉ chép lời, chưa chấm phát âm. Job Blaze đã được tạo có thể vẫn chạy phía nhà cung cấp sau khi trình duyệt hủy. Backend tiếp tục chạy **một worker** vì registry hủy reply/native voice chưa phân tán. Các giới hạn registry 32 phiên/process, một phiên/account, heartbeat/TTL và reconnect của adapter native chỉ áp dụng khi chọn `VOICE_PROVIDER=native`; không phải phép đo khả năng phục vụ của luồng Blaze. Quyền micro, echo/speaker và ngắt lời cần kiểm chứng trên thiết bị thật. Cách thu số đo và giới hạn phép đo tại [kiểm thử độ trễ](docs/TESTING.md#đo-độ-trễ-thoại-p0p1).
 
 Vite đọc `BACKEND_URL` từ `.env` root hoặc terminal; mặc định `http://127.0.0.1:8010`, proxy cả HTTP và WebSocket `/api`. Reverse proxy khi triển khai cũng cần chuyển tiếp WebSocket Upgrade. Đổi port bằng `--port` và cập nhật proxy/CORS tương ứng. Dev và production dùng cùng backend, không còn lựa chọn demo ở build. Nếu báo `Port 5174 is already in use`, kiểm tra frontend đã chạy tại địa chỉ trên trước khi mở thêm tiến trình.
 

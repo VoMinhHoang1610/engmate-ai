@@ -1,6 +1,7 @@
 """Bounded account and conversation contracts for the chat API."""
 
 import re
+from typing import Literal
 from uuid import UUID
 
 from pydantic import (
@@ -10,6 +11,7 @@ from pydantic import (
     SecretStr,
     ValidationInfo,
     field_validator,
+    model_validator,
 )
 
 from app.schemas.ai import Level
@@ -86,6 +88,21 @@ class MessageCreate(Input):
 
     client_request_id: UUID
     message: str = Field(min_length=1, max_length=2000)
+    voice: bool = False
+    voice_gender: Literal["male", "female"] | None = None
+
+    @model_validator(mode="after")
+    def voice_identity(self) -> "MessageCreate":
+        """Only spoken turns may supply the selected speaker's gender."""
+        if self.voice_gender is not None and not self.voice:
+            raise ValueError("Voice gender requires voice mode.")
+        return self
+
+
+class PlaybackReceipt(Input):
+    """A monotonic played prefix in Unicode code points, never arbitrary text."""
+
+    heard_chars: int = Field(ge=0, le=12000)
 
 
 def snake_name(name: str) -> str:

@@ -1,14 +1,23 @@
 import { observeAudioLevel } from './visualLevel';
 import { api, apiFetch } from '../api/database';
+import { readJSON } from '../api/readJSON';
 import { streamTurn } from '../api/chatStream';
 import type { VoiceEvents, VoiceState } from './session';
+import { SpokenText } from './spokenText';
+import { SpeechQueue } from './speechQueue';
+import { VoiceLatencyTrace } from './latency';
+import { RealtimeSTT } from './realtimeSTT';
+import { voiceGender, type VoiceGender } from '../speech/identity';
 
 interface BlazeVoiceOptions {
   language?: 'en' | 'vi';
   voiceEn?: string;
   voiceVi?: string;
+  voiceLanguage?: 'en' | 'vi';
+  voiceGender?: VoiceGender | null;
   speed?: number;
   opening?: string;
+  sttMode?: 'batch' | 'realtime';
 }
 
 const SAMPLE_RATE = 16000;
@@ -18,7 +27,6 @@ const SILENCE_FRAMES = 9;
 const MAX_FRAMES = 300;
 const PRE_ROLL_FRAMES = 3;
 const RMS_THRESHOLD = 0.018;
-const VIETNAMESE = /[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i;
 
 function wav(frames: Int16Array[]): Blob {
   const length = frames.reduce((total, frame) => total + frame.length, 0);
@@ -48,34 +56,6 @@ function wav(frames: Int16Array[]): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-function spokenChunks(text: string): string[] {
-  const plain = text
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/[*_`#>|]/g, '')
-    .trim();
-  const result: string[] = [];
-  // Sentence boundaries let Vietnamese explanations and English examples use their own voices.
-  for (let sentence of plain.split(/(?<=[.!?…])\s+|\n+/).filter(Boolean)) {
-    while (sentence.length > 2000) {
-      const space = sentence.lastIndexOf(' ', 2000);
-      const boundary = space > 0 ? space : 2000;
-      result.push(sentence.slice(0, boundary));
-      sentence = sentence.slice(boundary).trim();
-    }
-    if (sentence) {
-      const previous = result.at(-1);
-      if (
-        previous &&
-        previous.length + sentence.length + 1 <= 2000 &&
-        VIETNAMESE.test(previous) === VIETNAMESE.test(sentence)
-      )
-        result[result.length - 1] += ` ${sentence}`;
-      else result.push(sentence);
-    }
-  }
-  return result;
-}
-
 /** Capture bounded speech turns; Gemini supplies text and Blaze alone supplies speech. */
 export class BlazeVoiceSession {
   private context: AudioContext | null = null;
@@ -96,14 +76,37 @@ export class BlazeVoiceSession {
   private frames: Int16Array[] = [];
   private voiced = 0;
   private silence = 0;
+  private lastVoicedAt = 0;
+  private trace: VoiceLatencyTrace | null = null;
+  private recognition: RealtimeSTT | null = null;
+  private delivery: { id: number; heard: number } | null = null;
+
+  private recordPlayback(delivery: { id: number; heard: number }): Promise<void> {
+    return api<void>(`/conversations/${this.identity}/messages/${delivery.id}/playback`, 'POST', {
+      heard_chars: delivery.heard,
+    });
+  }
   private state: VoiceState = 'idle';
+  private readonly speaker: string;
+  private readonly speechLanguage: 'en' | 'vi';
+  private readonly gender: VoiceGender | null;
 
   constructor(
     private readonly identity: number,
     private readonly events: VoiceEvents,
-    private readonly voiceId?: string,
+    voiceId?: string,
     private readonly options: BlazeVoiceOptions = {},
-  ) {}
+  ) {
+    const language = options.language ?? 'vi';
+    this.speaker =
+      voiceId ||
+      (language === 'vi' ? options.voiceVi : options.voiceEn) ||
+      (language === 'vi' ? 'HN-Nam-1-BL' : 'UK-Nu-1-TM');
+    this.speechLanguage =
+      options.voiceLanguage ??
+      (/^(HN|SG)-/.test(this.speaker) ? 'vi' : /^(UK|US)-/.test(this.speaker) ? 'en' : language);
+    this.gender = voiceGender(this.speaker, options.voiceGender);
+  }
 
   private status(state: VoiceState): void {
     this.state = state;
@@ -162,9 +165,16 @@ export class BlazeVoiceSession {
         const opening = new AbortController();
         this.controller = opening;
         this.events.transcript('assistant', this.options.opening);
-        for (const chunk of spokenChunks(this.options.opening)) {
-          if (opening.signal.aborted || this.ended) break;
-          await this.speak(chunk, opening.signal);
+        const queue = this.speechQueue(opening.signal);
+        try {
+          queue.push(new SpokenText().finish(this.options.opening));
+          queue.finish();
+          await queue.completion;
+        } catch {
+          // Opening audio is optional: the transcript is already visible and
+          // the learner can still continue with text or voice.
+          if (!opening.signal.aborted && !this.ended)
+            this.events.error('Không phát được lời mở đầu. Bạn vẫn có thể tiếp tục trò chuyện.');
         }
         if (this.controller === opening) {
           this.controller = null;
@@ -191,6 +201,7 @@ export class BlazeVoiceSession {
       frame.reduce((sum, sample) => sum + (sample / 32768) ** 2, 0) / frame.length,
     );
     const speaking = rms >= RMS_THRESHOLD;
+    if (speaking) this.lastVoicedAt = performance.now();
     if (!this.frames.length) {
       this.preRoll.push(frame);
       if (this.preRoll.length > PRE_ROLL_FRAMES) this.preRoll.shift();
@@ -204,14 +215,37 @@ export class BlazeVoiceSession {
       this.preRoll = [];
       this.silence = 0;
       this.status('user_speaking');
+      if (this.options.sttMode === 'realtime') {
+        const recognition = new RealtimeSTT(
+          this.identity,
+          this.options.language ?? 'vi',
+          (text) => {
+            if (!this.ended && this.recognition === recognition)
+              this.events.transcript('user', text);
+          },
+        );
+        this.recognition = recognition;
+        // Include pre-roll so connection setup never discards the start of a word.
+        for (const initial of this.frames) recognition.push(initial, true);
+      }
       return;
     }
     this.frames.push(frame);
+    this.recognition?.push(frame, speaking);
+    if (this.ended) return;
     this.silence = speaking ? 0 : this.silence + 1;
     if (this.silence < SILENCE_FRAMES && this.frames.length < MAX_FRAMES) return;
     const frames = this.frames;
+    const recognition = this.recognition;
+    this.recognition = null;
+    const trace = new VoiceLatencyTrace(
+      this.lastVoicedAt,
+      this.silence >= SILENCE_FRAMES ? 'silence' : 'max_duration',
+      this.options.sttMode ?? 'batch',
+      recognition?.traceId,
+    );
     this.resetCapture();
-    void this.respond(wav(frames));
+    void this.respond(recognition, wav(frames), trace);
   }
 
   private resetCapture(): void {
@@ -223,6 +257,10 @@ export class BlazeVoiceSession {
 
   private interrupt(): void {
     ++this.turn;
+    this.recognition?.cancel();
+    this.recognition = null;
+    this.trace?.finish('cancelled');
+    this.trace = null;
     this.controller?.abort();
     this.controller = null;
     if (this.textActive) {
@@ -234,36 +272,52 @@ export class BlazeVoiceSession {
           this.cancellationError = error;
         });
     }
+    const delivery = this.delivery;
+    this.delivery = null;
+    if (delivery) {
+      this.cancellation = this.cancellation
+        .then(() => this.recordPlayback(delivery))
+        .catch((error: unknown) => {
+          this.cancellationError = error;
+        });
+    }
   }
 
-  private async respond(blob: Blob): Promise<void> {
+  private async respond(
+    input: RealtimeSTT | null,
+    recording: Blob,
+    trace: VoiceLatencyTrace,
+  ): Promise<void> {
     const turn = ++this.turn;
     const controller = new AbortController();
     this.controller = controller;
+    this.trace = trace;
     const live = () => !this.ended && turn === this.turn && !controller.signal.aborted;
     this.status('processing');
+    const cancelSTT = () => input?.cancel();
+    controller.signal.addEventListener('abort', cancelSTT, { once: true });
     try {
-      const form = new FormData();
-      form.append('file', blob, 'recording.wav');
-      const response = await apiFetch(`/api/speech/stt?language=${this.options.language ?? 'vi'}`, {
-        method: 'POST',
-        body: form,
-        signal: controller.signal,
-      });
+      let transcript: string;
+      if (input) {
+        trace.markAt('stt_requested', input.requestedAt);
+        try {
+          transcript = await input.finish();
+        } catch (error) {
+          if (!live() || (error instanceof DOMException && error.name === 'AbortError')) return;
+          // Realtime STT is an optimization, not a dependency. Re-transcribe the
+          // captured PCM with the batch endpoint before ending the turn.
+          transcript = await this.transcribe(recording, controller.signal, trace);
+        }
+      } else {
+        transcript = await this.transcribe(recording, controller.signal, trace);
+      }
       if (!live()) return;
-      if (!response.ok)
-        throw new Error(
-          'Blaze chưa chuyển được lời nói thành chữ. Kiểm tra dịch vụ giọng nói và thử lại.',
-        );
-      const data: unknown = await response.json();
-      if (!live()) return;
-      if (!data || typeof data !== 'object' || !('text' in data) || typeof data.text !== 'string')
-        throw new Error('Bản chép lời Blaze không hợp lệ.');
-      const message = data.text.trim();
+      const message = transcript.trim();
       if (!message)
         throw new Error('Chưa nghe rõ lời nói. Hãy bắt đầu thoại lại và nói gần micro hơn.');
       if (message.length > 2000)
         throw new Error('Lời nói quá dài. Hãy chia thành câu hỏi ngắn hơn.');
+      trace.mark('stt_final');
       this.events.transcript('user', message);
       await this.cancellation;
       if (!live()) return;
@@ -272,75 +326,241 @@ export class BlazeVoiceSession {
           'Chưa xác nhận hủy câu trả lời trước. Hãy tải lại hội thoại trước khi tiếp tục.',
         );
       let text = '';
+      const spoken = new SpokenText();
+      const delivery = { id: 0, heard: 0 };
+      // Speech has its own cancel scope: a TTS/playback failure stops audio but
+      // must not abort the Gemini response that is still producing useful text.
+      const audioController = new AbortController();
+      const audioSignal = AbortSignal.any([controller.signal, audioController.signal]);
+      const queue = new SpeechQueue(
+        audioSignal,
+        (phrase) => this.prepareSpeech(phrase, audioSignal, trace),
+        async (blob) => {
+          const end = spoken.nextEnd();
+          await this.playSpeech(blob, audioSignal, trace);
+          if (live() && !audioSignal.aborted) delivery.heard = end;
+        },
+      );
+      let audioNotified = false;
+      const notifyAudioFailure = (error: unknown) => {
+        if (audioNotified) return;
+        audioNotified = true;
+        const detail =
+          error instanceof Error && error.message
+            ? error.message
+            : 'Không phát được giọng nói Blaze.';
+        this.events.error(`${detail} Câu trả lời vẫn được lưu trong hội thoại.`);
+      };
+      const audioDone = queue.completion.catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          // Stop a clip that is already playing; the remaining reply stays text.
+          audioController.abort();
+          notifyAudioFailure(error);
+        }
+      });
       this.textActive = true;
-      const result = await streamTurn(
+      trace.mark('llm_requested');
+      const streaming = streamTurn(
         this.identity,
-        { client_request_id: crypto.randomUUID(), message },
+        {
+          client_request_id: crypto.randomUUID(),
+          message,
+          voice: true,
+          voice_gender: this.gender,
+        },
         controller.signal,
         (event) => {
           if (!live()) return;
+          if (event.type === 'start') {
+            delivery.id = event.response_id;
+            this.delivery = delivery;
+          }
           if (event.type === 'delta') {
             text += event.delta;
+            if (event.delta) trace.mark('llm_first_text');
+            const chunks = spoken.push(event.delta);
+            if (chunks.length) trace.mark('first_phrase');
+            // Start paid TTS preparation before React re-renders the growing caption.
+            queue.push(chunks);
             this.events.transcript('assistant', text);
-          } else if (event.type === 'done') this.events.sync();
+          }
         },
+        trace.id,
       );
+      let result: Awaited<ReturnType<typeof streamTurn>>;
+      try {
+        result = await streaming;
+      } catch (error) {
+        // The text turn failed; stop speech work that belongs to it. A speech
+        // failure alone is handled below and must not cancel a useful reply.
+        controller.abort();
+        await audioDone;
+        throw error;
+      }
       if (!live()) return;
       this.textActive = false;
-      if (result.reply.status !== 'completed' || !result.reply.content.trim())
+      if (!result || result.reply.status !== 'completed' || !result.reply.content.trim())
         throw new Error(
           'Gemini chưa hoàn tất câu trả lời. Hãy kiểm tra hội thoại trước khi thử lại.',
         );
       this.events.transcript('assistant', result.reply.content);
+      delivery.id = result.reply.message_id;
+      this.delivery = delivery;
       this.events.sync();
-      if (result.reply.content.length > 20000)
-        throw new Error('Câu trả lời quá dài để đọc. Bạn có thể xem nội dung trong hội thoại.');
-      for (const chunk of spokenChunks(result.reply.content)) {
+      trace.mark('llm_completed');
+      const tail = spoken.finish(result.reply.content);
+      if (tail.length) trace.mark('first_phrase');
+      queue.push(tail);
+      queue.finish();
+      await audioDone;
+      if (live()) {
+        if (delivery.id) await this.recordPlayback({ ...delivery });
         if (!live()) return;
-        await this.speak(chunk, controller.signal);
+        this.delivery = null;
+        trace.finish('completed');
+        this.status('listening');
       }
-      if (live()) this.status('listening');
     } catch (error) {
-      if (live()) await this.fail(error instanceof Error ? error.message : 'Phiên thoại gặp lỗi.');
+      if (!this.ended && turn === this.turn) {
+        if (this.cancellationError) {
+          trace.finish('failed');
+          await this.fail(
+            'Chưa xác nhận hủy câu trả lời trước. Hãy tải lại hội thoại trước khi tiếp tục.',
+          );
+          return;
+        }
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        this.recoverTurn(trace, controller, error);
+      }
     } finally {
+      controller.signal.removeEventListener('abort', cancelSTT);
+      cancelSTT();
       if (this.controller === controller) {
         this.controller = null;
+        this.trace = null;
         this.textActive = false;
       }
     }
   }
 
-  private async speak(text: string, signal: AbortSignal): Promise<void> {
-    const language = VIETNAMESE.test(text.normalize('NFC')) ? 'vi' : 'en';
-    const selectedLanguage = this.voiceId?.match(/^(HN|SG)-/)
-      ? 'vi'
-      : this.voiceId?.match(/^(UK|US)-/)
-        ? 'en'
-        : null;
-    const speaker =
-      selectedLanguage === language
-        ? this.voiceId
-        : language === 'vi'
-          ? this.options.voiceVi
-          : this.options.voiceEn;
-    const response = await apiFetch('/api/speech/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal,
-      body: JSON.stringify({
-        text,
-        language,
-        speaker_id: speaker || (language === 'vi' ? 'HN-Nam-1-BL' : 'UK-Nu-1-TM'),
-        speed: Math.min(2, Math.max(0.5, this.options.speed ?? 1)),
-      }),
-    });
-    if (signal.aborted) return;
+  private async transcribe(
+    recording: Blob,
+    signal: AbortSignal,
+    trace: VoiceLatencyTrace,
+  ): Promise<string> {
+    const form = new FormData();
+    form.append('file', recording, 'recording.wav');
+    trace.mark('stt_requested');
+    const response = await apiFetch(
+      `/api/speech/stt?language=${this.options.language ?? 'vi'}&voice_trace_id=${trace.id}`,
+      { method: 'POST', body: form, signal },
+    );
+    if (signal.aborted) throw new DOMException('Speech turn cancelled', 'AbortError');
     if (!response.ok)
-      throw new Error('Blaze chưa tạo được giọng nói. Câu trả lời đã được lưu trong hội thoại.');
-    const blob = await response.blob();
+      throw new Error(
+        'Blaze chưa chuyển được lời nói thành chữ. Kiểm tra dịch vụ giọng nói và thử lại.',
+      );
+    const data: unknown = await readJSON(response, signal);
+    if (!data || typeof data !== 'object' || !('text' in data) || typeof data.text !== 'string')
+      throw new Error('Bản chép lời Blaze không hợp lệ.');
+    trace.mark('stt_final');
+    return data.text;
+  }
+
+  /** Keep the microphone/session alive when one turn cannot complete. */
+  private recoverTurn(trace: VoiceLatencyTrace, controller: AbortController, error: unknown): void {
+    trace.finish('failed');
+    if (!controller.signal.aborted) controller.abort();
+    if (this.textActive) {
+      this.textActive = false;
+      this.cancellation = this.cancellation
+        .then(() => api<void>(`/conversations/${this.identity}/cancel`, 'POST'))
+        .catch((failure: unknown) => {
+          this.cancellationError = failure;
+        });
+    }
+    this.delivery = null;
+    this.trace = null;
+    this.status('listening');
+    this.events.error(error instanceof Error ? error.message : 'Phiên thoại gặp lỗi.');
+    this.events.sync();
+  }
+
+  private speechQueue(signal: AbortSignal, trace?: VoiceLatencyTrace): SpeechQueue {
+    return new SpeechQueue(
+      signal,
+      (text) => this.prepareSpeech(text, signal, trace),
+      (blob) => this.playSpeech(blob, signal, trace),
+    );
+  }
+
+  private async prepareSpeech(
+    text: string,
+    signal: AbortSignal,
+    trace?: VoiceLatencyTrace,
+  ): Promise<Blob | null> {
+    if (signal.aborted) return null;
+    // Keep one speaker/model language for the whole call, including bilingual phrases.
+    // Content detection used to switch to a different person between streamed chunks.
+    trace?.mark('tts_requested');
+    const timeout = new AbortController();
+    const deadline = setTimeout(() => timeout.abort(), 95000);
+    try {
+      const response = await apiFetch(
+        `/api/speech/tts${trace ? `?voice_trace_id=${trace.id}` : ''}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.any([signal, timeout.signal]),
+          body: JSON.stringify({
+            text,
+            language: this.speechLanguage,
+            speaker_id: this.speaker,
+            speed: Math.min(2, Math.max(0.5, this.options.speed ?? 1)),
+          }),
+        },
+      );
+      if (signal.aborted) return null;
+      trace?.mark('tts_headers');
+      if (!response.ok)
+        throw new Error(
+          'Blaze chưa tạo được giọng nói. Bạn có thể kiểm tra câu trả lời trong hội thoại.',
+        );
+      if (!response.body) throw new Error('Âm thanh Blaze không hợp lệ.');
+      const reader = response.body.getReader();
+      const parts: ArrayBuffer[] = [];
+      let bytes = 0;
+      try {
+        while (true) {
+          const part = await reader.read();
+          if (signal.aborted) return null;
+          if (part.done) break;
+          if (part.value.length) trace?.mark('tts_first_byte');
+          bytes += part.value.length;
+          if (bytes > 8 * 1024 * 1024) throw new Error('Âm thanh Blaze vượt giới hạn.');
+          parts.push(part.value.slice().buffer);
+        }
+      } finally {
+        await reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
+      const blob = new Blob(parts, { type: response.headers.get('Content-Type') ?? '' });
+      if (signal.aborted) return null;
+      if (!blob.size || !blob.type.startsWith('audio/'))
+        throw new Error('Âm thanh Blaze không hợp lệ.');
+      trace?.mark('audio_ready');
+      return blob;
+    } finally {
+      clearTimeout(deadline);
+    }
+  }
+
+  private async playSpeech(
+    blob: Blob,
+    signal: AbortSignal,
+    trace?: VoiceLatencyTrace,
+  ): Promise<void> {
     if (signal.aborted) return;
-    if (!blob.size || !blob.type.startsWith('audio/'))
-      throw new Error('Âm thanh Blaze không hợp lệ.');
     const url = URL.createObjectURL(blob);
     const player = new Audio(url);
     let stopMeter: (() => void) | undefined;
@@ -358,9 +578,25 @@ export class BlazeVoiceSession {
     }
     try {
       await new Promise<void>((resolve, reject) => {
+        let finished = false;
+        let position = 0;
+        let progressedAt = Date.now();
+        // A media element can stop advancing without firing ended/error. Bound
+        // inactivity rather than clip duration so long replies can still play.
+        const watchdog = setInterval(() => {
+          if (Number.isFinite(player.currentTime) && player.currentTime > position) {
+            position = player.currentTime;
+            progressedAt = Date.now();
+          } else if (Date.now() - progressedAt >= 15_000) {
+            finish(new Error('Âm thanh Blaze bị treo.'));
+          }
+        }, 1000);
         const finish = (error?: Error) => {
+          if (finished) return;
+          finished = true;
+          clearInterval(watchdog);
           signal.removeEventListener('abort', cancel);
-          player.onended = player.onerror = null;
+          player.onended = player.onerror = player.onplaying = null;
           if (error) reject(error);
           else resolve();
         };
@@ -369,16 +605,16 @@ export class BlazeVoiceSession {
           finish();
         };
         signal.addEventListener('abort', cancel, { once: true });
+        player.onplaying = () => {
+          if (finished || signal.aborted) return;
+          trace?.mark('playback_started');
+          this.status('assistant_speaking');
+        };
         player.onended = () => finish();
         player.onerror = () => finish(new Error('Không phát được âm thanh Blaze.'));
         if (signal.aborted) cancel();
         else {
-          this.status('assistant_speaking');
-          void player
-            .play()
-            .catch(() =>
-              finish(new Error('Trình duyệt chặn phát âm thanh. Hãy bắt đầu thoại lại.')),
-            );
+          void player.play().catch(() => finish(new Error('Trình duyệt chặn phát âm thanh.')));
         }
       });
     } finally {
@@ -387,6 +623,7 @@ export class BlazeVoiceSession {
       player.pause();
       player.removeAttribute('src');
       URL.revokeObjectURL(url);
+      if (!signal.aborted && this.state === 'assistant_speaking') this.status('processing');
     }
   }
 
@@ -396,6 +633,8 @@ export class BlazeVoiceSession {
       track.enabled = !value;
     });
     this.resetCapture();
+    this.recognition?.cancel();
+    this.recognition = null;
     if (value && this.state === 'user_speaking') this.status('listening');
   }
 

@@ -46,6 +46,8 @@
   color-scheme: light;
   display: flex;
   flex-direction: row;
+  width: 100%;
+  min-width: 0;
   min-height: 100dvh;
   overflow: clip;
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
@@ -223,15 +225,15 @@
   box-shadow: none;
 }
 
-/* Navigation expands over its reserved rail so content never moves under a click. */
+/* Keep the sidebar as part of normal flow so the chat pane reflows instead of overlapping it. */
 .workspace-sidebar {
   --sidebar-width: 72px;
-  position: fixed;
-  inset: 0 auto 0 0;
+  position: relative;
   z-index: 30;
   display: flex;
   flex: 0 0 var(--sidebar-width);
   width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
@@ -240,7 +242,8 @@
   border-right: 1px solid var(--workspace-line);
   transition:
     width 180ms ease,
-    flex-basis 180ms ease;
+    flex-basis 180ms ease,
+    min-width 180ms ease;
 }
 .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
   --sidebar-width: 240px;
@@ -426,11 +429,11 @@
 .workspace-body {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1 1 auto;
   width: 0;
   min-width: 0;
   min-height: 100dvh;
-  margin-left: 72px;
+  margin-left: 0;
 }
 .workspace-topbar {
   display: flex;
@@ -1199,6 +1202,20 @@
   :root .workspace-shell.workspace-shell {
     flex-direction: column;
   }
+  .workspace-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 72;
+    width: min(280px, calc(100vw - 40px));
+    min-width: min(280px, calc(100vw - 40px));
+    height: 100dvh;
+    border-right: 1px solid var(--workspace-line);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 180ms ease,
+      visibility 180ms ease;
+  }
   .workspace-mobile-bar {
     display: flex;
     align-items: center;
@@ -1227,19 +1244,11 @@
     background: var(--workspace-bg);
     color: var(--workspace-text);
   }
-  .workspace-sidebar,
   .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 72;
     width: min(280px, calc(100vw - 40px));
-    height: 100dvh;
-    border-right: 1px solid var(--workspace-line);
+    min-width: min(280px, calc(100vw - 40px));
     transform: translateX(-100%);
     visibility: hidden;
-    transition:
-      transform 180ms ease,
-      visibility 180ms ease;
   }
   .workspace-sidebar[data-mobile-open='true'] {
     transform: translateX(0);

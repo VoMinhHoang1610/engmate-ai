@@ -199,10 +199,10 @@ export function TutorWorkspace(props: Props) {
   }
   function startPractice(kind: 'practice' | 'explain' | 'assessment' | 'review') {
     const prompts = {
-      practice: `Thầy Mate ơi, hãy hướng dẫn tôi luyện hội thoại về “${lesson.topic}” ở mức ${learning.level}. Giải thích ngắn bằng tiếng Việt, rồi đóng vai người đối thoại và hỏi từng câu bằng tiếng Anh. Hãy đợi tôi trả lời rồi sửa lỗi nhẹ nhàng. Bắt đầu với mẫu: ${lesson.example}`,
-      explain: `Thầy Mate hãy giải thích thêm cấu trúc “${lesson.rule}” ở mức ${learning.level}, cho một ví dụ dễ hiểu rồi hỏi tôi một câu thực hành.`,
-      assessment: `Thầy Mate hãy đánh giá sơ bộ tiếng Anh của tôi để học ${learning.goal === 'work' ? 'học tập và công việc' : goalTitle}, ${learning.minutes} phút mỗi ngày. Tôi tự chọn mức ${learning.level}. Hãy hỏi 3 câu lần lượt, đợi tôi trả lời từng câu rồi mới đưa nhận xét; không khẳng định trình độ khi chưa đủ bằng chứng.`,
-      review: `Thầy Mate hãy giúp tôi ôn các cụm: ${lesson.words.map((w) => w[0]).join(', ')}. Cho tình huống về ${lesson.topic}, hỏi từng câu và chờ tôi trả lời trước khi nhận xét.`,
+      practice: `Mate ơi, hãy hướng dẫn tôi luyện hội thoại về “${lesson.topic}” ở mức ${learning.level}. Giải thích ngắn bằng tiếng Việt, rồi đóng vai người đối thoại và hỏi từng câu bằng tiếng Anh. Hãy đợi tôi trả lời rồi sửa lỗi nhẹ nhàng. Bắt đầu với mẫu: ${lesson.example}`,
+      explain: `Mate hãy giải thích thêm cấu trúc “${lesson.rule}” ở mức ${learning.level}, cho một ví dụ dễ hiểu rồi hỏi tôi một câu thực hành.`,
+      assessment: `Mate hãy đánh giá sơ bộ tiếng Anh của tôi để học ${learning.goal === 'work' ? 'học tập và công việc' : goalTitle}, ${learning.minutes} phút mỗi ngày. Tôi tự chọn mức ${learning.level}. Hãy hỏi 3 câu lần lượt, đợi tôi trả lời từng câu rồi mới đưa nhận xét; không khẳng định trình độ khi chưa đủ bằng chứng.`,
+      review: `Mate hãy giúp tôi ôn các cụm: ${lesson.words.map((w) => w[0]).join(', ')}. Cho tình huống về ${lesson.topic}, hỏi từng câu và chờ tôi trả lời trước khi nhận xét.`,
     };
     props.onNew();
     setDraft(prompts[kind]);
@@ -248,7 +248,7 @@ export function TutorWorkspace(props: Props) {
     course: [
       'LỚP HỌC BẰNG GIỌNG NÓI',
       'Lớp học cùng Mate',
-      'Nghe thầy giảng, trả lời và luyện lại từng bước.',
+      'Nghe Mate giảng, trả lời và luyện lại từng bước.',
     ],
     profile: [
       'TÀI KHOẢN CỦA BẠN',
@@ -268,7 +268,7 @@ export function TutorWorkspace(props: Props) {
     lesson: [
       'LỚP HỌC CÙNG MATE',
       lesson.topic,
-      'Nghe thầy giảng, thử nói và tự tin dùng điều vừa học.',
+      'Nghe Mate giảng, thử nói và tự tin dùng điều vừa học.',
     ],
     pronunciation: [
       'LUYỆN PHÁT ÂM',
@@ -715,10 +715,10 @@ export function TutorWorkspace(props: Props) {
                         <p>
                           {view === 'summary'
                             ? 'Ôn lại mẫu câu, luyện phát âm và thử kể một tình huống của chính bạn.'
-                            : 'Giữ nhịp học phù hợp với bạn. Đừng ngại hỏi lại khi cần thầy giải thích.'}
+                            : 'Giữ nhịp học phù hợp với bạn. Đừng ngại hỏi lại khi cần Mate giải thích.'}
                         </p>
                         <button className="text-button" onClick={() => startPractice('review')}>
-                          Ôn lại cùng thầy Mate <BieuTuong ten="arrow" size={16} />
+                          Ôn lại cùng Mate <BieuTuong ten="arrow" size={16} />
                         </button>
                       </article>
                     </div>

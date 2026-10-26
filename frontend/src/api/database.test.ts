@@ -115,6 +115,22 @@ describe('authenticated database transport', () => {
     expect(networkSignal?.aborted).toBe(true);
   });
 
+  it('keeps caller cancellation linked after response headers arrive', async () => {
+    const caller = new AbortController();
+    let networkSignal: AbortSignal | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_path: string, options: RequestInit) => {
+        networkSignal = options.signal as AbortSignal;
+        return new Response('audio');
+      }),
+    );
+    await apiFetch('/api/speech/tts', { signal: caller.signal });
+    expect(networkSignal?.aborted).toBe(false);
+    caller.abort();
+    expect(networkSignal?.aborted).toBe(true);
+  });
+
   it('aborts a stalled API request at its deadline', async () => {
     vi.useFakeTimers();
     try {

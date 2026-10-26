@@ -213,6 +213,7 @@ describe('Blaze voice with Gemini reasoning', () => {
   it('uses Blaze catalog and forwards separate voices and recognition language', async () => {
     vi.mocked(liveVoices).mockResolvedValue({
       provider: 'blaze',
+      stt_mode: 'realtime',
       default_voice: 'HN-Nam-1-BL',
       voices: [
         { id: 'HN-Nam-1-BL', name: 'Mate Vietnamese', language: 'vi' },
@@ -245,7 +246,12 @@ describe('Blaze voice with Gemini reasoning', () => {
     expect(transport.instances[0]).toMatchObject({
       identity: 7,
       voiceId: 'UK-Nam-1-DT',
-      options: { language: 'en', voiceEn: 'UK-Nam-1-DT', voiceVi: 'HN-Nam-1-BL' },
+      options: {
+        language: 'en',
+        voiceEn: 'UK-Nam-1-DT',
+        voiceVi: 'HN-Nam-1-BL',
+        sttMode: 'realtime',
+      },
     });
   });
   it('refuses native voice metadata when Blaze is required', async () => {
@@ -271,8 +277,18 @@ const blazeCatalog = {
   provider: 'blaze',
   default_voice: 'HN-Nam-1-BL',
   voices: [
-    { id: 'HN-Nam-1-BL', name: 'Vietnamese default', language: 'vi' as const },
-    { id: 'HN-Nu-2-BL', name: 'Vietnamese chosen', language: 'vi' as const },
+    {
+      id: 'HN-Nam-1-BL',
+      name: 'Vietnamese default',
+      language: 'vi' as const,
+      gender: 'male' as const,
+    },
+    {
+      id: 'HN-Nu-2-BL',
+      name: 'Vietnamese chosen',
+      language: 'vi' as const,
+      gender: 'female' as const,
+    },
     { id: 'UK-Nu-1-TM', name: 'English default', language: 'en' as const },
     { id: 'UK-Nam-1-DT', name: 'English chosen', language: 'en' as const },
   ],
@@ -301,6 +317,22 @@ async function preferredBlaze(startRequest = 0) {
 }
 
 describe('shared voice preferences in live dialogue', () => {
+  it('replaces the voice identity together with the speaker when switching male to female', async () => {
+    const { select } = await preferredBlaze();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' }));
+    await screen.findByText('Đang nghe');
+    expect(transport.instances[0]).toMatchObject({
+      options: { voiceGender: 'male', voiceLanguage: 'vi' },
+    });
+    fireEvent.change(select, { target: { value: 'HN-Nu-2-BL' } });
+    await waitFor(() => expect(transport.instances).toHaveLength(2));
+    expect(transport.instances[0].stop).toHaveBeenCalledOnce();
+    expect(transport.instances[1]).toMatchObject({
+      voiceId: 'HN-Nu-2-BL',
+      options: { voiceGender: 'female', voiceLanguage: 'vi' },
+    });
+  });
+
   it('starts with Settings voices for both languages and the saved rate', async () => {
     setSpeechVoice('en', 'UK-Nam-1-DT');
     setSpeechVoice('vi', 'HN-Nu-2-BL');
