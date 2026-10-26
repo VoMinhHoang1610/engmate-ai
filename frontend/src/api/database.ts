@@ -1,4 +1,5 @@
 /** Authenticated API access. Provider and database secrets never enter the browser. */
+import { readJSON } from './readJSON';
 interface Session {
   access_token: string;
   refresh_token: string;
@@ -9,9 +10,10 @@ let refreshing: Promise<void> | null = null;
 
 async function boundedFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
-  const abort = () => controller.abort(options.signal?.reason);
-  if (options.signal?.aborted) abort();
-  options.signal?.addEventListener('abort', abort, { once: true });
+  // Keep caller cancellation attached to the body, not only until response headers.
+  const signal = options.signal
+    ? AbortSignal.any([controller.signal, options.signal])
+    : controller.signal;
   const timeout = path.includes('/speech/tts')
     ? 95000
     : path.includes('/auth/refresh')
@@ -22,10 +24,9 @@ async function boundedFetch(path: string, options: RequestInit = {}): Promise<Re
     timeout,
   );
   try {
-    return await fetch(path, { ...options, signal: controller.signal });
+    return await fetch(path, { ...options, signal });
   } finally {
     window.clearTimeout(timer);
-    options.signal?.removeEventListener('abort', abort);
   }
 }
 try {
@@ -40,6 +41,7 @@ export function hasSession() {
 }
 export function saveSession(value: Session | null) {
   sessionEpoch++;
+  window.dispatchEvent(new Event('engmate-account-changed'));
   persistSession(value);
 }
 function persistSession(value: Session | null) {
@@ -64,7 +66,7 @@ async function refreshSession() {
         saveSession(null);
         throw new Error('Phiên đăng nhập đã hết hạn.');
       }
-      const tokens = (await response.json()) as Session;
+      const tokens = await readJSON<Session>(response, undefined, 15000);
       if (epoch !== sessionEpoch) throw new Error('Phiên đăng nhập đã thay đổi.');
       persistSession(tokens);
     })().finally(() => {
@@ -90,6 +92,7 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
   ) {
     if (session.access_token === access) await refreshSession();
     if (epoch !== sessionEpoch) return response;
+    void response.body?.cancel().catch(() => undefined);
     response = await send();
   }
   return response;
@@ -108,6 +111,7 @@ export async function api<T>(
       : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   });
   if (!response.ok) {
+    void response.body?.cancel().catch(() => undefined);
     const errors: Record<number, string> = {
       401: 'Tài khoản hoặc mật khẩu không đúng. Vui lòng đăng nhập lại.',
       409: 'Dữ liệu đã thay đổi hoặc đã tồn tại. Hãy tải lại và thử lại.',
@@ -119,7 +123,7 @@ export async function api<T>(
     };
     throw new Error(errors[response.status] ?? 'Không thực hiện được yêu cầu. Hãy thử lại.');
   }
-  return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
+  return response.status === 204 ? (undefined as T) : await readJSON<T>(response, signal);
 }
 export async function authenticate(register: boolean, body: unknown) {
   saveSession(await api<Session>(register ? '/auth/register' : '/auth/login', 'POST', body));

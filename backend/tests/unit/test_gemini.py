@@ -164,8 +164,9 @@ async def test_missing_key_timeout_block_and_malformed_json() -> None:
 async def test_factory_capabilities_and_private_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Gemini alone enables chat/live; no OpenAI key is required or substituted."""
+    """Explicit native mode enables Gemini Live without substituting OpenAI."""
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
+    monkeypatch.setenv("VOICE_PROVIDER", "native")
     monkeypatch.setenv("GEMINI_API_KEY", "gemini-test-key")
     monkeypatch.setenv("OPENAI_API_KEY", "")
     config = get_settings()

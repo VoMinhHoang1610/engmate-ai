@@ -20,14 +20,19 @@ def capabilities(request: Request) -> Record:
     mock = settings.llm_provider == "mock"
     return {
         "provider": settings.llm_provider,
+        "voice_provider": settings.voice_provider,
         "is_mock": mock,
         "chat": settings.chat_configured,
         "streaming": settings.chat_configured,
         "speech": bool(settings.blaze_api_key),
-        "realtime": settings.chat_configured,
+        "realtime": settings.voice_configured,
         "reason": (
             None
-            if settings.chat_configured
-            else "Cần cấu hình khóa API của provider đã chọn để chat và thoại."
+            if settings.voice_configured
+            else (
+                "Cần cấu hình BLAZE_API_KEY để Mate nói bằng giọng Blaze."
+                if settings.chat_configured
+                else "Cần cấu hình khóa API của provider đã chọn để chat và thoại."
+            )
         ),
     }

@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { VoiceSession, type VoiceState } from './session';
+import { VoiceSession, type VoiceEvents, type VoiceState } from './session';
 import { GeminiVoiceSession } from './gemini';
+import { BlazeVoiceSession } from './blaze';
 import { liveVoices, type VoiceCatalog } from './catalog';
 import { BieuTuong } from '../components/BieuTuong';
 import { AudioSettingsMenu } from '../components/AudioSettingsMenu';
+import { getSpeechPreferences, setSpeechVoice, useSpeechPreferences } from '../speech/preferences';
 
 const labels: Record<VoiceState, string> = {
-  idle: 'Sẵn sàng thoại',
+  idle: 'Nói cùng Mate',
   connecting: 'Đang kết nối…',
   listening: 'Đang nghe',
   user_speaking: 'Bạn đang nói',
-  processing: 'AI đang suy nghĩ…',
-  assistant_speaking: 'AI đang nói — bạn có thể chen lời',
-  interrupting: 'Đang ngắt lời AI…',
+  processing: 'Để mình nghĩ chút',
+  assistant_speaking: 'Mate đang nói',
+  interrupting: 'Đến lượt bạn',
   reconnecting: 'Đang kết nối lại…',
   error: 'Phiên thoại gặp lỗi',
 };
@@ -25,6 +27,15 @@ export function VoiceChat({
   provider = 'openai',
   ensureIdentity,
   audioOptions,
+  onState,
+  onLevel,
+  onMuted,
+  onCaption,
+  onReady,
+  speechOptions,
+  speechProvider,
+  opening,
+  startRequest = 0,
 }: {
   identity: number | undefined;
   ensureIdentity: () => Promise<number>;
@@ -33,11 +44,34 @@ export function VoiceChat({
   onActive: (active: boolean) => void;
   onSync: () => void;
   provider?: string;
+  onState?: (state: VoiceState) => void;
+  onLevel?: (level: number | undefined) => void;
+  onMuted?: (muted: boolean) => void;
+  onCaption?: (caption: string) => void;
+  onReady?: (ready: boolean) => void;
+  speechOptions?: {
+    language: 'en' | 'vi';
+    voiceEn: string;
+    voiceVi: string;
+  };
+  speechProvider?: 'blaze' | 'native';
+  opening?: string;
+  startRequest?: number;
 }) {
+  const speechPreferences = useSpeechPreferences();
   const [state, setState] = useState<VoiceState>('idle');
+  useEffect(() => {
+    onState?.(state);
+  }, [state, onState]);
   const [error, setError] = useState('');
   const [muted, setMuted] = useState(false);
+  useEffect(() => {
+    onMuted?.(muted);
+  }, [muted, onMuted]);
   const [caption, setCaption] = useState('');
+  useEffect(() => {
+    onCaption?.(caption);
+  }, [caption, onCaption]);
   const [catalog, setCatalog] = useState<VoiceCatalog | null>(null);
   const [voiceId, setVoiceId] = useState('');
   const [catalogError, setCatalogError] = useState('');
@@ -48,25 +82,60 @@ export function VoiceChat({
   const mutedRef = useRef(false);
   const closing = useRef<Promise<void> | null>(null);
   const mounted = useRef(true);
-  const session = useRef<VoiceSession | GeminiVoiceSession | null>(null);
-  const callbacks = useRef({ onActive, onSync });
+  const session = useRef<VoiceSession | GeminiVoiceSession | BlazeVoiceSession | null>(null);
+  const callbacks = useRef({ onActive, onSync, onLevel });
+  const requested = useRef(0);
+  const beginVoice = useRef<() => Promise<void>>(async () => undefined);
+  const active = state !== 'idle' && state !== 'error';
+  const blaze =
+    speechProvider !== 'native' && (speechProvider === 'blaze' || catalog?.provider === 'blaze');
+  // An active call keeps its voice until the learner explicitly switches or ends it.
+  const selectedVoice =
+    blaze && !active && !transition
+      ? (speechPreferences.dialogueVoice ?? catalog?.default_voice ?? '')
+      : voiceId;
+  const selectedCatalogVoice = catalog?.voices.find((voice) => voice.id === selectedVoice);
+  const unavailableVoice = Boolean(
+    blaze &&
+    catalog &&
+    (!selectedCatalogVoice ||
+      (speechPreferences.dialogueVoice === selectedVoice &&
+        (selectedCatalogVoice.language === 'en'
+          ? speechPreferences.voiceEn !== selectedVoice
+          : selectedCatalogVoice.language === 'vi'
+            ? speechPreferences.voiceVi !== selectedVoice
+            : true))),
+  );
+  const ready = !disabled && Boolean(catalog) && !unavailableVoice && !active && !transition;
+  useEffect(() => {
+    onReady?.(ready);
+  }, [ready, onReady]);
   useEffect(() => {
     const abort = new AbortController();
     void liveVoices(abort.signal)
       .then((data) => {
         if (abort.signal.aborted) return;
+        if (speechProvider === 'blaze' && data.provider !== 'blaze')
+          throw new Error('Chưa tải được giọng Blaze. Hãy tải lại giọng đối thoại.');
         setCatalog(data);
-        setVoiceId((old) => (data.voices.some((v) => v.id === old) ? old : data.default_voice));
+        setCatalogError('');
+        setVoiceId((old) =>
+          speechProvider !== 'native' && data.provider === 'blaze'
+            ? (getSpeechPreferences().dialogueVoice ?? data.default_voice)
+            : data.voices.some((v) => v.id === old)
+              ? old
+              : data.default_voice,
+        );
       })
       .catch((e: unknown) => {
         if (!abort.signal.aborted)
           setCatalogError(e instanceof Error ? e.message : 'Chưa tải được giọng đối thoại.');
       });
     return () => abort.abort();
-  }, [provider, retry]);
+  }, [provider, speechProvider, retry]);
   useEffect(() => {
-    callbacks.current = { onActive, onSync };
-  }, [onActive, onSync]);
+    callbacks.current = { onActive, onSync, onLevel };
+  }, [onActive, onSync, onLevel]);
   useEffect(() => {
     mounted.current = true;
     ++epoch.current;
@@ -76,7 +145,7 @@ export function VoiceChat({
       session.current = null;
       void old?.stop().catch(() => undefined);
     };
-  }, [provider]);
+  }, [provider, speechProvider]);
 
   function moving(value: typeof transition) {
     transitionRef.current = value;
@@ -84,28 +153,51 @@ export function VoiceChat({
   }
   function makeSession(id: number, selectedVoice: string, token: number) {
     const live = () => mounted.current && epoch.current === token;
-    const Session = provider === 'gemini' ? GeminiVoiceSession : VoiceSession;
-    return new Session(
-      id,
-      {
-        state: (value) => {
-          if (live()) {
-            setState(value);
-            callbacks.current.onActive(value !== 'idle' && value !== 'error');
-          }
-        },
-        transcript: (role, text) => {
-          if (live()) setCaption(`${role === 'user' ? 'Bạn' : 'Mate'}: ${text}`);
-        },
-        error: (message) => {
-          if (live()) setError(message);
-        },
-        sync: () => {
-          if (live()) callbacks.current.onSync();
-        },
+    const events: VoiceEvents = {
+      state: (value) => {
+        if (live()) {
+          setState(value);
+          callbacks.current.onLevel?.(undefined);
+          callbacks.current.onActive(value !== 'idle' && value !== 'error');
+        }
       },
-      selectedVoice || undefined,
-    );
+      level: (level, channel) => {
+        if (
+          live() &&
+          (session.current?.currentState === 'assistant_speaking'
+            ? channel === 'output'
+            : channel === 'input')
+        )
+          callbacks.current.onLevel?.(mutedRef.current && channel === 'input' ? 0 : level);
+      },
+      transcript: (role, text) => {
+        if (live()) setCaption(`${role === 'user' ? 'Bạn' : 'Mate'}: ${text}`);
+      },
+      error: (message) => {
+        if (live()) setError(message);
+      },
+      sync: () => {
+        if (live()) callbacks.current.onSync();
+      },
+    };
+    if (blaze) {
+      const selected = catalog?.voices.find((voice) => voice.id === selectedVoice);
+      const preferences = getSpeechPreferences();
+      return new BlazeVoiceSession(id, events, selectedVoice || undefined, {
+        ...speechOptions,
+        sttMode: catalog?.stt_mode ?? 'batch',
+        voiceLanguage: selected?.language,
+        voiceGender: selected?.gender,
+        voiceEn: preferences.voiceEn,
+        voiceVi: preferences.voiceVi,
+        ...(selected?.language === 'en' ? { voiceEn: selectedVoice } : {}),
+        ...(selected?.language === 'vi' ? { voiceVi: selectedVoice } : {}),
+        speed: preferences.rate,
+        opening,
+      });
+    }
+    const Session = provider === 'gemini' ? GeminiVoiceSession : VoiceSession;
+    return new Session(id, events, selectedVoice || undefined);
   }
   function closeCurrent() {
     if (closing.current) return closing.current;
@@ -122,8 +214,10 @@ export function VoiceChat({
     return promise;
   }
   async function start() {
-    if (transitionRef.current) return;
+    if (transitionRef.current || disabled || !catalog || unavailableVoice) return;
     const token = ++epoch.current;
+    const startingVoice = selectedVoice;
+    setVoiceId(startingVoice);
     moving('starting');
     setError('');
     setCaption('');
@@ -136,7 +230,7 @@ export function VoiceChat({
       if (!mounted.current || token !== epoch.current) return;
       const id = identity ?? (await ensureIdentity());
       if (!mounted.current || token !== epoch.current) return;
-      const next = makeSession(id, voiceId, token);
+      const next = makeSession(id, startingVoice, token);
       session.current = next;
       await next.start();
     } catch (e) {
@@ -149,6 +243,23 @@ export function VoiceChat({
       if (mounted.current && token === epoch.current) moving(null);
     }
   }
+  useEffect(() => {
+    beginVoice.current = start;
+  });
+  useEffect(() => {
+    if (
+      !startRequest ||
+      requested.current >= startRequest ||
+      !catalog ||
+      disabled ||
+      unavailableVoice
+    )
+      return;
+    requested.current = startRequest;
+    queueMicrotask(() => {
+      if (mounted.current) void beginVoice.current();
+    });
+  }, [startRequest, catalog, disabled, unavailableVoice]);
   async function stop() {
     const token = ++epoch.current;
     moving('stopping');
@@ -171,14 +282,15 @@ export function VoiceChat({
     }
   }
   async function changeVoice(nextVoice: string) {
-    if (
-      transitionRef.current ||
-      nextVoice === voiceId ||
-      !catalog?.voices.some((v) => v.id === nextVoice)
-    )
-      return;
+    const choice = catalog?.voices.find((voice) => voice.id === nextVoice);
+    if (transitionRef.current || nextVoice === selectedVoice || !choice) return;
+    const rememberChoice = () => {
+      if (blaze && (choice.language === 'en' || choice.language === 'vi'))
+        setSpeechVoice(choice.language, nextVoice);
+    };
     if (state === 'idle' || state === 'error') {
       setVoiceId(nextVoice);
+      rememberChoice();
       return;
     }
     if (!identity) return;
@@ -193,6 +305,7 @@ export function VoiceChat({
       if (!mounted.current || token !== epoch.current) return;
       callbacks.current.onSync();
       setVoiceId(nextVoice);
+      rememberChoice();
       const next = makeSession(identity, nextVoice, token);
       session.current = next;
       next.mute(mutedRef.current);
@@ -207,7 +320,6 @@ export function VoiceChat({
       if (mounted.current && token === epoch.current) moving(null);
     }
   }
-  const active = state !== 'idle' && state !== 'error';
   return (
     <div className="voice-session">
       <div className="voice-controls">
@@ -216,12 +328,17 @@ export function VoiceChat({
             Giọng đối thoại
             <select
               aria-label="Giọng đối thoại"
-              value={voiceId}
+              value={selectedVoice}
               disabled={Boolean(transition) || !catalog}
               title="Đổi giọng AI, kể cả khi đang thoại"
               onChange={(e) => void changeVoice(e.target.value)}
             >
               {!catalog && <option value="">Đang tải giọng…</option>}
+              {catalog && !selectedCatalogVoice && (
+                <option value={selectedVoice} disabled>
+                  Giọng đã chọn chưa khả dụng
+                </option>
+              )}
               {catalog?.voices.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
@@ -237,7 +354,10 @@ export function VoiceChat({
           aria-label={active || transition ? 'Kết thúc thoại' : 'Bắt đầu thoại trực tiếp'}
           title={active || transition ? 'Kết thúc thoại' : 'Bắt đầu thoại trực tiếp'}
           aria-pressed={active}
-          disabled={transition === 'stopping' || (!active && !transition && (disabled || !catalog))}
+          disabled={
+            transition === 'stopping' ||
+            (!active && !transition && (disabled || !catalog || unavailableVoice))
+          }
           onClick={() => void (active || transition ? stop() : start())}
         >
           <BieuTuong ten={active ? 'stop' : 'waveform'} size={20} />
@@ -260,7 +380,7 @@ export function VoiceChat({
           </button>
         )}
       </div>
-      {(active || transition || state === 'error' || catalogError || error) && (
+      {(active || transition || state === 'error' || catalogError || error || unavailableVoice) && (
         <div className="voice-feedback">
           {(state !== 'idle' || transition) && (
             <span className="live-state" role="status">
@@ -289,7 +409,13 @@ export function VoiceChat({
               </button>
             </p>
           )}
-          {active && caption && (
+          {unavailableVoice && (
+            <p className="error-text" role="alert">
+              Giọng bạn đã chọn chưa khả dụng trong danh sách hiện tại. Chọn giọng khác trong tùy
+              chọn âm thanh để bắt đầu thoại.
+            </p>
+          )}
+          {active && caption && !onCaption && (
             <p className="chat-disclaimer" aria-live="polite">
               {caption}
             </p>

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { applyTheme, readTheme, type Theme } from '../theme';
+import { useEffect, useSyncExternalStore } from 'react';
+import { applyTheme, readAppliedTheme, subscribeTheme } from '../theme';
 import { BieuTuong } from './BieuTuong';
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>(readTheme);
-  useEffect(() => applyTheme(theme), [theme]);
+  const theme = useSyncExternalStore(subscribeTheme, readAppliedTheme);
+  useEffect(() => applyTheme(readAppliedTheme()), []);
   const label = theme === 'light' ? 'Chuyển sang giao diện tối' : 'Chuyển sang giao diện sáng';
   return (
     <button
@@ -15,7 +15,7 @@ export function ThemeToggle() {
       aria-pressed={theme === 'dark'}
       onClick={() => {
         const next = theme === 'light' ? 'dark' : 'light';
-        setTheme(next);
+        applyTheme(next);
         try {
           localStorage.setItem('engmate-theme', next);
         } catch {

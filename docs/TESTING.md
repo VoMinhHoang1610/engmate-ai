@@ -1,5 +1,283 @@
 # Kiểm thử bản hội thoại
 
+## Một giọng và xưng hô theo giọng — 2026-10-23
+
+| Yêu cầu | Kiểm thử hồi quy |
+| --- | --- |
+| Giữ một speaker qua lời mở đầu và phản hồi Việt/Anh trộn | `voice/blaze.test.ts` (nữ/nam/custom/không rõ), cả STT language khác TTS |
+| Đổi giọng nam → nữ cập nhật persona sau cleanup | `voice/VoiceChat.test.tsx`, `speech/identity.test.ts` |
+| Nghe thử nữ giới thiệu cô Mate | `settings/VoiceSettings.test.tsx` |
+| Prompt hiện tại ưu tiên lịch sử, lời chào không trộn ngôn ngữ | `backend/tests/unit/test_voice_identity.py` |
+| Lượt thoại mang identity mới, giữ history và từ chối retry khác giới tính | `backend/tests/integration/test_voice_identity.py` (MySQL test riêng) |
+| Catalog cũ thiếu gender vẫn dùng được, gender lạ bị từ chối | `api/voices.test.ts` |
+
+Kiểm thử offline kiểm tra payload/prompt và playback lifecycle, không đánh giá
+chất lượng sinh lời hoặc phát âm của Gemini/Blaze thật.
+
+## Tối ưu toàn chương trình — 2026-10-23
+
+- `backend/tests/unit/test_optimization.py`: overload account/process, release khi
+  cancel, logout chỉ dừng đúng owner, disconnect dọn upstream, admission giữ tới
+  hết SSE body, catalog single-flight/TTL/error, Compose/config parity.
+- `backend/tests/integration/test_optimization.py`: cursor trên 1002 tin thật
+  trong schema MySQL test, ownership và tổ hợp cursor sai; playback prefix
+  monotonic, giữ generated text, loại khỏi voice context, bỏ receipt quá muộn;
+  voice context 12 tin so với text 20 tin.
+- `frontend/src/Chat.history.test.tsx`: 1000 tin, mở 100, tải cũ và merge done
+  không phát history GET mới. `api/optimization.test.ts`: JSON stall/cancel,
+  cache subscriber cancellation, TTL, account change và merge ID/pending tail.
+- `voice/blaze.test.ts`/`spokenText.test.ts`: played-prefix chỉ tăng khi clip
+  ended, ngắt lời sau SSE done, raw Unicode/Markdown boundary. Diagnostics test
+  không thu khi tắt, cap 200 mẫu, chỉ numeric whitelist và xóa khi account đổi.
+- `api/chatStream.test.ts`: idle watchdog reset khi có data, tổng lifetime vẫn
+  bounded. UI tests preload module trong setup để transform không chiếm timeout
+  tương tác; scope DOM query vẫn kiểm cùng role/name, không hạ assertion/ngưỡng.
+  Test 100 bài chia thành năm case chặng độc lập, mỗi case đủ 20 nút và đúng số
+  thứ tự; test modal current/locked riêng. Không tăng timeout 5000 ms trong repo;
+  runner container chậm có thể dùng CLI override cho lượt xác minh và phải ghi rõ,
+  không sửa assertion/ngưỡng.
+
+Kiểm chứng offline bằng `scripts/manage.py lint-backend`, `lint-frontend`,
+`coverage-backend`, `build`; frontend `npm.cmd run test:coverage -- --maxWorkers=1`.
+Coverage giữ **80%**. Backend integration yêu cầu `MYSQL_TEST_URL` kết thúc `_test`;
+dùng schema/container biệt lập theo phần MySQL bên dưới, tuyệt đối không trỏ DB
+người dùng. Kết quả từng lượt và lỗi còn lại ghi tại `PROGRESS.md`.
+
+Đợt này frontend **383/383** qua trên Windows native (33 file); backend unit/integration
+**223/223** qua với MySQL test riêng. Windows vẫn có thể timeout UI khi máy tải;
+không hạ assertion/ngưỡng để che lỗi. Lần chạy coverage Linux gần nhất: frontend
+379/379, coverage 89,01% statements, 81,7% branches, 84,43% functions, 92,15% lines;
+backend 219/219, coverage 93,04% với MySQL test.
+Runner Linux dùng image frontend sẵn có với package-lock SHA-256 trùng repo, copy
+snapshot source/tests/config vào container riêng (không copy `.env`), chạy cùng câu
+lệnh và thresholds. Không chỉnh cấu hình CI để che lỗi local.
+
+Chẩn đoán thủ công: bật checkbox trong Settings, mở thoại rồi quay lại xem số mẫu
+và p50/p95 theo mode. Không dùng mock để khẳng định latency/quality thực. Cần phê
+duyệt ngân sách riêng trước bất kỳ benchmark provider hay audio thật nào.
+
+Nginx test bằng bản build và container biệt lập: GET HTML phải no-store; asset
+hash phải immutable/gzip, byte giải nén khớp file build, ETag conditional trả 304;
+asset không tồn tại trả 404 không immutable. Compose resolve với `.env.example`,
+chỉ in allowlist mode/model/quota/logging để không lộ secret.
+
+## STT realtime opt-in — P2
+
+- `backend/tests/unit/test_blaze_stt.py`: init/model/token chỉ server, ready,
+  ticket sai/expired/replay, Origin, JWT/ownership/open state, lỗi provider được
+  che nội dung, chỉ PCM đúng kích thước, burst/rate/tổng frames, cap text, quota
+  process/account, disconnect và logout hủy task/socket kể cả handshake đang chờ,
+  đóng provider trước khi chờ cancel task con; REST logout revoke ticket; vòng
+  ready/PCM/partial/final qua route WebSocket thật và upstream giả, không dùng
+  credit provider.
+- `voice/realtimeSTT.test.ts`: backlog pre-roll trước ready, little-endian PCM,
+  partial không thành final, final segmented qua pause, nói tiếp invalidate settled,
+  deadline/setup timeout, bỏ ticket/callback muộn, backpressure và lỗi send;
+  `voice/blaze.test.ts` kiểm fallback batch một lần khi realtime lỗi/timeout, PCM
+  trước endpoint, chỉ final vào chat, mute/ngắt lời/timeout/lỗi đang capture.
+  Catalog/VoiceChat test truyền đúng mode.
+- `voice/latency.test.ts`: STT bắt đầu trước cuối speech nên offset âm được giữ;
+  duration vẫn dương. Report có `sttMode`, dùng filter khi so batch/realtime:
+  `summarizeVoiceLatency(samples.filter(s => s.sttMode === 'realtime'))`.
+  `sttMs` gồm cả thời gian nói, không coi tất cả là độ trễ sau lời nói;
+  `sttAfterEndpointMs` mới phản ánh phần chờ final sau endpoint.
+
+Tự động chỉ dùng doubles, không gọi Blaze/Gemini tính phí. Để thử thật: đặt
+BLAZE_STT_MODE=realtime, restart backend/reload trang, mở phiên mới và kiểm WS
+`/api/speech/realtime/<UUID>` có binary frames **trước khi nói xong**; lượt thành
+công không có POST `/api/speech/stt`, chỉ fallback batch khi realtime lỗi/timeout;
+giọng/tốc độ TTS không thay đổi. Cần ngân sách/API account được phép trước khi agent
+gọi thật. Rollback bằng batch.
+
+Giữ cùng tập câu và cấu hình để so p50/p95, WER/CER, tỷ lệ cắt lời/ngắt giả và phí.
+Đặc biệt thử pause 300/600/800 ms rồi nói tiếp, provider final tới sớm/trễ, nhiều
+final segments, mạng chậm/backlog setup, ngắt lời khi chờ final và khi đang phát,
+mute/stop/logout; không chỉ thử một câu đọc liền. Protocol chưa có flush ACK/audio
+offset nên tests giả lập **không chứng minh final phủ toàn bộ audio**. Cần đối chiếu
+waveform/transcript provider thực và onset loa như mục P0P1 trước khi bật mặc định.
+
+## Đo độ trễ thoại P0P1
+
+Các test không gọi Gemini/Blaze thật và không chứng minh SLO hay chất lượng loa:
+
+- `voice/spokenText.test.ts`: câu incremental, mệnh đề đầu tại dấu câu/96 ký tự,
+  gom câu ngắn sau hai clip thành job >=120 ký tự, dấu/Markdown chia qua nhiều
+  delta, số thập phân, đoạn dài, giới hạn và terminal content không khớp.
+- `voice/speechQueue.test.ts`: một clip phát/một clip chuẩn bị trước, thứ tự,
+  câu đến trong lúc phát, hủy dữ liệu muộn và lỗi prepare/playback.
+- `voice/blaze.test.ts`: audio bắt đầu trước terminal Gemini, đúng giọng/tốc độ,
+  không đọc trùng, sync một lần, chen lời bỏ clip chờ, TTS/playback lỗi (kể cả lời
+  mở đầu) chỉ dừng audio và giữ Gemini/phiên, Gemini lỗi dừng audio, hủy mở bài
+  không đóng lượt mới, timing từ `playing`.
+- `api/database.test.ts`: tín hiệu hủy còn tác dụng sau khi headers đã tới.
+- `voice/latency.test.ts`: giữ mốc đầu tiên, một report/lượt, tính interval và
+  nearest-rank p50/p95 kèm số mẫu, loại cancelled/failed/forced endpoint.
+- `backend/tests/unit/test_voice_timing.py`: pool lifecycle kể cả shutdown lỗi,
+  dùng lại pool qua STT/TTS/catalog, hủy một Gemini request không đóng pool,
+  header private theo request, UUID trace hợp lệ và reset context.
+- `backend/tests/unit/test_speech.py`: poll 0,2/0,35/0,5 giây có biên, retry tạo
+  job chỉ khi `429` và dừng sau hai lần, job/audio lỗi, catalog và các đường STT/TTS
+  không gọi provider thật.
+
+Thu mẫu trên Vite dev bằng DevTools **trước khi bắt đầu thoại**:
+
+```js
+const samples = [];
+const collect = ({ detail }) => {
+  samples.push(detail);
+  if (samples.length > 100) samples.shift();
+};
+window.addEventListener('engmate-voice-latency', collect);
+```
+
+Sau thử nghiệm (import `/src` sau chỉ dùng được trên Vite dev, không dùng bản build):
+
+```js
+const { summarizeVoiceLatency } = await import('/src/voice/latency.ts');
+console.table(summarizeVoiceLatency(samples));
+console.table(samples.map(({ traceId, status, endpointReason }) => ({
+  traceId, status, endpointReason,
+})));
+window.removeEventListener('engmate-voice-latency', collect);
+```
+
+Report chỉ có UUID, status, endpointReason và offset mốc số từ frame cuối vượt
+RMS: endpoint, STT requested/final, LLM requested/first_text/completed, first_phrase,
+TTS requested/headers/first_byte, audio_ready và playback_started. Không tự lưu
+localStorage/SQL hoặc upload telemetry; xóa biến mẫu khi logout/đổi tài khoản.
+Không có mẫu trả samples=0/p50=null/p95=null, không tự điền số giả.
+
+`estimatedEndToPlaybackMs` bao gồm khoảng endpointing, **không phải phép đo vật lý**:
+main thread có thể nhận frame trễ, RMS có thể bỏ tiếng nói nhỏ hoặc nhận tiếng ồn,
+và `playing` chưa bao gồm độ trễ phần cứng. `ttsFirstByteMs` ở browser bao gồm
+backend chờ job/tải MP3 vì REST hiện chưa stream audio; log `tts_first_audio` ở
+backend là byte đầu tải từ Blaze sau khi job complete. Không đánh đồng hai mốc.
+
+Bật logger Python `engmate.voice.latency` ở INFO và gắn StreamHandler trong môi
+trường dev khi cần log backend; logger mặc định tuân cấu hình logging của host.
+Chỉ các request có `voice_trace_id` UUID mới tạo log timing, dùng cùng UUID trong
+report trình duyệt để ghép các span; `span_id` phân biệt các job TTS trong một lượt.
+Elapsed mỗi span có gốc riêng, không trừ
+timestamp backend với performance.now hoặc cộng p95 các stage chồng lấp.
+
+Để đo **thực sự từ cuối lời nói tới âm đầu tiên nghe được**, phát bộ audio có
+waveform đánh dấu `speech_end_reference` qua nguồn micro kiểm thử có kiểm soát,
+ghi đầu ra/loopback và xác định `audible_onset_reference` (loại khoảng lặng đầu
+file). Tính chênh lệch trên cùng đồng hồ ghi âm; nếu dùng loopback trước DAC thì
+phải nêu rõ chưa đo độ trễ loa vật lý. Giữ riêng p50/p95 của ground truth và proxy.
+
+Baseline/so sánh cần cùng tập câu, giọng, model, prompt/history, thiết bị/browser,
+điều kiện mạng, phân biệt lượt lạnh/ấm và local/tunnel. Thống nhất ngân sách API
+trước khi gọi thật; khoảng 100 lượt hợp lệ/cấu hình giúp p95 bớt thiếu ổn định.
+Đếm lỗi/timeout/cancel riêng, không âm thầm loại lỗi để làm đẹp số. Đối chiếu
+transcript WER/CER và tỷ lệ cắt lời, ngắt giả, audio gap, job/credit mỗi lượt.
+Kiểm câu ngắn/dài/trên 30 giây, ngập ngừng, tiếng ồn/nói nhỏ/loa ngoài, mạng chậm,
+barge-in trong STT/LLM/TTS/playback, đổi giọng/mute/stop/logout và nhiều tài khoản.
+Smoke ngày 2026-10-23 (không phải p50/p95): Gemini first text ấm median 0,81 giây
+(5 mẫu, không history); TTS batch pro median 1,30 giây và flash 1,57 giây (3 job
+mỗi model, cùng câu ngắn); WebSocket realtime có byte đầu 0,595 giây, hoàn tất
+1,312 giây (1 mẫu). Chưa đo 100 lượt, thiết bị thật, chất lượng âm thanh hoặc
+tỷ lệ cắt lời; không báo giảm X% hoặc đạt dưới một giây.
+
+## Chọn giọng trong Cài đặt
+
+- `speech/preferences.test.ts`: tách lựa chọn theo tài khoản, khôi phục giọng/tốc độ, dữ liệu hỏng, storage bị chặn và dataset đồng bộ.
+- `settings/VoiceSettings.test.tsx`: danh sách Anh/Việt thật từ hợp đồng API, tải/rỗng/lỗi/thử lại, giọng không còn sẵn; chỉ nghe thử bằng click, dừng/hủy, lỗi phát và bỏ kết quả muộn.
+- `voice/VoiceChat.test.tsx`: cặp giọng/tốc độ từ Cài đặt vào phiên Blaze tiếp theo, chọn trực tiếp lưu sau cleanup, chặn giọng mất khỏi catalog, giữ adapter native và ngắt/đổi phiên hiện có.
+- `App.test.tsx`: chọn hai giọng và tốc độ trong Cài đặt, trở lại chat vẫn giữ, đăng xuất đặt lại và đăng nhập khôi phục. `speech/audio.test.ts` xác nhận callback kết thúc/lỗi phát và không nhận callback cũ sau hủy.
+- `.artifacts/check-settings-voice.cjs`: Chrome với metadata/API/WAV fixture kiểm tra speaker ID/tốc độ của request nghe thử, không tự gọi TTS khi đổi lựa chọn, lưu qua điều hướng/đăng nhập và giao diện sáng/tối/điện thoại. Fixture không chứng minh chất lượng giọng hay quota Blaze thật.
+
+## Thanh bên và giao diện tối giản
+
+Đợt màu tương tác dùng `.artifacts/audit-workspace-colors.cjs` với API fixture,
+đo màu computed/độ tương phản của chữ đang hiển thị ở home/lộ trình/hồ sơ/cài
+đặt, nút chính thường/hover và điều hướng đang chọn trong sáng/tối. Kiểm tra
+focus và hình học hover; không coi phép lấy mẫu này là chứng nhận toàn bộ WCAG.
+Kết quả tại `.artifacts/workspace-color-audit.json`; ảnh sáng/tối desktop/mobile.
+
+`WorkspaceSidebar.test.tsx` kiểm tra hover/focus/ghim, trạng thái chọn/khóa,
+điều hướng, menu mobile, inert, Escape, focus trap và phục hồi focus/scroll.
+App tests kiểm tra mở hồ sơ/cài đặt từ sidebar, giữ bản nháp chat khi chuyển
+trang, chuyển focus từ menu mobile sang lịch sử và trả về nút menu đang hiển thị.
+Luồng đăng xuất vẫn kiểm tra lỗi server và thu hồi phiên. Kiểm tra hash chạy
+cùng logic runtime, không bỏ đồng bộ URL trong môi trường test.
+Theme tests xác nhận đổi ở Cài đặt/sidebar luôn đồng bộ và một click chuyển
+đúng chiều sau khi theme được áp dụng từ nơi khác.
+
+`.artifacts/check-workspace.cjs` kiểm tra Chrome với API fixture: sidebar
+72/240 px, vùng nội dung đứng yên khi mở, sáng/tối, lộ trình, hồ sơ, cài đặt,
+drawer/focus và ô nhập trong viewport 1440/900/390/320 px. Mở trang hoặc đổi
+menu không được tạo hội thoại bài học hay gọi STT/TTS. Script học giọng nói
+`check-learning.cjs` kiểm lại bắt đầu bài bằng click, microphone WAV, Blaze,
+Gemini SSE, chuyển bước, kiểm tra và mở lại tiến độ trên shell mới.
+
+## SQL khởi tạo đồng bộ với backend
+
+`gemini-code-1791478978574.sql` tạo đủ 13 bảng và 4 trigger trên database mới.
+Khi kiểm chứng bootstrap, đổi tên `EngMateAI` sang một schema mới kết thúc
+`_test`, thực thi file SQL trực tiếp rồi đặt `MYSQL_TEST_URL` trỏ schema đó.
+Không chạy installer trước suite này: làm vậy có thể che việc bootstrap thiếu bảng.
+`database/mysql/tests/verify_chat.sql` gồm 9 truy vấn chỉ đọc kiểm tra version,
+CEFR, bảng bắt buộc và tính nhất quán owner/JSON.
+
+`backend/tests/integration/test_mysql_schema.py` so sánh kiểu dữ liệu, độ dài,
+nullable, khóa chính, default, auto-increment và trigger của bốn bảng lộ trình
+với metadata backend; đồng thời kiểm tra các mức trong giáo án và base version 1.
+Chạy cùng toàn bộ backend suite để kiểm chứng đăng ký, hồ sơ, chat và tiến độ
+trên chính schema vừa bootstrap. Các test vẫn rollback, không dùng database ứng dụng.
+
+## Lộ trình TOEIC và buổi học bằng giọng nói
+
+`backend/tests/test_learning_catalog.py` kiểm tra 5 chặng/25 cụm/100 bài,
+200 câu kiểm tra và việc loại khóa đáp án khỏi catalog công khai.
+`backend/tests/integration/test_learning.py` dùng schema MySQL test riêng, rollback
+từng test: quyền sở hữu, plan version, start/check idempotency, liên kết giáo án
+với chat, câu lệnh chuyển bước, loại lượt lỗi/điều khiển khỏi số lượt luyện,
+chấm bài, lịch ôn và giới hạn gợi ý theo điểm mục tiêu. Bootstrap mới đã có đủ
+bảng. Chỉ với schema test cũ thiếu bảng lộ trình, bổ sung trước bằng
+`scripts/install_learning.py --test` với `MYSQL_TEST_URL`.
+
+`frontend/src/learning/learning.test.tsx` kiểm tra mục tiêu, khám phá chặng, mở bài,
+409/retry giữ nháp, chuyển bước, nghe theo thao tác, hủy audio, chấm bài và không
+hiển thị điểm TOEIC giả. App tests kiểm tra lesson chat đã bind phía server,
+khởi động thoại có chủ ý và không gửi tin người học giả. Voice tests kiểm tra
+Mate đọc mở bài qua Blaze rồi chờ, hỗ trợ chen lời ngay trong mở bài.
+
+Browser script `.artifacts/check-learning.cjs` dùng catalog thật, API fixture và
+microphone WAV giả lập trong Chrome, chạy AudioWorklet/HTMLAudio thật: ba lượt
+luyện, chuyển bước bằng lời nói, kiểm tra hoàn thành, học tiếp, đăng nhập lại xem
+tiến độ và responsive 1440/900/390/320 px. Không dùng tài khoản thật hoặc API
+tính phí. Kết quả kỹ thuật không chứng minh chất lượng giảng dạy, pronunciation
+accuracy hoặc mức TOEIC; cần thẩm định chuyên môn và thử thiết bị thật riêng.
+
+## Giọng Blaze và Gemini text
+
+- `backend/tests/unit/test_blaze_voice.py`: metadata cần cả hai dịch vụ, catalog
+  song ngữ có bearer, thiếu Blaze không fallback, chặn REST/WS native, giữ Gemini
+  GenerateContent làm adapter sinh nội dung.
+- `frontend/src/voice/blaze.test.ts`: WAV/VAD, im lặng không gọi API, pipeline
+  STT → text SSE → TTS, phân ngôn ngữ/giọng, giới hạn lượt/phiên, ngắt lời, chờ
+  cancel server, mute, stop, quyền micro và kết quả đến muộn.
+- `VoiceChat.test.tsx`, `catalog.test.ts`, `speech/audio.test.ts`: chọn Blaze khi
+  đầu não Gemini, catalog sai không khởi động, giọng máy không được dùng kể cả
+  khi có sẵn hoặc Blaze lỗi. Native transport giữ tests riêng.
+- Test tự động dùng doubles, không gọi API tính phí. Kiểm thử thiết bị thật và
+  quota/chất lượng nhà cung cấp không được suy ra từ các kết quả này.
+
+## Kiểm thử khôi phục hồ sơ
+
+- `backend/tests/integration/test_profile.py`: đọc/ghi trên schema `_test` rollback, chuẩn hóa dữ liệu, stale version 409, dữ liệu sai/giả owner/account fields 422; tài khoản thứ hai không đọc được ảnh của tài khoản thứ nhất; 401 khi thiếu bearer, 404 khi chưa có ảnh, giới hạn dung lượng và từ chối SVG. Test contract giữ các endpoint học tập cũ bị bỏ và bổ sung kiểm tra xác thực cho profile/avatar được khôi phục.
+- `frontend/src/profile/*.test.ts(x)`: biểu mẫu cũ, readonly identity, PUT/version, lỗi server/xung đột giữ nháp, chặn gửi lặp, upload ảnh/lỗi decode/dung lượng, reload sau lỗi và kiểm tra định dạng cục bộ. Menu test xác nhận hover rồi click không đóng mất menu và callback mở hồ sơ.
+- `.artifacts/check-profile.cjs`: Chrome với API giả lập, sửa đầy đủ trường và lưu, encode ảnh thật thành JPEG, avatar menu, xử lý xung đột/tải lại và mở lại sau đăng nhập; screenshot dark/light, không overflow ở 1440/900/390/320 px. Không dùng dữ liệu tài khoản thật. Khi Windows chặn tmp_path mặc định, đặt `PYTEST_ADDOPTS=--basetemp=<thư mục mới trong .cache của repo>` để fixtures ảnh nằm trong workspace.
+
+## Kiểm thử giao diện thầy Mate, 2026-10-18
+
+`App.test.tsx` kiểm tra điều hướng, chọn mục tiêu/bài học, chuẩn bị bản nháp và gửi qua API chat, ghi nhận từ/bài đã học, không đếm bài hai lần, nghe mẫu/chép lời/lỗi speech; giữ toàn bộ kiểm thử hội thoại, retry, hủy, lịch sử, phiên và voice. Các assertion sidebar cũ được chuyển sang mở ngăn kéo; kiểm tra nhãn chào và nav khớp yêu cầu mới, không bỏ test nghiệp vụ. `tutor/curriculum.test.ts` kiểm tra dữ liệu storage sai, tách tài khoản, lọc mục không hợp lệ, giới hạn lịch sử ngày và lịch local.
+
+Integration Gemini kiểm tra prompt `Version: 5.` cho text và realtime. Lượt này dùng schema mới `EngMateAI_tutor_test` riêng, bootstrap từ SQL trong repo; test xác nhận schema kết thúc `_test` và không có tài khoản, các transaction rollback. Database người dùng không được bootstrap lại.
+
+Kiểm tra browser tại `.artifacts/check-tutor.cjs`: Chrome headless, mock API chỉ ở `/api`, không dùng tài khoản/khóa thật; xem sáu màn ở 1440/900/390/320 px, chụp ảnh và kiểm tra overflow, ảnh tải thành công, JavaScript errors. Artifact `.artifacts/tutor-browser.json` và `tutor-*.png`. Kiểm chứng này không thay thế trải nghiệm microphone/loa/provider thật.
+
 Từ root: `python scripts/manage.py lint`, `test`, `coverage`, `build`, `smoke`. Lint gồm Ruff/Black/mypy, ESLint/TypeScript/Prettier. Coverage >=80% giữ nguyên. Frontend chạy 2 worker, giữ timeout/assertion.
 
 Chia sẻ HTTPS: build trước khi bật `docker-compose.share.yml`; kiểm tra Compose `config --quiet` và `exec -T share nginx -t`. Probe public tại `.artifacts/share/check.py` đọc HTML/assets/health/ready/capabilities, xác nhận source/`.env` trả 404, catalog cần auth trả 401, CORS đúng origin và WSS handshake 101 rồi đóng 4404 với ticket giả. Browser `.artifacts/check_share_browser.cjs` mở link thật, kiểm tra màn hình đăng nhập, secure context và API microphone, không đăng nhập hoặc gọi provider. Kết quả trong `.artifacts/share/`. Các probe này không thay thế thử chat trả phí/micro/loa thực.

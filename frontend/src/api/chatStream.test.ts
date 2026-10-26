@@ -120,4 +120,31 @@ describe('Chat SSE transport', () => {
       /định dạng/,
     );
   });
+
+  it('resets the idle deadline on data but closes a stalled stream', async () => {
+    vi.useFakeTimers();
+    let body!: ReadableStreamDefaultController<Uint8Array>;
+    const cancel = vi.fn();
+    vi.mocked(apiFetch).mockResolvedValue(
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            body = controller;
+          },
+          cancel,
+        }),
+        { headers: { 'Content-Type': 'text/event-stream' } },
+      ),
+    );
+    const result = streamTurn(1, payload, new AbortController().signal, vi.fn());
+    const assertion = expect(result).rejects.toThrow('quá lâu');
+    await vi.advanceTimersByTimeAsync(10000);
+    body.enqueue(new TextEncoder().encode(': heartbeat\n\n'));
+    await vi.advanceTimersByTimeAsync(29999);
+    expect(cancel).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    await assertion;
+    expect(cancel).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
 });

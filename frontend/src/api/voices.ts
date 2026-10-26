@@ -3,7 +3,7 @@ export interface GiongDoc {
   id: string;
   name: string;
   language: 'en' | 'vi';
-  gender: 'male' | 'female' | null;
+  gender?: 'male' | 'female' | null;
 }
 
 /** Load the server catalog; provider credentials stay in the backend. */
@@ -28,10 +28,12 @@ export async function layGiongDoc(
         voice.name.trim() &&
         'language' in voice &&
         voice.language === language &&
-        'gender' in voice &&
-        (voice.gender === null || voice.gender === 'male' || voice.gender === 'female'),
+        (!('gender' in voice) ||
+          voice.gender === null ||
+          voice.gender === 'male' ||
+          voice.gender === 'female'),
     )
   )
     throw new Error('Danh sách giọng nói chưa hợp lệ. Vui lòng thử lại.');
-  return data as GiongDoc[];
+  return (data as GiongDoc[]).map((voice) => ({ ...voice, gender: voice.gender ?? null }));
 }

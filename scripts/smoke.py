@@ -1,4 +1,4 @@
-"""Check liveness, provider capabilities, HTML, proxy and the chat REST surface."""
+"""Check liveness, provider capabilities, HTML, proxy, chat and learning routes."""
 
 import json
 import os
@@ -30,6 +30,11 @@ def main() -> None:
         assert "/api/conversations/{identity}/messages" in paths
         assert "/api/conversations/{identity}/messages/stream" in paths
         assert "/api/conversations/{identity}/voice" in paths
+        assert "/api/learning/catalog" in paths
+        assert "/api/learning/plan" in paths
+        assert "/api/learning/progress" in paths
+        assert "/api/learning/lessons/{lesson_id}/start" in paths
+        assert "/api/learning/lessons/{lesson_id}/check" in paths
         assert not any(
             p.startswith(
                 ("/api/practice", "/api/lessons", "/api/vocabulary", "/api/flashcards")
@@ -37,7 +42,7 @@ def main() -> None:
             for p in paths
         )
     print(
-        "PASS: health, frontend, proxy, capabilities and chat-only OpenAPI. "
+        "PASS: health, frontend, proxy, capabilities, chat and learning OpenAPI. "
         "This is not a paid provider/readiness test."
     )
 

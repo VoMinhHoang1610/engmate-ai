@@ -1,0 +1,72 @@
+.auth-minimal .auth-switch-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 20px;
+  font-size: 13px;
+}
+
+.auth-minimal .auth-switch-link {
+  min-height: 44px;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-minimal .auth-minimal-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-minimal .auth-input-wrap input {
+  min-width: 0;
+  width: 100%;
+  padding-right: 56px;
+}
+
+.auth-minimal .auth-form-pane .auth-switcher {
+  min-width: 0;
+}
+
+.auth-minimal .auth-slide-face h2 {
+  color: var(--text);
+}
+
+.auth-minimal .auth-mode-switch {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.auth-minimal .auth-mode-switch button {
+  min-height: 44px;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.auth-minimal .auth-mode-switch button.active {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.auth-minimal .auth-social-btn:focus-visible,
+.auth-minimal .auth-switch-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 880px) {
+  .auth-minimal .auth-slide-pane {
+    min-height: 300px;
+    padding-bottom: 88px;
+  }
+
+  .auth-minimal .auth-slide-face p {
+    display: none;
+  }
+}

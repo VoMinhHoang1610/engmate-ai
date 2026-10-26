@@ -98,12 +98,14 @@ class AuthService:
             )
             user = dict(row) if row else None
             encoded = user["PasswordHash"] if user else None
-            if (
-                not verify_password(data.password.get_secret_value(), encoded)
-                or not user
-                or user["Status"] != "active"
-            ):
-                raise HTTPException(401, "Invalid username/email or password.")
+        # Argon2 may wait for a hash slot; never occupy a pooled DB connection then.
+        if (
+            not verify_password(data.password.get_secret_value(), encoded)
+            or not user
+            or user["Status"] != "active"
+        ):
+            raise HTTPException(401, "Invalid username/email or password.")
+        with self.db.transaction() as connection:
             self.db.lock_user(connection, user["UserId"])
             repo = Repository(self.db, connection)
             current = repo.one("Users", UserId=user["UserId"])

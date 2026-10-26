@@ -1,6 +1,8 @@
 """Speech endpoints with authenticated access and opt-in loopback demo."""
 
-from typing import Annotated
+import asyncio
+from collections.abc import AsyncIterator, Coroutine
+from typing import Annotated, Any, TypeVar
 
 from fastapi import (
     APIRouter,
@@ -32,11 +34,57 @@ def speech_service(request: Request, auth: Auth) -> SpeechService:
         scheme, _, token = authorization.partition(" ")
         if scheme.lower() != "bearer" or not token:
             raise HTTPException(401, "A bearer token is required.")
-        auth.authenticate(token)
-    return SpeechService(settings)
+        user_id = auth.authenticate(token)["UserId"]
+    else:
+        user_id = 0
+    request.state.speech_user_id = user_id
+    return SpeechService(
+        settings,
+        http_client=request.app.state.speech_http,
+        catalog_cache=request.app.state.speech_catalog,
+    )
 
 
 Speech = Annotated[SpeechService, Depends(speech_service)]
+
+
+async def bounded_speech(
+    request: Request, service: Speech
+) -> AsyncIterator[SpeechService]:
+    """Admit one entire generation/transcription, after speech authentication."""
+    async with request.app.state.speech_admission.slot(
+        getattr(request.state, "speech_user_id", 0)
+    ):
+        yield service
+
+
+BoundedSpeech = Annotated[SpeechService, Depends(bounded_speech)]
+
+Result = TypeVar("Result")
+
+
+async def connected_job(request: Request, work: Coroutine[Any, Any, Result]) -> Result:
+    """Stop local polling/download when an HTTP browser has already disconnected."""
+
+    async def disconnected() -> None:
+        # The route has already consumed its JSON/multipart body. A direct receive
+        # avoids polling and cancellation scopes swallowing task cancellation.
+        while (await request.receive())["type"] != "http.disconnect":
+            pass
+
+    task = asyncio.create_task(work)
+    monitor = asyncio.create_task(disconnected())
+    try:
+        done, _ = await asyncio.wait(
+            [task, monitor], return_when=asyncio.FIRST_COMPLETED
+        )
+        if task in done:
+            return task.result()
+        raise HTTPException(499, "Speech client disconnected.")
+    finally:
+        task.cancel()
+        monitor.cancel()
+        await asyncio.gather(task, monitor, return_exceptions=True)
 
 
 @router.get("/voices", response_model=list[SpeechVoice])
@@ -50,20 +98,25 @@ async def voices(
 @router.post(
     "/tts", response_class=Response, responses={200: {"content": {"audio/mpeg": {}}}}
 )
-async def tts(data: TTSRequest, service: Speech) -> Response:
+async def tts(data: TTSRequest, service: BoundedSpeech, request: Request) -> Response:
     """Return synthesized MP3 audio after Blaze completes the job."""
-    return Response(await service.synthesize(data), media_type="audio/mpeg")
+    return Response(
+        await connected_job(request, service.synthesize(data)), media_type="audio/mpeg"
+    )
 
 
 @router.post("/stt", response_model=STTResponse)
 async def stt(
     file: UploadFile,
-    service: Speech,
+    service: BoundedSpeech,
+    request: Request,
     language: Annotated[SpeechLanguage, Query()] = "en",
 ) -> STTResponse:
     """Transcribe multipart audio without persisting it to the database."""
     try:
         content = await file.read(MAX_AUDIO + 1)
-        return await service.transcribe(content, file.content_type or "", language)
+        return await connected_job(
+            request, service.transcribe(content, file.content_type or "", language)
+        )
     finally:
         await file.close()

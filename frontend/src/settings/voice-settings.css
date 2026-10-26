@@ -1,0 +1,147 @@
+.workspace-shell .voice-settings {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  margin-top: 20px;
+  padding-bottom: 22px;
+  color: var(--workspace-text);
+}
+.workspace-shell .voice-settings-intro strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.workspace-shell .voice-settings p {
+  margin: 5px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.workspace-shell .voice-settings-intro p,
+.workspace-shell .voice-choice-description,
+.workspace-shell .voice-choice-status,
+.workspace-shell .voice-settings-note {
+  color: var(--workspace-muted);
+}
+.workspace-shell .voice-choice {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 15px;
+  background: var(--workspace-blue-soft);
+  border: 1px solid var(--workspace-blue-line);
+  border-radius: 12px;
+}
+.workspace-shell .voice-choice[data-language='vi'] {
+  background: var(--workspace-violet-soft);
+  border-color: var(--workspace-violet-line);
+}
+.workspace-shell .voice-choice legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 0 5px;
+  font-weight: 700;
+  font-size: 0.925rem;
+}
+.workspace-shell .voice-language-mark {
+  display: inline-grid;
+  place-items: center;
+  min-width: 29px;
+  min-height: 25px;
+  border-radius: 6px;
+  background: var(--workspace-blue);
+  color: var(--workspace-bg);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+.workspace-shell .voice-choice[data-language='vi'] .voice-language-mark {
+  background: var(--workspace-violet);
+}
+.workspace-shell .voice-choice-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 12px;
+}
+.workspace-shell .voice-choice-controls select {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 43px;
+  padding: 9px 28px 9px 10px;
+  border: 1px solid var(--workspace-line);
+  font: inherit;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+}
+.workspace-shell .voice-preview,
+.workspace-shell .voice-retry {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 43px;
+  padding: 8px 11px;
+  color: var(--workspace-blue);
+  background: var(--workspace-bg);
+  border: 1px solid var(--workspace-blue-line);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.workspace-shell .voice-preview {
+  flex-shrink: 0;
+}
+.workspace-shell .voice-choice[data-language='vi'] :is(.voice-preview, .voice-retry) {
+  color: var(--workspace-violet);
+  border-color: var(--workspace-violet-line);
+}
+.workspace-shell .voice-preview:hover:not(:disabled),
+.workspace-shell .voice-retry:hover {
+  background: var(--workspace-hover);
+}
+.workspace-shell .voice-preview[data-active='true'] {
+  color: var(--workspace-teal);
+  background: var(--workspace-teal-soft);
+  border-color: var(--workspace-teal-line);
+}
+.workspace-shell .voice-settings :disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.workspace-shell .voice-choice-error,
+.workspace-shell .voice-preview-error {
+  color: var(--danger);
+}
+.workspace-shell .voice-choice-error,
+.workspace-shell .voice-choice-empty {
+  display: grid;
+  justify-items: start;
+  gap: 9px;
+  margin-top: 8px;
+}
+.workspace-shell .voice-choice-saved {
+  color: var(--workspace-teal);
+  font-weight: 600;
+}
+.workspace-shell .voice-settings .voice-settings-note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+@media (max-width: 600px) {
+  .workspace-shell .voice-choice-controls {
+    flex-wrap: wrap;
+  }
+  .workspace-shell .voice-choice-controls select {
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .workspace-shell .voice-preview {
+    width: 100%;
+  }
+}

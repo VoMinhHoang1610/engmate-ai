@@ -1,3 +1,4 @@
+import { observeAudioLevel } from './visualLevel';
 import { api } from '../api/database';
 
 export type VoiceState =
@@ -11,6 +12,7 @@ export type VoiceState =
   | 'reconnecting'
   | 'error';
 export interface VoiceEvents {
+  level?: (level: number, channel: 'input' | 'output') => void;
   state: (state: VoiceState) => void;
   transcript: (role: 'user' | 'assistant', text: string) => void;
   error: (message: string) => void;
@@ -19,6 +21,8 @@ export interface VoiceEvents {
 
 /** Own one WebRTC media transport, response identity and all associated resources. */
 export class VoiceSession {
+  private visualContext: AudioContext | null = null;
+  private visualCleanups: (() => void)[] = [];
   private peer: RTCPeerConnection | null = null;
   private channel: RTCDataChannel | null = null;
   private microphone: MediaStream | null = null;
@@ -72,6 +76,19 @@ export class VoiceSession {
         return;
       }
       this.microphone = media;
+      if (this.events.level && typeof AudioContext !== 'undefined') {
+        try {
+          this.visualContext = new AudioContext();
+          const source = this.visualContext.createMediaStreamSource(media);
+          this.visualCleanups.push(
+            observeAudioLevel(this.visualContext, source, (level) =>
+              this.events.level?.(this.muted ? 0 : level, 'input'),
+            ),
+          );
+        } catch {
+          /* Visualization is optional; voice remains available. */
+        }
+      }
       this.peer = new RTCPeerConnection();
       this.audio = new Audio();
       this.audio.autoplay = true;
@@ -85,6 +102,20 @@ export class VoiceSession {
       this.peer.ontrack = (event) => {
         if (generation !== this.generation || !this.audio) return;
         this.audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
+        if (this.visualContext && this.events.level) {
+          try {
+            const source = this.visualContext.createMediaStreamSource(
+              this.audio.srcObject as MediaStream,
+            );
+            this.visualCleanups.push(
+              observeAudioLevel(this.visualContext, source, (level) =>
+                this.events.level?.(level, 'output'),
+              ),
+            );
+          } catch {
+            /* Keep the existing playback route. */
+          }
+        }
         void this.audio.play().catch(() => {
           if (!this.ended)
             void this.fail('Trình duyệt chặn phát âm thanh. Hãy bắt đầu lại phiên thoại.');
@@ -248,6 +279,9 @@ export class VoiceSession {
     this.connectTimer = null;
     this.heartbeat = this.retryTimer = null;
     this.audio?.pause();
+    this.visualCleanups.splice(0).forEach((cleanup) => cleanup());
+    void this.visualContext?.close().catch(() => undefined);
+    this.visualContext = null;
     if (this.audio) this.audio.srcObject = null;
     this.audio = null;
     if (this.channel) this.channel.onmessage = this.channel.onerror = null;

@@ -1,6 +1,7 @@
 """Private roleplay history and durable, idempotent AI turn lifecycles."""
 
 import asyncio
+import json
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,6 +13,7 @@ from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import func, select
 
+from app.core.prompts import read_prompt
 from app.db.database import Record
 from app.db.repository import Repository
 from app.llm.base import ContextMessage, LLMClient
@@ -26,9 +28,14 @@ from app.services.common import (
     require_open,
     start_session,
 )
+from app.services.voice_identity import voice_instructions
 
-PROMPT_VERSION = "persona.v4"
+PROMPT_VERSION = "persona.v6"
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
+TEXT_CONTEXT_MESSAGES = 20
+VOICE_CONTEXT_MESSAGES = 12
+TEXT_CONTEXT_CHARS = 32000
+VOICE_CONTEXT_CHARS = 12000
 
 
 @dataclass
@@ -47,7 +54,11 @@ class ConversationService(PersistenceService):
     """Store roleplay context and prevent duplicate or overlapping turns."""
 
     def context(
-        self, repo: Repository, identity: int, before: int = 2147483647
+        self,
+        repo: Repository,
+        identity: int,
+        before: int = 2147483647,
+        voice: bool = False,
     ) -> list[ContextMessage]:
         """Keep recent role-typed messages within a bounded context budget."""
         table = self.db.models.table("Messages", repo.connection)
@@ -60,17 +71,43 @@ class ConversationService(PersistenceService):
                     table.c.SequenceNumber < before,
                 )
                 .order_by(table.c.SequenceNumber.desc())
-                .limit(20)
+                .limit(VOICE_CONTEXT_MESSAGES if voice else TEXT_CONTEXT_MESSAGES)
             )
             .mappings()
             .all()
         )
         result: list[ContextMessage] = []
-        budget = 32000
+        deliveries: dict[int, int] = {}
+        if voice and rows:
+            evaluations = self.db.models.table("AIEvaluations", repo.connection)
+            # Evaluations point to the learner message; map paired assistant sequence.
+            query = (
+                select(table.c.SequenceNumber, evaluations.c.ResultJson)
+                .join(evaluations, evaluations.c.MessageId == table.c.MessageId)
+                .where(
+                    table.c.ConversationId == identity,
+                    table.c.SequenceNumber.in_(
+                        [
+                            row["SequenceNumber"] - 1
+                            for row in rows
+                            if row["Role"] == "assistant"
+                        ]
+                    ),
+                )
+            )
+            for sequence, raw in repo.connection.execute(query):
+                data = json.loads(raw) if isinstance(raw, str) else raw
+                if isinstance(data, dict) and data.get("voice_delivery") is True:
+                    deliveries[sequence + 1] = int(data.get("heard_chars", 0))
+        budget = VOICE_CONTEXT_CHARS if voice else TEXT_CONTEXT_CHARS
         for row in rows:
             if row["Role"] not in ("user", "assistant"):
                 continue
             text = str(row["Content"])
+            if row["SequenceNumber"] in deliveries:
+                text = text[: deliveries[row["SequenceNumber"]]]
+                if not text.strip():
+                    continue
             if len(text) > budget:
                 break
             budget -= len(text)
@@ -89,14 +126,23 @@ class ConversationService(PersistenceService):
             self.expire_pending(repo, user_id, identity)
             if repo.rows("Messages", ConversationId=identity, Status="pending"):
                 raise HTTPException(409, "A reply is already in progress.")
-            return PROMPT_PATH.read_text(
-                encoding="utf-8"
-            ) + f"\nLearner level: {conversation['CefrLevel']}", self.context(
-                repo, identity
+            prompt = read_prompt(PROMPT_PATH)
+            if conversation["PromptVersion"] == "toeic.v1":
+                from app.services.learning import learning_context
+
+                prompt += learning_context(repo, user_id, identity)
+            return (
+                prompt + f"\nLearner level: {conversation['CefrLevel']}",
+                self.context(repo, identity, voice=True),
             )
 
     def start(self, user_id: int, data: ConversationCreate) -> Record:
         """Create free chat once, preserving existing schema and account data."""
+        if data.lesson_id is not None:
+            from app.services.curriculum import find_lesson
+
+            stage, lesson = find_lesson(data.lesson_id)
+            data = data.model_copy(update={"level": stage.level, "title": lesson.title})
         with self.transaction(user_id) as repo:
             if not self.db.mysql and data.level not in ("A2", "B1", "B2"):
                 raise HTTPException(
@@ -111,6 +157,10 @@ class ConversationService(PersistenceService):
                 conversation = repo.one(
                     "Conversations", StudySessionId=previous[0]["StudySessionId"]
                 )
+                if (conversation["PromptVersion"] == "toeic.v1") != (
+                    data.lesson_id is not None
+                ):
+                    raise HTTPException(409, "Request ID belongs to another activity.")
                 if (conversation["CefrLevel"], conversation["Title"]) != (
                     data.level,
                     data.title,
@@ -129,8 +179,20 @@ class ConversationService(PersistenceService):
                     Mode="free_chat",
                     Title=data.title,
                     CefrLevel=data.level,
-                    AIRoleSnapshot="English conversation partner",
-                    PromptVersion=PROMPT_VERSION,
+                    AIRoleSnapshot=(
+                        "Mate: guided voice lesson"
+                        if data.lesson_id is not None
+                        else "English conversation partner"
+                    ),
+                    PromptVersion=(
+                        "toeic.v1" if data.lesson_id is not None else PROMPT_VERSION
+                    ),
+                )
+            if data.lesson_id is not None:
+                from app.services.learning import bind_lesson
+
+                bind_lesson(
+                    repo, user_id, conversation["ConversationId"], data.lesson_id
                 )
             return self.serialize(repo, conversation)
 
@@ -197,12 +259,37 @@ class ConversationService(PersistenceService):
             ]
 
     def messages(
-        self, user_id: int, identity: int, offset: int, limit: int
+        self,
+        user_id: int,
+        identity: int,
+        offset: int,
+        limit: int,
+        after_id: int | None = None,
+        before_id: int | None = None,
+        latest: bool = False,
     ) -> list[Record]:
         """Check conversation ownership before exposing any message."""
         with self.transaction(user_id) as repo:
             owned(repo, "Conversations", "ConversationId", identity, user_id)
             self.expire_pending(repo, user_id, identity)
+            if after_id is not None or before_id is not None or latest:
+                table = self.db.models.table("Messages", repo.connection)
+                query = select(table).where(
+                    table.c.ConversationId == identity, table.c.UserId == user_id
+                )
+                if after_id is not None:
+                    query = query.where(table.c.MessageId > after_id)
+                if before_id is not None:
+                    query = query.where(table.c.MessageId < before_id)
+                backwards = latest or before_id is not None
+                query = query.order_by(
+                    table.c.MessageId.desc() if backwards else table.c.MessageId
+                ).limit(limit)
+                rows = [
+                    public(dict(row))
+                    for row in repo.connection.execute(query).mappings()
+                ]
+                return list(reversed(rows)) if backwards else rows
             return [
                 public(row)
                 for row in repo.page(
@@ -254,6 +341,24 @@ class ConversationService(PersistenceService):
                 evaluation = repo.one(
                     "AIEvaluations", MessageId=message["MessageId"], UserId=user_id
                 )
+                metadata = evaluation.get("ResultJson")
+                metadata = (
+                    json.loads(metadata) if isinstance(metadata, str) else metadata
+                )
+                if (
+                    bool(isinstance(metadata, dict) and metadata.get("voice_delivery"))
+                    != data.voice
+                ):
+                    raise HTTPException(
+                        409, "Request ID was used with a different input mode."
+                    )
+                previous_gender = (
+                    metadata.get("voice_gender") if isinstance(metadata, dict) else None
+                )
+                if previous_gender != data.voice_gender:
+                    raise HTTPException(
+                        409, "Request ID was used with a different voice identity."
+                    )
                 return self.turn_result(repo, message, evaluation)
             require_open(repo, conversation["StudySessionId"], user_id)
             if repo.rows("Messages", ConversationId=identity, Status="pending"):
@@ -292,9 +397,26 @@ class ConversationService(PersistenceService):
                 Provider=self.db.settings.llm_provider,
                 IsMock=self.db.settings.llm_provider == "mock",
                 PromptVersion=PROMPT_VERSION,
+                ResultJson=(
+                    json.dumps(
+                        {
+                            "voice_delivery": True,
+                            "heard_chars": 0,
+                            "voice_gender": data.voice_gender,
+                        }
+                    )
+                    if data.voice
+                    else None
+                ),
             )
-            history = self.context(repo, identity, sequence)
-            prompt = PROMPT_PATH.read_text(encoding="utf-8")
+            history = self.context(repo, identity, sequence, voice=data.voice)
+            prompt = read_prompt(PROMPT_PATH)
+            if conversation["PromptVersion"] == "toeic.v1":
+                from app.services.learning import learning_context
+
+                prompt += learning_context(repo, user_id, identity, data.message)
+            if data.voice:
+                prompt += voice_instructions(data.voice_gender)
             level = cast(Level, conversation["CefrLevel"])
             return PendingTurn(message, assistant, evaluation, prompt, level, history)
 
@@ -481,6 +603,60 @@ class ConversationService(PersistenceService):
                 {"EvaluationId": turn.evaluation["EvaluationId"]},
                 {"Status": "cancelled", "Feedback": None, "CompletedAt": now()},
             )
+
+    def playback(
+        self, user_id: int, identity: int, response_id: int, heard_chars: int
+    ) -> Record:
+        """Advance only an owned voice reply's prefix, preserving its visible text."""
+        with self.transaction(user_id) as repo:
+            owned(repo, "Conversations", "ConversationId", identity, user_id)
+            reply = repo.one(
+                "Messages",
+                MessageId=response_id,
+                ConversationId=identity,
+                UserId=user_id,
+            )
+            if reply["Role"] != "assistant":
+                raise HTTPException(422, "Playback requires an assistant response.")
+            learner = repo.one(
+                "Messages",
+                ConversationId=identity,
+                UserId=user_id,
+                SequenceNumber=reply["SequenceNumber"] - 1,
+            )
+            evaluation = repo.one(
+                "AIEvaluations", MessageId=learner["MessageId"], UserId=user_id
+            )
+            raw = evaluation.get("ResultJson")
+            data = json.loads(raw) if isinstance(raw, str) else raw
+            if not isinstance(data, dict) or data.get("voice_delivery") is not True:
+                raise HTTPException(
+                    409, "Response was not generated for voice playback."
+                )
+            if reply["Status"] != "completed":
+                return {"heard_chars": int(data.get("heard_chars", 0))}
+            if heard_chars > len(reply["Content"]):
+                raise HTTPException(422, "Playback exceeds generated content.")
+            # A late old receipt must not rewrite context after a newer turn starts.
+            table = self.db.models.table("Messages", repo.connection)
+            newer = repo.connection.execute(
+                select(table.c.MessageId)
+                .where(
+                    table.c.ConversationId == identity,
+                    table.c.SequenceNumber > reply["SequenceNumber"],
+                )
+                .limit(1)
+            ).first()
+            previous = int(data.get("heard_chars", 0))
+            if newer is None and heard_chars > previous:
+                data["heard_chars"] = heard_chars
+                repo.update(
+                    "AIEvaluations",
+                    {"EvaluationId": evaluation["EvaluationId"]},
+                    {"ResultJson": json.dumps(data)},
+                )
+                previous = heard_chars
+            return {"heard_chars": previous}
 
     def close(self, user_id: int, identity: int, abandoned: bool) -> Record:
         """Close once after outstanding replies finish; abandon credits zero time."""

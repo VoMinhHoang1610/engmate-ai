@@ -1,8 +1,11 @@
--- EngMate AI: schema mới chỉ phục vụ tài khoản và hội thoại; MySQL 8.0.16+.
+-- EngMate AI: tài khoản, hồ sơ, hội thoại và lộ trình TOEIC; MySQL 8.0.16+.
+-- Tạo 13 bảng (9 bảng nền + 4 bảng engmate_learning_*) và 4 trigger Version.
 -- Chỉ chạy trên database mới chưa có bảng. Không chạy lại trên EngMateAI hiện có.
 -- Không DROP, TRUNCATE hoặc chuyển dữ liệu cũ. DDL MySQL tự COMMIT.
--- API tương thích các bảng hội thoại v1 trong database cũ có thêm bảng học tập.
--- Các cột CEFR/phiên học được giữ để tương thích; không có bài tập hoặc dashboard.
+-- Database cũ: dùng scripts/install_learning.py để thêm các bảng lộ trình còn thiếu.
+-- Giáo án/đáp án chuẩn ở backend/app/content/toeic.v1.json, không seed vào SQL.
+-- Avatar lưu riêng trong AVATAR_STORAGE_DIR; các cột avatar cũ giữ để tương thích.
+-- Bốn bảng lộ trình khớp backend/app/db/learning.py, không tự thêm FK/trigger.
 -- Mỗi kết nối ứng dụng phải dùng UTC. Không seed tài khoản, mật khẩu hoặc khóa API.
 SET NAMES utf8mb4 COLLATE utf8mb4_0900_as_ci;
 SET SESSION time_zone = '+00:00';
@@ -183,6 +186,48 @@ CREATE TABLE `DanhGiaAI` (
         CONSTRAINT CK_DanhGiaAI_Mock CHECK ((`Provider` = 'mock' AND `IsMock` = 1) OR `Provider` <> 'mock')
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
 
+-- Kế hoạch TOEIC theo tài khoản. Version do LearningService tăng, không dùng trigger.
+CREATE TABLE `engmate_learning_plans` (
+    `UserId` bigint NOT NULL,
+    `Version` int NOT NULL,
+    `GoalScore` int NOT NULL,
+    `StartStage` varchar(64) NOT NULL,
+    `Minutes` int NOT NULL,
+    `ExamDate` date NULL,
+    PRIMARY KEY (`UserId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+-- Một dòng cho mỗi tài khoản/bài; số lượt luyện được tính từ TinNhan, không lưu lặp.
+CREATE TABLE `engmate_learning_progress` (
+    `UserId` bigint NOT NULL,
+    `LessonId` varchar(100) NOT NULL,
+    `ConversationId` bigint NULL,
+    `Phase` int NOT NULL,
+    `Completed` boolean NOT NULL,
+    `CheckCorrect` int NOT NULL,
+    `CheckTotal` int NOT NULL,
+    `ReviewDue` datetime NULL,
+    PRIMARY KEY (`UserId`, `LessonId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+-- Liên kết hội thoại với giáo án chuẩn; service kiểm tra owner trong transaction.
+CREATE TABLE `engmate_learning_bindings` (
+    `UserId` bigint NOT NULL,
+    `ConversationId` bigint NOT NULL,
+    `LessonId` varchar(100) NOT NULL,
+    PRIMARY KEY (`UserId`, `ConversationId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+-- Receipt chống gửi lặp: RequestId duy nhất theo tài khoản cho cả start và check.
+CREATE TABLE `engmate_learning_receipts` (
+    `UserId` bigint NOT NULL,
+    `RequestId` varchar(36) NOT NULL,
+    `Kind` varchar(16) NOT NULL,
+    `PayloadHash` varchar(64) NOT NULL,
+    `ResultJson` text NOT NULL,
+    PRIMARY KEY (`UserId`, `RequestId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
 CREATE TRIGGER TR_NguoiDung_Version BEFORE UPDATE ON `NguoiDung`
 FOR EACH ROW SET NEW.`Version` = OLD.`Version` + 1;
 
@@ -206,5 +251,7 @@ INSERT INTO `TrinhDoCEFR` (`Code`, `Name`, `Description`, `SortOrder`) SELECT 'B
 INSERT INTO `TrinhDoCEFR` (`Code`, `Name`, `Description`, `SortOrder`) SELECT 'B2', 'Trên trung cấp', 'Trình bày quan điểm và trao đổi tương đối trôi chảy.', 5 WHERE NOT EXISTS (SELECT 1 FROM `TrinhDoCEFR` WHERE `Code`='B2');
 INSERT INTO `TrinhDoCEFR` (`Code`, `Name`, `Description`, `SortOrder`) SELECT 'C1', 'Nâng cao', 'Sử dụng tiếng Anh linh hoạt trong học thuật và công việc.', 6 WHERE NOT EXISTS (SELECT 1 FROM `TrinhDoCEFR` WHERE `Code`='C1');
 INSERT INTO `TrinhDoCEFR` (`Code`, `Name`, `Description`, `SortOrder`) SELECT 'C2', 'Thành thạo', 'Diễn đạt chính xác, tinh tế với nội dung phức tạp.', 7 WHERE NOT EXISTS (SELECT 1 FROM `TrinhDoCEFR` WHERE `Code`='C2');
-INSERT INTO PhienBanCauTruc(Version, Description) VALUES (1, 'Chat-only schema; compatible conversation tables v1');
+-- Version 1 là hợp đồng bảng nền mà /api/ready đang kiểm tra.
+-- Phiên bản nội dung TOEIC độc lập với version SQL, lấy từ catalog JSON của server.
+INSERT INTO PhienBanCauTruc(Version, Description) VALUES (1, 'Accounts, profiles, conversations and TOEIC voice learning; compatible base v1');
 COMMIT;

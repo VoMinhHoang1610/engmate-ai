@@ -14,7 +14,7 @@ from app.api.speech_routes import speech_service
 from app.core.config import Settings
 from app.main import create_app
 from app.schemas.speech import TTSRequest
-from app.services.speech import MAX_AUDIO, SpeechService
+from app.services.speech import MAX_AUDIO, SpeechService, poll_delay
 
 pytestmark = pytest.mark.anyio
 MP3 = b"\xff\xfb\x94\xc4" + b"\0" * 32
@@ -63,6 +63,69 @@ async def test_tts_job_and_audio() -> None:
     assert await service(handler).synthesize(TTSRequest(text="Hello")) == MP3
     assert calls.count("/v1/tts") == 1
     assert calls[-1] == "/v1/tts/job-1/download"
+
+
+async def test_tts_rate_limit_retries_create(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A short provider burst limit must not fail the learner's first clip."""
+    sleeps: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    monkeypatch.setattr("app.services.speech.asyncio.sleep", fake_sleep)
+    posts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal posts
+        if request.method == "POST":
+            posts += 1
+            if posts == 1:
+                return httpx.Response(429)
+            return httpx.Response(202, json={"id": "job-1"})
+        if request.url.path.endswith("info"):
+            return httpx.Response(200, json={"status": "completed"})
+        return httpx.Response(200, content=MP3)
+
+    assert await service(handler).synthesize(TTSRequest(text="Hello")) == MP3
+    assert posts == 2
+    assert sleeps == [0.6]
+
+
+async def test_tts_rate_limit_stops_after_bounded_retries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A persistent quota still returns a clean, non-provider error."""
+    sleeps: list[float] = []
+
+    async def fake_sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    monkeypatch.setattr("app.services.speech.asyncio.sleep", fake_sleep)
+    posts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal posts
+        if request.method == "POST":
+            posts += 1
+        return httpx.Response(429)
+
+    with pytest.raises(HTTPException) as error:
+        await service(handler).synthesize(TTSRequest(text="Hello"))
+    assert error.value.status_code == 503
+    assert posts == 3
+    assert sleeps == [0.6, 1.2]
+
+
+def test_tts_poll_backoff_starts_fast_and_stays_bounded() -> None:
+    """Do not add a fixed half-second to every short TTS job."""
+    assert [poll_delay(attempt) for attempt in (0, 4, 5, 9, 10, 100)] == [
+        0.2,
+        0.2,
+        0.35,
+        0.35,
+        0.5,
+        0.5,
+    ]
 
 
 async def test_stt_multipart() -> None:
@@ -115,11 +178,14 @@ async def test_timeout() -> None:
 )
 async def test_tts_bad_results(kind: str) -> None:
     """Invalid jobs, provider failures and non-audio output remain errors."""
+    posts = 0
 
     def handler(request: httpx.Request) -> httpx.Response:
-        if kind == "network":
-            raise httpx.ConnectError("private data", request=request)
+        nonlocal posts
         if request.method == "POST":
+            posts += 1
+            if kind == "network":
+                raise httpx.ConnectError("private data", request=request)
             if kind == "bad-json":
                 return httpx.Response(202, text="invalid-json")
             return httpx.Response(
@@ -134,6 +200,8 @@ async def test_tts_bad_results(kind: str) -> None:
     with pytest.raises(HTTPException) as error:
         await service(handler).synthesize(TTSRequest(text="Hello"))
     assert error.value.status_code == 502
+    # Only rate limiting may retry; a failed generation/audio job is never replayed.
+    assert posts == 1
 
 
 @pytest.mark.parametrize(

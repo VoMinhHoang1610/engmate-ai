@@ -1,5 +1,182 @@
 # Quyết định kỹ thuật
 
+## 2026-10-23 — Lỗi âm thanh không kết thúc phiên, fallback STT có kiểm soát
+
+Khi TTS hoặc phát MP3 lỗi, frontend dừng queue/clip hiện tại và báo lỗi nhưng giữ
+phiên, mic và phần text Gemini đang stream; không đổi giọng và không gọi lại job
+TTS đã thất bại. Lỗi Gemini vẫn dừng audio của lượt đó. Đây thay thế quy tắc cũ
+“lỗi bên nào hủy cả pipeline”: audio là kênh phụ, còn câu trả lời text vẫn hữu ích
+và đã/đang được lưu.
+
+Realtime STT chỉ là tối ưu: lỗi setup/relay/final hoặc timeout được fallback sang
+batch **một lần** với chính WAV đã thu; không promote partial. Fallback có thể phát
+sinh thêm phí, nên realtime vẫn opt-in và chỉ dùng khi ngân sách thử nghiệm cho phép.
+Batch vẫn là rollback. TTS chỉ retry POST khi `429` (tối đa hai lần, 0,6/1,2 giây);
+không retry lỗi generation/audio để tránh nhân phí. Log chỉ ghi operation/status/
+reason/số byte, không ghi job ID, URL, body, token hoặc nội dung câu.
+
+Voice context giảm còn 12 tin/12.000 ký tự; text chat giữ 20 tin/32.000 ký tự. Sau
+hai clip đầu, câu ngắn được gom tới ít nhất 120 ký tự để giảm job TTS nhưng không
+trì hoãn clip đầu. Prompt thoại yêu cầu 1–2 câu ngắn, tối đa một câu hỏi, trừ khi
+người học yêu cầu giải thích dài. Chưa có p50/p95 hoặc kiểm micro/loa thật.
+
+## 2026-10-23 — Giữ batch TTS và VAD 900 ms sau đo thử
+
+Tách mệnh đề đầu (32–96 ký tự) và poll TTS 0,2/0,35/0,5 giây để giảm chờ mà
+không đổi chất lượng giọng. Đo 3 job mỗi model trên cùng câu cho median
+`v2.0_pro` 1,30 giây, `v2.0_flash` 1,57 giây; flash không nhanh hơn nên giữ pro.
+Probe WebSocket `2.0-realtime` có byte audio đầu sau 0,595 giây nhưng frontend
+vẫn phát MP3 trọn clip, nên chưa tích hợp streaming PCM. Giữ VAD 900 ms vì giảm
+xuống 700 ms có thể cắt lời người học; endpoint thích nghi/provider final cần
+test riêng. Các phép đo này là smoke ngắn, không thay thế p50/p95 100 lượt hoặc
+kiểm micro/loa thật.
+
+## 2026-10-23 — Cố định người đọc và danh xưng theo phiên thoại
+
+Chọn một speaker_id và ngôn ngữ TTS từ catalog ngay khi mở phiên, giữ qua mọi
+chunk. Cách cũ dò dấu tiếng Việt rồi chọn cặp giọng Anh/Việt làm đổi người nói
+ngay giữa phản hồi. Khi người học đổi giọng, lifecycle stop/start tạo identity
+mới; ngôn ngữ STT độc lập. Một giọng có thể phát âm ngôn ngữ thứ hai kém hơn giọng
+chuyên dụng, nhưng đáp ứng yêu cầu chỉ một người đọc; không tự chuyển giọng.
+
+Giới tính catalog (fallback mã Blaze Nam/Nu, không rõ dùng trung tính) là enum
+trong request mỗi lượt. Prompt phiên bản mới dùng danh xưng hiện tại thay vì
+hard-code Thầy Mate hoặc thay chữ trong output, tránh sửa nhầm lời trích dẫn.
+Giữ metadata trong ResultJson để retry khác identity bị từ chối, không đổi SQL.
+
+## 2026-10-23 — Giảm công việc lặp, bảo toàn context khi ngắt lời
+
+Theo phê duyệt toàn chương trình và riêng Docker/proxy/quota: chọn cursor/tail
+sync, scope practice, TTL catalog, admission fail-fast và body deadline trước
+khi đổi model hoặc VAD. Slot theo job chứ không theo connection HTTP, không có
+queue chờ vô hạn hoặc retry paid POST. Giới hạn chỉ có hiệu lực trong một process.
+
+Giữ generated reply để xem lại; voice context dùng Unicode prefix của clip đã
+ended, giới hạn 12 tin/12.000 ký tự (text: 20 tin/32.000 ký tự). Không tính clip
+đang phát dở: duration MP3 không ánh xạ chắc chắn tới ký tự. Receipt lưu trong
+ResultJson hiện có, monotonic và không đổi context sau lượt mới; client chờ receipt
+trước lượt tiếp theo. Không coi receipt là bằng chứng người học nghe vật lý hoặc
+bằng chứng chấm điểm học tập.
+
+Cache catalog/frontend chỉ có TTL/byte tối thiểu cần thiết; plan/progress và
+auth revocation tiếp tục đọc DB. Argon2 giữ nguyên độ khó, chạy ngoài connection
+pool rồi revalidate dưới lock. Chưa thêm index/schema/ORM hoặc worker mới.
+STT realtime/TTS realtime/quality benchmark vẫn cần xác minh protocol, speaker
+và ngân sách; không dùng số đo mocked để cam kết chất lượng hay ms cải thiện.
+
+## 2026-10-22 — P2 STT realtime trước, rollout có kiểm soát
+
+Người dùng xác nhận tối ưu thêm sau thử thoại thấy còn chờ lâu. Triển khai nhận
+dạng song song với lời nói, giữ Gemini và TTS hiện tại. Không tự đổi model của
+REST STT: realtime dùng model riêng `stt-stream-1.5`, bật bằng BLAZE_STT_MODE.
+Mặc định batch vì chưa xác minh entitlement, phí và chất lượng trên tài khoản thật.
+
+Một socket/lượt bắt đầu sau VAD, giữ pre-roll/backlog có giới hạn; chưa duy trì
+kết nối tính phí suốt 10 phút im lặng. Tái sử dụng pattern ticket một lần của
+native adapter, không đưa API key/JWT vào URL. JWT, quyền hội thoại và trạng thái
+open kiểm tra qua REST trước khi trả ticket; Origin/ticket kiểm tra trước upstream.
+Giới hạn toàn process/account, audio rate/bytes/time; logout và shutdown đóng relay.
+
+Không cho partial kích hoạt Gemini; gom final qua pause và giữ endpoint 900 ms.
+Provider chưa công bố flush/EOS ACK hoặc audio-offset: chỉ dùng binary silence
+tail có timeout, không tự chế lệnh hoặc khẳng định đã kiểm chứng đầy đủ frame cuối.
+Đây là điểm cần test thật trước rollout. Quyết định ngày 2026-10-23 bổ sung fallback
+batch một lần khi realtime lỗi/timeout; fallback có thể phát sinh phí nên vẫn opt-in.
+TTS realtime và VAD ngắn hơn để giai đoạn sau, cần kiểm model/giọng và accuracy.
+
+## 2026-10-22 — P0–P1 giảm độ trễ nhưng giữ Gemini và giọng Blaze
+
+Ưu tiên chồng lấp sinh văn bản/TTS thay vì đổi provider hoặc tự giảm VAD. Gom
+delta theo câu, chờ khoảng trắng sau dấu câu để tránh cắt số thập phân, giữ phần
+chưa hoàn tất và đối chiếu terminal content với prefix đã nhận. Chặn tổng text
+12000 ký tự như Gemini adapter, chia phrase tối đa 600 ký tự. Câu đầu không bị
+ghép thành job 2000 ký tự. Hàng đợi chỉ phát một clip và chuẩn bị trước một clip;
+không tạo hàng loạt job. Từ 2026-10-23 chỉ retry POST khi `429`, không replay job
+generation/audio đã lỗi. Chi phí có thể tăng theo số job; chưa có phép đo thực để
+khẳng định mức giảm độ trễ hoặc giá.
+
+TTS/playback và Gemini chạy đồng thời; quy tắc hiện hành (2026-10-23) là lỗi audio
+chỉ dừng audio, còn lỗi Gemini mới dừng audio của lượt. Giữ barrier cancel server
+trước lượt text mới và bỏ callbacks cũ. Không phát lại nội dung đã đọc; lỗi Gemini
+sau khi phát một phần không thể thu hồi phần đã nghe.
+Không đổi mô hình hoàn tất lịch sử/tiến độ trong P1; playback receipts/đánh dấu
+heard cần thiết kế riêng. VAD, REST STT, job/poll/MP3 TTS giữ nguyên cho đợt này.
+
+Pool HTTP riêng theo provider do FastAPI lifespan sở hữu, có giới hạn và đóng
+trong finally. Không lưu khóa trong shared client Gemini; request speech gắn
+Bearer riêng. Không mở nhiều backend worker. Test inject pool/transport và không
+gọi provider thật. AbortSignal.any giữ tín hiệu hủy body sau headers; yêu cầu
+trình duyệt hiện đại, không thay timeout/assertion để làm test qua.
+
+Telemetry chỉ có UUID/stage/thời gian, không tự lưu hoặc tải đi. Log backend
+opt-in theo trace và logging INFO. Mốc cuối voiced frame tại main thread và
+`playing` là proxy được đặt tên rõ; không trình bày như ground truth vật lý.
+
+## 2026-10-18 — Sidebar tối giản cho không gian sau đăng nhập
+
+Theo mẫu người dùng, chọn rail điều hướng trung tính thu/mở và menu trượt trên
+điện thoại. Tái sử dụng React/CSS/icon hiện có thay vì thêm các dependency trong
+đoạn demo. CSS mới có phạm vi `.workspace-shell`, import cuối để giữ giao diện
+trang giới thiệu/đăng nhập và tránh thay đổi các service học tập.
+
+Desktop mở thanh bên dạng overlay, vùng nội dung luôn chừa 72 px. Kiểm thử browser
+phát hiện việc đẩy nội dung theo độ rộng sidebar có thể làm mất click khi blur
+giữa pointerdown/up. Giữ hình học nội dung ổn định giải quyết trực tiếp lỗi này;
+không trì hoãn blur bằng timer. Mobile dùng focus trap/inert và chuyển focus
+rõ ràng khi mở lịch sử từ menu. Không thay API, SQL, provider giọng nói hay tiến độ.
+
+## Lộ trình nhỏ, hội thoại chính, tiến độ có bằng chứng
+
+Triển khai giáo án đã bàn thành catalog server `toeic.v1.json`: 5 chặng, 25 cụm,
+100 bài, mỗi bài 10–14 phút, gồm mục tiêu, giải thích, ví dụ, ba câu thực hành,
+tình huống, từ vựng, đoạn nghe/đọc và kiểm tra. Phân nhóm theo mục tiêu khóa học,
+không xem đây là phân loại chính thức hoặc cam kết điểm TOEIC.
+
+Buổi học tái sử dụng chat/Blaze, gắn lesson ID chuẩn ở server qua
+ConversationService. Gemini nhận đúng giáo án và bước hiện hành; Blaze đọc mở
+bài chỉ sau thao tác vào lớp, rồi người học đối thoại. Lệnh “Mate next step” hoặc
+“Mate, bước tiếp theo” chuyển bước bằng lời nói; không tính lệnh vào lượt luyện.
+Mặc định ghi âm tiếng Anh trong lớp, chat tự do giữ tiếng Việt. Menu âm thanh
+cho đổi ngôn ngữ khi dừng thoại. Native audio không thay Blaze.
+
+Thêm bốn bảng độc lập bằng installer tạo mới có kiểm tra tồn tại; giữ dữ liệu
+cũ, không bootstrap lại hoặc nâng schema legacy. Plan có optimistic version;
+start/check có receipt idempotent, mọi thao tác theo owner. Hoàn thành nghĩa là
+đã có ít nhất ba cặp lượt thành công và đúng các câu kiểm tra của bài; đây là
+bằng chứng hoàn thành hoạt động, chưa phải thành thạo hay điểm phát âm. Gợi ý
+bài dừng ở mục tiêu khóa học; lịch ôn một/ba ngày là quy tắc sản phẩm ban đầu.
+Người học vẫn được khám phá chặng cao hơn. Không thêm dependency.
+
+Chưa có ảnh Part 1 hoặc bộ đề đủ 200 câu theo cấu trúc thi. Nội dung tự biên
+soạn cần giáo viên duyệt trước khi gọi là giáo trình được thẩm định. Các câu
+kiểm tra nhỏ được chữa ngay để phục vụ học, không dùng làm dự đoán điểm thi.
+
+## Mate dùng Blaze cho giọng nói, Gemini cho nội dung
+
+Người dùng yêu cầu giữ Gemini làm đầu não và bắt buộc giọng Blaze. Chọn mặc định
+`VOICE_PROVIDER=blaze`, tái sử dụng SpeechService và chat SSE có persistence; thêm
+VAD/capture và điều phối lượt nói trong `BlazeVoiceSession`. Không thêm dependency
+hoặc migration. Chấp nhận độ trễ STT → text → TTS; không tự retry job generation
+tính phí và không thay giọng khi lỗi. Từ 2026-10-23, TTS chỉ retry POST khi `429`;
+realtime STT lỗi có fallback batch một lần. Giữ native adapter để tương thích khi chủ động chọn
+`VOICE_PROVIDER=native`; chặn signaling native trong chế độ Blaze. Browser
+speechSynthesis bị bỏ để bảo đảm toàn bộ giọng đọc là Blaze. Test dùng doubles;
+không suy ra chất lượng sư phạm, độ chính xác phát âm hoặc quota từ kết quả test.
+
+## 2026-10-18 — Khôi phục hồ sơ thật và ảnh riêng tư
+
+Khôi phục HoSo từ lịch sử Git, chuyển từ demo provider cũ sang API hồ sơ lấy owner từ bearer. Dùng bảng profile đang có và cơ chế Version/lock hiện tại, không phục hồi toàn bộ API học tập/media cũ hoặc thay schema. Username/email chỉ đọc như form MySQL cũ. Trình độ là người học tự chọn; thống kê thời gian dùng DurationSeconds thật, không dùng số demo.
+
+Ảnh được encode lại thành JPEG ở trình duyệt, giới hạn raster/dung lượng ở server, lưu theo UUID tài khoản và chỉ cấp qua route có xác thực. Chọn file storage riêng để hỗ trợ cả schema hội thoại mới không có bảng media cũ; thêm AVATAR_STORAGE_DIR và Docker bind mount để giữ ảnh khi recreate container. Không thêm thư viện. Dữ liệu form lưu MySQL, ảnh cần được backup riêng.
+
+## 2026-10-18 — Giao diện người thầy và dữ liệu học tự ghi nhận
+
+Theo yêu cầu mới, triển khai các màn của Figma Tutor journey trên React hiện có. Dùng linh thú trang đăng nhập thay orb trong bản mẫu; giữ token màu, nhịp bố cục, các orbit/ambient SVG và chuyển động nhẹ, không cài thêm thư viện giao diện. Chat/voice/auth dùng nguyên API và cơ chế bảo vệ hiện có.
+
+Backend hiện chưa có API đánh giá phát âm hoặc tiến độ học. Vì vậy, bài giảng và từ vựng là curriculum xác định, bài/từ hoàn thành được người học chủ động ghi nhận, lưu theo username trong localStorage. Không trình bày dữ liệu demo như kết quả thật; không hứa đồng bộ nhiều thiết bị. Nếu bổ sung đồng bộ, cần endpoint/schema có quyền sở hữu và kiểm thử riêng. Mọi yêu cầu thực hành được người học xem/gửi qua ô chat; không tự gọi provider khi chuyển tab.
+
+Prompt mới `persona.v5` định nghĩa cách giảng dạy chung cho text/voice, giữ quy tắc ngôn ngữ, chờ học viên trả lời trước khi nhận xét và không bịa điểm số. Không đổi provider/model local trong tác vụ giao diện.
+
 ## 2026-10-18 — Chia sẻ HTTPS tạm thời bằng SSH tunnel và Nginx
 
 Người dùng chọn chia sẻ bản đang chạy trên máy bằng link HTTPS tạm thời. Dùng reverse proxy riêng cho bản build để không đưa Vite/source code ra Internet; giữ base Compose bind loopback và không đổi schema/auth. Nginx chính thức được ghim digest đã pull, chạy read-only với tmpfs cần thiết, chuyển Upgrade cho thoại và tắt buffering cho chat SSE theo [Nginx](https://nginx.org/en/docs/http/websocket.html).

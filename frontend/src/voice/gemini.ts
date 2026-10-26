@@ -1,9 +1,11 @@
+import { observeAudioLevel } from './visualLevel';
 import { api } from '../api/database';
 import type { VoiceEvents, VoiceState } from './session';
 
 /** Own microphone PCM, bounded playback and an authenticated same-origin relay. */
 export class GeminiVoiceSession {
   private context: AudioContext | null = null;
+  private stopInputMeter: (() => void) | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private capture: AudioWorkletNode | null = null;
   private microphone: MediaStream | null = null;
@@ -12,6 +14,7 @@ export class GeminiVoiceSession {
   private sessionId: string | null = null;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private nodeMeters = new Map<AudioBufferSourceNode, () => void>();
   private nodes = new Set<AudioBufferSourceNode>();
   private nextAudio = 0;
   private generation = 0;
@@ -72,6 +75,10 @@ export class GeminiVoiceSession {
       await context.audioWorklet.addModule(new URL('./capture.worklet.js', import.meta.url));
       if (this.ended || generation !== this.generation) return;
       this.source = context.createMediaStreamSource(media);
+      if (this.events.level)
+        this.stopInputMeter = observeAudioLevel(context, this.source, (level) =>
+          this.events.level?.(this.muted ? 0 : level, 'input'),
+        );
       this.capture = new AudioWorkletNode(context, 'engmate-pcm');
       this.source.connect(this.capture);
       // The processor emits no audible output; this keeps capture running without echo.
@@ -211,8 +218,14 @@ export class GeminiVoiceSession {
     const node = context.createBufferSource();
     node.buffer = buffer;
     node.connect(context.destination);
+    const stopMeter = this.events.level
+      ? observeAudioLevel(context, node, (level) => this.events.level?.(level, 'output'))
+      : () => undefined;
+    this.nodeMeters.set(node, stopMeter);
     this.nodes.add(node);
     node.onended = () => {
+      this.nodeMeters.get(node)?.();
+      this.nodeMeters.delete(node);
       this.nodes.delete(node);
       node.disconnect();
       if (
@@ -231,6 +244,8 @@ export class GeminiVoiceSession {
 
   private clearAudio(): void {
     for (const node of this.nodes) {
+      this.nodeMeters.get(node)?.();
+      this.nodeMeters.delete(node);
       node.onended = null;
       node.stop();
       node.disconnect();
@@ -265,6 +280,8 @@ export class GeminiVoiceSession {
     if (this.capture) this.capture.port.onmessage = null;
     this.capture?.disconnect();
     this.capture?.port.close();
+    this.stopInputMeter?.();
+    this.stopInputMeter = null;
     this.source?.disconnect();
     this.capture = this.source = null;
     this.microphone?.getTracks().forEach((track) => {

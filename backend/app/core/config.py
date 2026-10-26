@@ -12,8 +12,14 @@ class Settings(BaseModel):
     """Validate credentials privately; mock is an explicit test configuration."""
 
     app_name: str = "EngMate-AI"
+    avatar_storage_dir: Path = Field(
+        default_factory=lambda: Path(__file__).resolve().parents[3]
+        / ".artifacts"
+        / "avatars"
+    )
     model_config = ConfigDict(hide_input_in_errors=True)
     llm_provider: Literal["mock", "blaze", "openai", "gemini"] = "gemini"
+    voice_provider: Literal["blaze", "native"] = "blaze"
     gemini_api_key: SecretStr | None = None
     gemini_chat_model: str = Field(
         default="gemini-3.5-flash-lite", pattern=r"^gemini-[a-zA-Z0-9._-]+$"
@@ -34,7 +40,14 @@ class Settings(BaseModel):
     blaze_api_key: SecretStr | None = None
     blaze_tts_model: str = "v2.0_pro"
     blaze_stt_model: Literal["stt-async-1.0", "stt-async-1.5"] = "stt-async-1.5"
+    blaze_stt_mode: Literal["batch", "realtime"] = "batch"
+    blaze_stt_realtime_model: Literal["stt-stream-1.5"] = "stt-stream-1.5"
     blaze_local_demo: bool = False
+    speech_max_jobs: int = Field(default=16, ge=1, le=128)
+    speech_max_jobs_per_user: int = Field(default=4, ge=1, le=16)
+    chat_max_jobs: int = Field(default=16, ge=1, le=128)
+    chat_max_jobs_per_user: int = Field(default=2, ge=1, le=16)
+    voice_timing_logs: bool = False
     database_odbc_connection: SecretStr | None = None
     database_mysql_url: SecretStr | None = None
     jwt_secret: SecretStr | None = None
@@ -84,6 +97,13 @@ class Settings(BaseModel):
             self.llm_provider == "openai" and bool(self.openai_api_key)
         )
 
+    @property
+    def voice_configured(self) -> bool:
+        """Require the text brain and the selected speech service independently."""
+        return self.chat_configured and (
+            self.voice_provider == "native" or bool(self.blaze_api_key)
+        )
+
 
 def get_settings() -> Settings:
     """Read process environment without caching state across tests."""
@@ -94,7 +114,13 @@ def get_settings() -> Settings:
     return Settings.model_validate(
         {
             "app_name": os.getenv("APP_NAME", "EngMate-AI"),
+            **(
+                {"avatar_storage_dir": os.environ["AVATAR_STORAGE_DIR"]}
+                if os.getenv("AVATAR_STORAGE_DIR")
+                else {}
+            ),
             "llm_provider": os.getenv("LLM_PROVIDER", "gemini"),
+            "voice_provider": os.getenv("VOICE_PROVIDER", "blaze"),
             "gemini_api_key": os.getenv("GEMINI_API_KEY") or None,
             "gemini_chat_model": os.getenv(
                 "GEMINI_CHAT_MODEL", "gemini-3.5-flash-lite"
@@ -113,7 +139,16 @@ def get_settings() -> Settings:
             "blaze_api_key": os.getenv("BLAZE_API_KEY") or None,
             "blaze_tts_model": os.getenv("BLAZE_TTS_MODEL", "v2.0_pro"),
             "blaze_stt_model": os.getenv("BLAZE_STT_MODEL", "stt-async-1.5"),
+            "blaze_stt_mode": os.getenv("BLAZE_STT_MODE", "batch"),
+            "blaze_stt_realtime_model": os.getenv(
+                "BLAZE_STT_REALTIME_MODEL", "stt-stream-1.5"
+            ),
             "blaze_local_demo": os.getenv("BLAZE_LOCAL_DEMO", "false"),
+            "speech_max_jobs": os.getenv("SPEECH_MAX_JOBS", "16"),
+            "speech_max_jobs_per_user": os.getenv("SPEECH_MAX_JOBS_PER_USER", "4"),
+            "chat_max_jobs": os.getenv("CHAT_MAX_JOBS", "16"),
+            "chat_max_jobs_per_user": os.getenv("CHAT_MAX_JOBS_PER_USER", "2"),
+            "voice_timing_logs": os.getenv("VOICE_TIMING_LOGS", "false"),
             "database_odbc_connection": os.getenv("DATABASE_ODBC_CONNECTION") or None,
             "database_mysql_url": os.getenv("DATABASE_MYSQL_URL") or None,
             "jwt_secret": os.getenv("JWT_SECRET") or None,

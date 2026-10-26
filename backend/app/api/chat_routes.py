@@ -5,7 +5,16 @@ import json
 from collections.abc import AsyncIterator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -13,6 +22,7 @@ from sqlalchemy import func, select
 
 from app.api.dependencies import get_llm_client
 from app.core.config import Settings
+from app.core.voice_timing import VoiceTimings
 from app.db.database import Record
 from app.llm.base import LLMClient
 from app.schemas.chat import (
@@ -20,9 +30,11 @@ from app.schemas.chat import (
     ConversationCreate,
     Login,
     MessageCreate,
+    PlaybackReceipt,
     Refresh,
     Register,
 )
+from app.schemas.profile import ProfileResponse, ProfileUpdate
 from app.schemas.responses import (
     AccountResponse,
     ConversationResponse,
@@ -32,6 +44,7 @@ from app.schemas.responses import (
 )
 from app.services.auth import AuthService
 from app.services.conversations import ConversationService, PendingTurn
+from app.services.profile import MAX_AVATAR_BYTES, ProfileService
 
 router = APIRouter(prefix="/api")
 bearer = HTTPBearer(auto_error=False)
@@ -68,6 +81,12 @@ def current_user(
 
 
 User = Annotated[Record, Depends(current_user)]
+
+
+async def chat_slot(user: User, request: Request) -> AsyncIterator[None]:
+    """Hold admission until the response body, including SSE, is finished."""
+    async with request.app.state.chat_admission.slot(user["UserId"]):
+        yield
 
 
 @router.get("/ready", tags=["health"])
@@ -119,6 +138,8 @@ async def logout(
 ) -> Response:
     """Revoke the selected account's current or all sessions."""
     await request.app.state.voice.shutdown(user["UserId"])
+    await request.app.state.blaze_stt.shutdown(user["UserId"])
+    await request.app.state.speech_admission.shutdown(user["UserId"])
     for key, task in list(request.app.state.chat_jobs.items()):
         if key[0] == user["UserId"]:
             task.cancel()
@@ -130,6 +151,51 @@ async def logout(
 def me(user: User, service: Auth) -> Record:
     """Return only safe account identity fields."""
     return service.user_public(user)
+
+
+@router.get("/me/profile", tags=["account"], response_model=ProfileResponse)
+def profile(user: User, request: Request) -> Record:
+    """Read only the signed-in learner's profile."""
+    return ProfileService(request.app.state.database).get(
+        user["UserId"], user["PublicId"]
+    )
+
+
+@router.put("/me/profile", tags=["account"], response_model=ProfileResponse)
+def update_profile(data: ProfileUpdate, user: User, request: Request) -> Record:
+    """Save editable personal fields with an expected profile version."""
+    return ProfileService(request.app.state.database).update(
+        user["UserId"], user["PublicId"], data
+    )
+
+
+@router.post("/me/avatar", tags=["account"], status_code=204)
+async def upload_avatar(file: UploadFile, user: User, request: Request) -> Response:
+    """Bound uploads and keep images private behind the existing authentication."""
+    content = await file.read(MAX_AVATAR_BYTES + 1)
+    await run_in_threadpool(
+        ProfileService(request.app.state.database).save_avatar,
+        user["UserId"],
+        user["PublicId"],
+        content,
+    )
+    return Response(status_code=204)
+
+
+@router.get("/me/avatar", tags=["account"])
+def get_avatar(user: User, request: Request) -> Response:
+    """Never expose an avatar through a public static path."""
+    content, media_type = ProfileService(request.app.state.database).avatar(
+        user["PublicId"]
+    )
+    return Response(
+        content,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.post(
@@ -176,15 +242,25 @@ def messages(
     service: Conversations,
     offset: Offset = 0,
     limit: Limit = 50,
+    after_id: Annotated[int | None, Query(ge=0, le=MAX_ID)] = None,
+    before_id: Annotated[int | None, Query(gt=0, le=MAX_ID)] = None,
+    latest: bool = False,
 ) -> list[Record]:
     """Read a chronological page after checking ownership."""
-    return service.messages(user["UserId"], identity, offset, limit)
+    if sum((after_id is not None, before_id is not None, latest)) > 1 or (
+        offset and (after_id is not None or before_id is not None or latest)
+    ):
+        raise HTTPException(422, "Use one history cursor without offset.")
+    return service.messages(
+        user["UserId"], identity, offset, limit, after_id, before_id, latest
+    )
 
 
 @router.post(
     "/conversations/{identity}/messages",
     tags=["conversations"],
     response_model=TurnResponse,
+    dependencies=[Depends(chat_slot)],
 )
 async def send_message(
     identity: Identity,
@@ -209,7 +285,11 @@ async def send_message(
             request.app.state.chat_jobs.pop(key, None)
 
 
-@router.post("/conversations/{identity}/messages/stream", tags=["conversations"])
+@router.post(
+    "/conversations/{identity}/messages/stream",
+    tags=["conversations"],
+    dependencies=[Depends(chat_slot)],
+)
 async def stream_message(
     identity: Identity,
     data: MessageCreate,
@@ -221,7 +301,9 @@ async def stream_message(
     """Authenticate and reserve before headers, then deliver SSE with durable IDs."""
     uid = user["UserId"]
     request.app.state.voice.ensure_text_available(uid, identity)
+    timing = VoiceTimings()
     turn = await run_in_threadpool(service.prepare, uid, identity, data)
+    timing.mark("chat_prepared")
 
     async def events() -> AsyncIterator[str]:
         task = asyncio.current_task()
@@ -256,6 +338,20 @@ def close_conversation(
     """Close an owned conversation idempotently."""
     request.app.state.voice.ensure_text_available(user["UserId"], identity)
     return service.close(user["UserId"], identity, False)
+
+
+@router.post(
+    "/conversations/{identity}/messages/{response_id}/playback", tags=["conversations"]
+)
+def playback_receipt(
+    identity: Identity,
+    response_id: Annotated[int, Path(gt=0, le=MAX_ID)],
+    data: PlaybackReceipt,
+    user: User,
+    service: Conversations,
+) -> Record:
+    """Store played progress separately from generated text, without trusting text."""
+    return service.playback(user["UserId"], identity, response_id, data.heard_chars)
 
 
 @router.post("/conversations/{identity}/cancel", tags=["conversations"])

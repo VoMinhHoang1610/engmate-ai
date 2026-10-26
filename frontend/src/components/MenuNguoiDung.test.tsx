@@ -3,6 +3,40 @@ import { describe, expect, it, vi } from 'vitest';
 import { MenuNguoiDung } from './MenuNguoiDung';
 
 describe('Menu avatar gốc', () => {
+  it('keeps the menu open on the first pointer click after hovering and opens profile', () => {
+    const onProfile = vi.fn();
+    render(
+      <MenuNguoiDung
+        account={{ username: 'learner', email: 'learner@example.test' }}
+        busy={false}
+        onLogout={vi.fn()}
+        onProfile={onProfile}
+      />,
+    );
+    const trigger = screen.getByRole('button', { name: 'Mở menu tài khoản' });
+    fireEvent.mouseEnter(trigger.parentElement!);
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('button', { name: 'Hồ sơ học tập' }));
+    expect(onProfile).toHaveBeenCalledOnce();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('calls onSettings and closes menu when clicking Cài đặt', () => {
+    const onSettings = vi.fn();
+    render(
+      <MenuNguoiDung
+        account={{ username: 'learner', email: 'learner@example.test' }}
+        busy={false}
+        onLogout={vi.fn()}
+        onSettings={onSettings}
+      />,
+    );
+    const trigger = screen.getByRole('button', { name: 'Mở menu tài khoản' });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByRole('button', { name: 'Cài đặt' }));
+    expect(onSettings).toHaveBeenCalledOnce();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
   it('opens on hover and closes outside or on Escape while restoring keyboard focus', () => {
     render(
       <MenuNguoiDung

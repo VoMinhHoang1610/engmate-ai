@@ -25,7 +25,9 @@ pytestmark = pytest.mark.anyio
 
 def manager() -> GeminiVoiceManager:
     """Use private test settings and disconnected storage, never local .env keys."""
-    settings = Settings(gemini_api_key=SecretStr("gemini-test-key"))
+    settings = Settings(
+        voice_provider="native", gemini_api_key=SecretStr("gemini-test-key")
+    )
     return GeminiVoiceManager(settings, Database(settings))
 
 
@@ -353,7 +355,9 @@ def test_websocket_origin_ticket_shape_and_rest_auth(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Only allowed origins and short-lived tickets reach the owned audio relay."""
-    app = create_app(Settings(gemini_api_key=SecretStr("gemini-test-key")))
+    app = create_app(
+        Settings(voice_provider="native", gemini_api_key=SecretStr("gemini-test-key"))
+    )
 
     async def close_browser(identity: str, ticket: str, browser: WebSocket) -> None:
         await browser.close()

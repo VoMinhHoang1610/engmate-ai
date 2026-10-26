@@ -1,0 +1,54 @@
+.course-studio {
+  display: grid;
+  grid-template-columns: minmax(290px, 0.85fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: 20px;
+  padding-bottom: 30px;
+}
+.course-studio > * {
+  min-width: 0;
+}
+.course-studio .chat-panel {
+  position: sticky;
+  top: 18px;
+  height: min(780px, calc(100dvh - 140px));
+  min-height: 440px;
+  max-height: none;
+}
+.course-studio .learning-guide {
+  max-height: none;
+}
+.course-studio .chat-top h2 {
+  font-size: 1rem;
+}
+.course-studio .conversation-hero {
+  min-height: 200px;
+}
+.course-help {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 18px;
+  color: var(--tutor-text-muted, #a7b3c9);
+  font-size: 0.88rem;
+}
+@media (max-width: 980px) {
+  .course-studio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .course-studio .chat-panel {
+    position: static;
+    grid-row: 1;
+    height: 650px;
+  }
+}
+@media (max-width: 480px) {
+  .course-studio {
+    gap: 14px;
+  }
+  .course-studio .chat-panel {
+    height: 590px;
+    min-height: 380px;
+  }
+}

@@ -1,4 +1,4 @@
-"""Private signaling/heartbeat controls; media flows directly over WebRTC."""
+"""Authenticated Blaze catalog and explicit legacy native voice controls."""
 
 import asyncio
 import json
@@ -13,13 +13,16 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from fastapi.concurrency import run_in_threadpool
 from pydantic import Field
 
-from app.api.chat_routes import Identity, User
+from app.api.chat_routes import Conversations, Identity, User
 from app.db.database import Record
 from app.schemas.chat import Input
+from app.schemas.speech import SpeechLanguage
 from app.services.gemini_voice import GeminiVoiceManager
 from app.services.realtime import RealtimeManager
+from app.services.speech import SpeechService
 
 router = APIRouter(prefix="/api", tags=["voice"])
 
@@ -32,10 +35,28 @@ class VoiceOffer(Input):
 
 
 @router.get("/voice/voices")
-def voice_catalog(user: User, request: Request) -> Record:
-    """Expose supported live voices, separately from the Blaze reading catalog."""
+async def voice_catalog(user: User, request: Request) -> Record:
+    """Expose only voices from the selected speech service, never credentials."""
     manager = request.app.state.voice
     settings = request.app.state.settings
+    if settings.voice_provider == "blaze":
+        service = SpeechService(
+            settings,
+            http_client=request.app.state.speech_http,
+            catalog_cache=request.app.state.speech_catalog,
+        )
+        vietnamese, english = await asyncio.gather(
+            service.voices("vi"), service.voices("en")
+        )
+        catalog = {voice.id: voice for voice in [*vietnamese, *english]}
+        return {
+            "provider": "blaze",
+            "stt_mode": settings.blaze_stt_mode,
+            "default_voice": (
+                "HN-Nam-1-BL" if "HN-Nam-1-BL" in catalog else next(iter(catalog), None)
+            ),
+            "voices": [voice.model_dump() for voice in catalog.values()],
+        }
     voices = (
         manager.live.voices()
         if isinstance(manager, GeminiVoiceManager)
@@ -54,11 +75,68 @@ def voice_catalog(user: User, request: Request) -> Record:
     }
 
 
+@router.post("/conversations/{identity}/speech-ticket")
+async def speech_ticket(
+    identity: Identity,
+    user: User,
+    service: Conversations,
+    request: Request,
+    language: SpeechLanguage = "vi",
+) -> dict[str, str]:
+    """Check JWT and conversation ownership before authorizing a single STT turn."""
+    origin = request.headers.get("origin")
+    if origin is not None and origin not in request.app.state.settings.cors_origins:
+        raise HTTPException(403, "Speech request origin is not allowed.")
+    conversation = await run_in_threadpool(service.detail, user["UserId"], identity)
+    if conversation["status"] != "in_progress":
+        raise HTTPException(409, "Study session is already closed.")
+    result: dict[str, str] = request.app.state.blaze_stt.issue(user["UserId"], language)
+    return result
+
+
+@router.websocket("/speech/realtime/{session_id}")
+async def blaze_stt_audio(websocket: WebSocket, session_id: UUID) -> None:
+    """Require allowed Origin and a short-lived ticket in the first frame."""
+    settings = websocket.app.state.settings
+    if (
+        settings.voice_provider != "blaze"
+        or settings.blaze_stt_mode != "realtime"
+        or websocket.headers.get("origin") not in settings.cors_origins
+    ):
+        await websocket.close(code=4403)
+        return
+    await websocket.accept()
+    try:
+        message = await asyncio.wait_for(websocket.receive(), 5)
+        if message["type"] == "websocket.disconnect":
+            return
+        raw = message.get("text")
+        if not isinstance(raw, str) or len(raw) > 256:
+            raise ValueError("Oversized ticket")
+        data = json.loads(raw)
+        if not isinstance(data, dict) or set(data) != {"ticket"}:
+            raise ValueError("Invalid ticket frame")
+        ticket = data["ticket"]
+        if not isinstance(ticket, str) or not 32 <= len(ticket) <= 128:
+            raise ValueError("Invalid ticket")
+        await websocket.app.state.blaze_stt.relay(str(session_id), ticket, websocket)
+    except (ValueError, TypeError, TimeoutError):
+        await websocket.close(code=4401)
+    except WebSocketDisconnect:
+        pass
+
+
 @router.post("/conversations/{identity}/voice")
 async def start_voice(
     identity: Identity, data: VoiceOffer, user: User, request: Request
 ) -> Record:
     """Check ownership/open state before any paid provider signaling call."""
+    if request.app.state.settings.voice_provider == "blaze":
+        raise HTTPException(
+            409,
+            "Mate dùng Blaze STT/TTS và chat văn bản; "
+            "thoại trực tiếp của Gemini/OpenAI đã tắt.",
+        )
     manager: RealtimeManager = request.app.state.voice
     if isinstance(manager, GeminiVoiceManager):
         return await manager.start(user["UserId"], identity, voice_id=data.voice_id)
@@ -78,7 +156,8 @@ async def gemini_audio(websocket: WebSocket, session_id: UUID) -> None:
     manager = websocket.app.state.voice
     settings = websocket.app.state.settings
     if (
-        not isinstance(manager, GeminiVoiceManager)
+        settings.voice_provider != "native"
+        or not isinstance(manager, GeminiVoiceManager)
         or websocket.headers.get("origin") not in settings.cors_origins
     ):
         await websocket.close(code=4403)
