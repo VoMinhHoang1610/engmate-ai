@@ -12,6 +12,8 @@ import { ProfilePage } from '../profile/ProfilePage';
 import { SettingsPage } from '../settings/SettingsPage';
 import { levels, useAccountProfile } from '../profile/api';
 import { RoadmapPage } from '../learning/RoadmapPage';
+import { LessonsPage, ProgressPage } from '../learning/LearningPages';
+import { LearningAccountSummary } from '../learning/LearningAccountSummary';
 import { LessonGuide } from '../learning/LessonGuide';
 import { getLearningProgress } from '../learning/api';
 import type { LearningLesson, LessonProgress } from '../learning/types';
@@ -51,7 +53,11 @@ export function TutorWorkspace(props: Props) {
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-    if (mainPane.current) mainPane.current.scrollTop = 0;
+    if (mainPane.current) {
+      mainPane.current.scrollTop = 0;
+      const body = mainPane.current.closest('.workspace-body');
+      if (body) body.scrollTop = 0;
+    }
   }, [view]);
   const [courseLesson, setCourseLesson] = useState<{
     lesson: LearningLesson;
@@ -61,6 +67,7 @@ export function TutorWorkspace(props: Props) {
   const [courseVoiceRequest, setCourseVoiceRequest] = useState(0);
   const [courseVoiceActive, setCourseVoiceActive] = useState(false);
   const [courseError, setCourseError] = useState('');
+  const [reviewOnly, setReviewOnly] = useState(false);
   const courseSync = useRef<AbortController | null>(null);
   useEffect(() => () => courseSync.current?.abort(), []);
   const [learning, setLearning] = useState(() => readLearning(account.username));
@@ -164,7 +171,8 @@ export function TutorWorkspace(props: Props) {
     setTranscript('');
     setCourseVoiceRequest(0);
     setCourseVoiceActive(false);
-    setView(next === 'lesson' && courseLesson ? 'course' : next);
+    setView(next);
+    if (next === 'lesson') setReviewOnly(false);
     setHistoryOpen(false);
   }
   function studyLesson(item: LearningLesson, conversation: Conversation, progress: LessonProgress) {
@@ -276,7 +284,7 @@ export function TutorWorkspace(props: Props) {
       'Nghe mẫu, đọc lại rồi luyện từng âm cùng Mate.',
     ],
     vocabulary: [
-      'ÔN TẬP / TỪ BÀI VỪA HỌC',
+      'ÔN TẬP GIAO TIẾP',
       'Nhớ từ qua tình huống',
       'Đọc ví dụ, tự kiểm tra và đánh dấu những cụm bạn đã nhớ.',
     ],
@@ -352,7 +360,7 @@ export function TutorWorkspace(props: Props) {
           </div>
           <button
             className="tutor-level"
-            onClick={() => navigate('setup')}
+            onClick={() => navigate('profile')}
             disabled={recording.active}
             title="Đổi mục tiêu và trình độ tự chọn"
           >
@@ -440,7 +448,7 @@ export function TutorWorkspace(props: Props) {
                           {learning.completed.length > 0
                             ? `${learning.completed.length} buổi luyện đã hoàn thành`
                             : 'Bắt đầu một buổi nhỏ hôm nay'}{' '}
-                          · Mục tiêu {learning.minutes} phút/ngày
+                          · Mục tiêu giao tiếp {learning.minutes} phút/ngày
                         </span>
                       </div>
                     </div>
@@ -467,18 +475,21 @@ export function TutorWorkspace(props: Props) {
                       </button>
                     </div>
                   ) : (
-                    <ProfilePage
-                      key={`${account.username}:${personal.revision}`}
-                      account={account}
-                      profile={personal.profile}
-                      avatar={personal.avatar}
-                      avatarError={personal.avatarError}
-                      remembered={learning.remembered.length}
-                      completed={learning.completed.length}
-                      onSaved={personal.onSaved}
-                      onAvatarChanged={personal.avatarChanged}
-                      onReload={personal.refresh}
-                    />
+                    <>
+                      <LearningAccountSummary onPlan={() => navigate('roadmap')} />
+                      <ProfilePage
+                        key={`${account.username}:${personal.revision}`}
+                        account={account}
+                        profile={personal.profile}
+                        avatar={personal.avatar}
+                        avatarError={personal.avatarError}
+                        remembered={learning.remembered.length}
+                        completed={learning.completed.length}
+                        onSaved={personal.onSaved}
+                        onAvatarChanged={personal.avatarChanged}
+                        onReload={personal.refresh}
+                      />
+                    </>
                   ))}
                 {view === 'settings' && (
                   <SettingsPage
@@ -489,11 +500,34 @@ export function TutorWorkspace(props: Props) {
                     onLogout={props.onLogout}
                   />
                 )}
-                {(view === 'roadmap' ||
-                  view === 'lesson' ||
-                  view === 'setup' ||
-                  view === 'progress') && (
-                  <RoadmapPage onStudy={studyLesson} progressOnly={view === 'progress'} />
+                {(view === 'roadmap' || view === 'setup') && <RoadmapPage onStudy={studyLesson} />}
+                {view === 'lesson' && (
+                  <>
+                    {courseLesson && (
+                      <div className="learning-resume learning-card">
+                        <p>
+                          Bài đang mở: <strong>{courseLesson.lesson.title}</strong>
+                        </p>
+                        <button className="tutor-button" onClick={() => navigate('course')}>
+                          Quay lại bài đang học
+                        </button>
+                      </div>
+                    )}
+                    <LessonsPage
+                      key={String(reviewOnly)}
+                      onStudy={studyLesson}
+                      reviewOnly={reviewOnly}
+                    />
+                  </>
+                )}
+                {view === 'progress' && (
+                  <ProgressPage
+                    onStudy={studyLesson}
+                    onLessons={(review = false) => {
+                      navigate('lesson');
+                      setReviewOnly(review);
+                    }}
+                  />
                 )}
                 {view === 'course' && courseLesson && (
                   <>
@@ -527,7 +561,7 @@ export function TutorWorkspace(props: Props) {
                         onProgress={(progress) =>
                           setCourseLesson((old) => (old ? { ...old, progress } : old))
                         }
-                        onExit={() => navigate('roadmap')}
+                        onExit={() => navigate('lesson')}
                         onStartVoice={
                           capabilities?.realtime
                             ? () => setCourseVoiceRequest((old) => old + 1)
@@ -556,6 +590,26 @@ export function TutorWorkspace(props: Props) {
                       />
                     </div>
                   </>
+                )}
+                {(view === 'pronunciation' || view === 'vocabulary') && (
+                  <label className="practice-topic">
+                    Chủ đề giao tiếp
+                    <select
+                      value={lesson.id}
+                      disabled={recording.active || audioBusy}
+                      onChange={(event) => {
+                        setLearning((old) => ({ ...old, lessonId: event.target.value }));
+                        setTranscript('');
+                      }}
+                    >
+                      {lessons.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.topic}
+                        </option>
+                      ))}
+                    </select>
+                    <span>Câu mẫu và cụm từ giao tiếp; nội dung TOEIC nằm trong từng bài học.</span>
+                  </label>
                 )}
                 {view === 'pronunciation' && (
                   <>
@@ -673,7 +727,9 @@ export function TutorWorkspace(props: Props) {
                         <strong>
                           {learning.completed.length} / {lessons.length}
                         </strong>
-                        <p>Bạn tự xác nhận sau mỗi bài</p>
+                        <p>
+                          Buổi ôn giao tiếp tự xác nhận trên trình duyệt này, riêng với bài TOEIC.
+                        </p>
                       </article>
                       <article className="tutor-card">
                         <span className="eyebrow">HỘI THOẠI ĐÃ TẢI</span>

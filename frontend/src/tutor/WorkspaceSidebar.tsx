@@ -37,20 +37,18 @@ const tones: Partial<Record<TutorView, string>> = {
   progress: 'teal',
 };
 
-/** Navigation expands on hover/focus and becomes a modal drawer on small screens. */
+/** Desktop width changes only through the menu button; mobile uses a modal drawer. */
 export function WorkspaceSidebar(props: Props) {
   const { account, displayName, avatar, view, disabled, busy } = props;
   const [mobile, setMobile] = useState(
     () => window.matchMedia?.(mobileQuery).matches ?? window.innerWidth <= 767,
   );
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [pinned, setPinned] = useState(false);
+  const [pinned, setPinned] = useState(true);
   const sidebar = useRef<HTMLElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const identity = useId();
-  const expanded = mobileOpen || hovered || focused || pinned;
+  const expanded = mobile ? mobileOpen : pinned;
   const name = displayName || account.username;
   const active = view === 'course' ? 'lesson' : view === 'setup' ? 'roadmap' : view;
 
@@ -144,30 +142,32 @@ export function WorkspaceSidebar(props: Props) {
         ref={sidebar}
         className="workspace-sidebar"
         data-expanded={expanded}
+        data-pinned={pinned}
         data-mobile-open={mobileOpen}
         role={mobile && mobileOpen ? 'dialog' : undefined}
         aria-modal={mobile && mobileOpen ? true : undefined}
         aria-label={mobile && mobileOpen ? 'Menu học tập' : 'Thanh bên học tập'}
         aria-hidden={mobile && !mobileOpen ? true : undefined}
         inert={mobile && !mobileOpen}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onFocusCapture={() => setFocused(true)}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
-        }}
       >
         <div className="workspace-sidebar-inner">
           <div className="workspace-sidebar-top">
             <button
               className="workspace-sidebar-brand"
               type="button"
-              aria-label="EngMate AI · Trang giới thiệu"
-              title="EngMate AI"
-              disabled={disabled}
-              onClick={() =>
-                run(() => (props.onOpenLanding ? props.onOpenLanding() : props.onNavigate('mate')))
+              aria-label={
+                !mobile && !pinned ? 'Mở rộng thanh bên' : 'EngMate AI · Trang giới thiệu'
               }
+              aria-expanded={!mobile && !pinned ? false : undefined}
+              title={!mobile && !pinned ? 'Mở rộng thanh bên' : 'EngMate AI'}
+              disabled={disabled}
+              onClick={() => {
+                if (!mobile && !pinned) setPinned(true);
+                else
+                  run(() =>
+                    props.onOpenLanding ? props.onOpenLanding() : props.onNavigate('mate'),
+                  );
+              }}
             >
               <Logo compact />
               <span className="workspace-nav-label">EngMate AI</span>
@@ -181,17 +181,17 @@ export function WorkspaceSidebar(props: Props) {
               >
                 <BieuTuong ten="close" />
               </button>
-            ) : (
+            ) : pinned ? (
               <button
                 type="button"
                 className="workspace-sidebar-toggle"
-                aria-label={pinned ? 'Bỏ ghim thanh bên' : 'Ghim thanh bên'}
-                aria-pressed={pinned}
+                aria-label={pinned ? 'Thu gọn thanh bên' : 'Mở rộng thanh bên'}
+                aria-expanded={pinned}
                 onClick={() => setPinned((old) => !old)}
               >
                 <BieuTuong ten="menu" size={17} />
               </button>
-            )}
+            ) : null}
           </div>
           <button
             className="workspace-nav-item workspace-sidebar-new"
@@ -264,10 +264,7 @@ export function WorkspaceSidebar(props: Props) {
               <BieuTuong ten="settings" />
               <span className="workspace-nav-label">Cài đặt</span>
             </button>
-            <div className="workspace-sidebar-theme">
-              <ThemeToggle />
-              <span className="workspace-nav-label">Giao diện</span>
-            </div>
+            <ThemeToggle navigation />
             <button
               className="workspace-nav-item workspace-sidebar-logout"
               type="button"

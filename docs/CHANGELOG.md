@@ -1,5 +1,52 @@
 # Changelog
 
+## 2026-10-30 — Đăng nhập Google bằng tài khoản EngMate đã có
+
+- Khi email Google trùng tài khoản cũ, hiện bước xác nhận mật khẩu EngMate để
+  liên kết và giữ nguyên dữ liệu. Có thể hủy; sau liên kết, đăng nhập Google trực tiếp.
+- Challenge gắn browser, hết hạn sau 5 phút và dùng một lần; sai hoặc hết hạn
+  có hướng dẫn bấm Google thử lại.
+
+## 2026-10-29 — Đăng nhập Google/Facebook
+
+- Bỏ GitHub, giữ hai nút Google/Facebook cùng hàng, dùng popup và backend OAuth.
+- Tài khoản nền tảng dùng cùng phiên đăng nhập/đăng xuất của EngMate; thông báo
+  rõ khi thiếu cấu hình, bị chặn popup, hủy hoặc email đã có tài khoản.
+- Cần cấu hình ứng dụng Google/Meta và cài bảng liên kết theo OAUTH_SETUP trước
+  khi sử dụng thật; không tự sửa dữ liệu hoặc cài schema khi khởi động.
+
+## 2026-10-29 — Logo thay nút menu khi thu gọn
+
+- Sidebar thu gọn hiển thị logo EngMate; click logo mở rộng. Nút menu riêng chỉ hiện khi mở rộng để thu gọn lại.
+
+## 2026-10-29 — Điều khiển sidebar bằng click
+
+- Sidebar desktop chỉ đóng/mở bằng nút menu, không tự mở do hover hoặc focus. Nút menu vẫn hiển thị khi thu gọn và không chồng logo.
+
+## 2026-10-29 — Sửa hồi quy sidebar che nội dung
+
+- Sidebar desktop mở tạm cũng dành đủ chiều rộng trong bố cục; nội dung luôn bắt đầu từ mép phải sidebar. Thay thế cách mở overlay trước đó.
+
+## 2026-10-29 — Sửa chồng lớp avatar, logo và nút mật khẩu
+
+- Giữ input chọn ảnh ẩn, không bị kiểu chỉ đọc làm hiện lên trên avatar.
+- Giữ đủ chiều rộng sidebar mở tạm, loại bỏ nút menu khỏi bố cục thu gọn.
+- Dùng biểu tượng mắt hiện/ẩn mật khẩu và tắt reveal mặc định của Edge để tránh trùng lặp.
+
+## 2026-10-29 — Hoàn thiện giao diện sau rà soát
+
+- Bài học có bộ lọc chặng/thời lượng/cần ôn, tìm không dấu và xem thêm; giữ lối quay lại bài đang học. Tiến độ mở bài ôn trực tiếp.
+- Dữ liệu học tải độc lập, giữ phần đã tải và phân biệt chưa tải với chưa học; chỉ bài đang mở hiện trạng thái chờ.
+- Đồng nhất nguồn kết quả TOEIC tại Hồ sơ/Cài đặt; làm rõ phạm vi mục tiêu giao tiếp và buổi ôn tự ghi nhận.
+- Sửa hiện mật khẩu, lưu/khôi phục giảm chuyển động, hiển thị rõ chức năng OAuth/âm báo chưa hỗ trợ; chuyển chẩn đoán thoại vào phần nâng cao.
+- Sidebar ghim mặc định, giữ vị trí khi cuộn; mở tạm không đẩy nội dung. Cải thiện chữ phụ, nút cảm ứng, màn hình thấp và form tài khoản trên mobile.
+- Nội dung giới thiệu thay số đo/lời chứng thực chưa xác nhận bằng tình huống luyện tập minh họa.
+
+## 2026-10-29 — Sửa bố cục đăng nhập và không gian trò chuyện
+
+- Xếp ba nút nền tảng cùng hàng; mục Giao diện có hover và vùng bấm toàn hàng.
+- Mở rộng chat/ô nhập, giảm chữ phụ đề thoại; cố định khung sidebar bằng vùng cuộn nội dung riêng.
+
 ## 2026-10-23 — Lỗi âm thanh không còn dừng phiên thoại
 
 - TTS hoặc phát MP3 lỗi (kể cả lời mở đầu) chỉ dừng audio và báo lỗi; Gemini vẫn

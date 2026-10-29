@@ -4,6 +4,7 @@ import { BieuTuong } from '../components/BieuTuong';
 import { TeacherMate, Waveform } from '../tutor/TutorScene';
 import { docVanBan, dungDoc } from '../speech/audio';
 import './landing.css';
+import { readReducedMotion } from '../settings/motion';
 
 interface LandingPageProps {
   signedIn?: boolean;
@@ -13,50 +14,44 @@ interface LandingPageProps {
 }
 
 const HERO_STRIP = [
-  { icon: 'mic', label: 'Gemini Live' },
-  { icon: 'waveform', label: 'Blaze Voice' },
-  { icon: 'compass', label: 'Chuẩn CEFR' },
+  { icon: 'mic', label: 'Đối thoại cùng Mate' },
+  { icon: 'waveform', label: 'Nghe giọng mẫu' },
+  { icon: 'compass', label: 'Mục tiêu tự chọn' },
   { icon: 'briefcase', label: 'Luyện TOEIC' },
-  { icon: 'headphones', label: 'Chấm phát âm' },
-  { icon: 'flame', label: 'Chuỗi 7 ngày' },
+  { icon: 'headphones', label: 'Đối chiếu bản chép lời' },
+  { icon: 'flame', label: 'Ôn tập theo tiến độ' },
 ];
 
 const STORIES = [
   {
-    name: 'Minh Quân',
-    role: 'Software Engineer · TP.HCM',
-    tag: 'CEFR A2 → B1',
-    photo:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-    quote:
-      '“Chỉ 15 phút nói chuyện mỗi tối cùng Thầy Mate giúp mình tự tin báo cáo tiến độ trong các buổi họp tiếng Anh.”',
+    name: 'Giới thiệu bản thân',
+    role: 'Tình huống gợi ý',
+    tag: 'LÀM QUEN',
+    photo: '/engmate-mark.svg',
+    quote: 'Tập nói tên, công việc và sở thích. Nhờ Mate hỏi từng câu để bạn có thời gian trả lời.',
   },
   {
-    name: 'Hoàng Nam',
-    role: 'Product Manager · Hà Nội',
-    tag: 'TOEIC 650+',
-    photo:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-    quote:
-      '“Đóng vai tình huống thực tế ngay sau mỗi bài học giúp mình nhớ từ vựng tự nhiên mà không cần học vẹt.”',
+    name: 'Họp cùng đồng nghiệp',
+    role: 'Tình huống gợi ý',
+    tag: 'CÔNG VIỆC',
+    photo: '/engmate-mark.svg',
+    quote: 'Đóng vai báo cáo tiến độ hoặc hẹn lịch họp, rồi luyện cách diễn đạt rõ ràng hơn.',
   },
   {
-    name: 'Thanh Thảo',
-    role: 'UX Designer · Đà Nẵng',
-    tag: 'CEFR B1 → B2',
-    photo:
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+    name: 'Nghe và đọc lại',
+    role: 'Tình huống gợi ý',
+    tag: 'PHÁT ÂM',
+    photo: '/engmate-mark.svg',
     quote:
-      '“Phần đối chiếu bản ghi âm chỉ rõ từng âm cuối bị thiếu. Giao diện sáng thoáng đãng, mở lên là muốn học ngay.”',
+      'Nghe câu mẫu, ghi âm và so sánh bản chép lời. Bản chép lời hỗ trợ tự đối chiếu, chưa chấm điểm phát âm.',
   },
   {
-    name: 'Đức Huy',
-    role: 'Team Lead · TP.HCM',
-    tag: 'CHUỖI 21 NGÀY',
-    photo:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    name: 'Ôn một bài TOEIC',
+    role: 'Tình huống gợi ý',
+    tag: 'ÔN TẬP',
+    photo: '/engmate-mark.svg',
     quote:
-      '“Tốc độ phản hồi giọng nói thời gian thực mượt như đang gọi trực tiếp với đồng nghiệp nước ngoài.”',
+      'Mở bài đến lịch ôn trong Tiến độ, thực hành với Mate và làm lại câu kiểm tra kiến thức.',
   },
 ];
 
@@ -73,36 +68,36 @@ const CANVAS_TABS = [
   {
     id: 'step2',
     title: '02 · Đối thoại giọng nói 2 chiều cùng Thầy Mate',
-    sub: 'Trò chuyện trực tiếp qua Gemini Live & Blaze.',
+    sub: 'Luyện nói, nghe phản hồi và xem lại bản chép lời.',
     previewTitle: 'Phòng học hội thoại trực tiếp',
-    nodeLeft: 'Bạn nói trực tiếp qua Micro (Realtime WebRTC)',
-    nodeCenter: 'Thầy Mate lắng nghe, gợi ý ý tưởng & phản hồi <320ms',
+    nodeLeft: 'Bạn nói qua micro hoặc nhập câu trả lời',
+    nodeCenter: 'Thầy Mate gợi ý cách diễn đạt và chờ bạn trả lời',
     nodeRight: 'Lưu lịch sử hội thoại & gợi ý cách diễn đạt tự nhiên hơn',
   },
   {
     id: 'step3',
-    title: '03 · So khớp phát âm AI',
+    title: '03 · Nghe mẫu & tự đối chiếu',
     sub: 'Đối chiếu câu bạn nói với giọng mẫu chuẩn.',
-    previewTitle: 'Phân tích phát âm & Ngữ điệu tức thì',
+    previewTitle: 'Luyện phát âm với câu mẫu',
     nodeLeft: 'Câu mẫu: “Could we schedule a quick sync?”',
-    nodeCenter: 'AI chấm điểm từng từ & phát hiện âm cuối bị thiếu',
-    nodeRight: 'Kết quả: 98% Tự nhiên · Sẵn sàng áp dụng thực tế',
+    nodeCenter: 'Nghe mẫu, đọc lại và xem bản chép lời của bạn',
+    nodeRight: 'Tự đối chiếu với câu mẫu; chưa có điểm phát âm',
   },
   {
     id: 'step4',
     title: '04 · Sổ từ vựng ngữ cảnh',
     sub: 'Ghi nhớ cụm từ vừa dùng trong cuộc trò chuyện.',
     previewTitle: 'Ôn tập từ vựng gắn liền tình huống',
-    nodeLeft: 'Trích xuất cụm từ hay từ buổi nói chuyện vừa xong',
+    nodeLeft: 'Chọn cụm từ trong nội dung bài để luyện lại',
     nodeCenter: 'Nghe lại giọng mẫu & đặt câu trong ngữ cảnh mới',
-    nodeRight: 'Duy trì chuỗi 7 ngày học liên tiếp bền bỉ',
+    nodeRight: 'Tự đánh dấu cụm đã nhớ trên trình duyệt',
   },
 ];
 
 const FAQS = [
   {
     q: 'EngMate AI khác gì so với ứng dụng học tiếng Anh thông thường?',
-    a: 'Bạn được trò chuyện giọng nói 2 chiều thời gian thực 1-1 với Gia sư AI Mate, kết hợp lộ trình CEFR A1–C1 và sửa phát âm tức thì.',
+    a: 'Bạn được trò chuyện giọng nói 2 chiều thời gian thực 1-1 với Gia sư AI Mate, kết hợp giáo trình TOEIC theo chặng và luyện phát âm qua câu mẫu.',
   },
   {
     q: 'Tôi mới bắt đầu (A1–A2) hoặc mất gốc thì có theo kịp không?',
@@ -144,7 +139,8 @@ export function LandingPage({
     if (!rootEl) return;
 
     const revealElements = Array.from(rootEl.querySelectorAll<HTMLElement>('[data-reveal]'));
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion =
+      readReducedMotion() || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion || typeof IntersectionObserver !== 'function') {
       revealElements.forEach((el) => el.classList.add('is-visible'));
       return;
@@ -243,7 +239,7 @@ export function LandingPage({
               Trải nghiệm
             </a>
             <a href="#stories" className={activeSection === 'stories' ? 'active' : ''}>
-              Câu chuyện
+              Cách luyện
             </a>
             <a href="#how-it-works" className={activeSection === 'how-it-works' ? 'active' : ''}>
               Cách hoạt động
@@ -284,8 +280,8 @@ export function LandingPage({
               Chinh phục tiếng Anh giao tiếp tự tin cùng Gia sư AI Mate
             </h1>
             <p className="landing-editorial-sub">
-              Đối thoại giọng nói 1-1 thời gian thực, lộ trình chuẩn CEFR A1–C1 và sự tiến bộ bạn
-              cảm nhận rõ qua từng buổi học.
+              Luyện hội thoại cùng Mate, học TOEIC theo chặng và xem kết quả thực hành đã lưu trong
+              tài khoản.
             </p>
 
             {/* Floating Action Pill overlapping the Hero Scenic Image */}
@@ -311,7 +307,7 @@ export function LandingPage({
               >
                 <div className="landing-scenic-left-badge">
                   <span className="landing-pulse-dot" />
-                  <span>Phòng học giọng nói AI · Hoạt động 24/7</span>
+                  <span>Phòng học giọng nói AI · Minh họa cách luyện</span>
                 </div>
 
                 <div className="landing-scenic-floating-card">
@@ -327,14 +323,14 @@ export function LandingPage({
                           letterSpacing: '0.05em',
                         }}
                       >
-                        Thầy Mate · CEFR B1
+                        Thầy Mate · Câu mẫu minh họa
                       </span>
                       <h3>“Good morning! Could you share your main goal for this week?”</h3>
                     </div>
                   </div>
                   <Waveform active={speakingSample} />
                   <div className="landing-scenic-card-footer">
-                    <span>Độ tự nhiên: 96% · Phản hồi &lt;320ms</span>
+                    <span>Nghe mẫu rồi thử trả lời theo cách của bạn</span>
                     <button
                       type="button"
                       className="landing-sample-btn"
@@ -376,7 +372,7 @@ export function LandingPage({
                         fontWeight: 700,
                       }}
                     >
-                      <span>Lộ trình CEFR</span>
+                      <span>Mức giao tiếp tự chọn</span>
                       <span style={{ color: '#2563eb' }}>A1 → C1</span>
                     </div>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -399,13 +395,13 @@ export function LandingPage({
                       ))}
                     </div>
                     <div style={{ fontSize: 12, color: '#64748b' }}>
-                      ✓ Đã đồng bộ mục tiêu Tiếng Anh công sở
+                      Ví dụ mục tiêu: Tiếng Anh công sở
                     </div>
                   </div>
                 </div>
                 <div className="landing-visual-caption">
                   <span className="landing-num-badge">01</span>
-                  <span>Thiết lập mục tiêu & trình độ CEFR phù hợp chỉ trong 30 giây.</span>
+                  <span>Tự chọn mục tiêu giao tiếp và kế hoạch học TOEIC.</span>
                 </div>
               </article>
 
@@ -425,7 +421,7 @@ export function LandingPage({
                         marginBottom: 8,
                       }}
                     >
-                      Đang đối thoại trực tiếp
+                      Minh họa tình huống đối thoại
                     </span>
                     <p style={{ margin: '0 0 10px', fontWeight: 650 }}>
                       “Let’s practice introducing your project to a new client.”
@@ -444,7 +440,7 @@ export function LandingPage({
                 <div className="landing-visual-frame photo-3">
                   <div className="landing-floating-widget">
                     <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                      Tiến độ phản xạ & phát âm
+                      Các bước luyện tập
                     </div>
                     <div
                       style={{
@@ -456,28 +452,28 @@ export function LandingPage({
                     >
                       <div style={{ padding: 8, borderRadius: 10, background: '#f0fdf4' }}>
                         <strong style={{ display: 'block', fontSize: 18, color: '#16a34a' }}>
-                          98%
+                          Nghe
                         </strong>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>Khớp âm</span>
+                        <span style={{ fontSize: 11, color: '#64748b' }}>Câu mẫu</span>
                       </div>
                       <div style={{ padding: 8, borderRadius: 10, background: '#eff6ff' }}>
                         <strong style={{ display: 'block', fontSize: 18, color: '#2563eb' }}>
-                          15p
+                          Nói
                         </strong>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>Mỗi ngày</span>
+                        <span style={{ fontSize: 11, color: '#64748b' }}>Đọc lại</span>
                       </div>
                       <div style={{ padding: 8, borderRadius: 10, background: '#f8fafc' }}>
                         <strong style={{ display: 'block', fontSize: 18, color: '#0f172a' }}>
-                          7 ngày
+                          Ôn
                         </strong>
-                        <span style={{ fontSize: 11, color: '#64748b' }}>Liên tiếp</span>
+                        <span style={{ fontSize: 11, color: '#64748b' }}>Kiến thức</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="landing-visual-caption">
                   <span className="landing-num-badge">03</span>
-                  <span>Nhận phản hồi phát âm tức thì và duy trì chuỗi học tập bền vững.</span>
+                  <span>Đối chiếu bản chép lời và ôn lại kiến thức trong bài.</span>
                 </div>
               </article>
             </div>
@@ -499,16 +495,16 @@ export function LandingPage({
 
             <div className="landing-stats-row">
               <div className="landing-stat-item">
-                <strong>&lt;320ms</strong>
-                <span>Độ trễ phản hồi giọng nói trực tiếp</span>
+                <strong>Hội thoại</strong>
+                <span>Luyện hỏi đáp bằng giọng nói hoặc chữ</span>
               </div>
               <div className="landing-stat-item">
-                <strong>24/7</strong>
-                <span>Gia sư AI luôn sẵn sàng đồng hành</span>
+                <strong>TOEIC</strong>
+                <span>Học theo chặng, thực hành và tự kiểm tra</span>
               </div>
               <div className="landing-stat-item">
-                <strong>A1–C1</strong>
-                <span>Lộ trình chuẩn khung tham chiếu quốc tế</span>
+                <strong>Ôn tập</strong>
+                <span>Xem bài đến lịch ôn trong Tiến độ</span>
               </div>
             </div>
           </div>
@@ -517,6 +513,8 @@ export function LandingPage({
         {/* 4. PORTRAIT PHOTO LEARNER STORIES GRID */}
         <section id="stories" className="landing-stories-section">
           <div className="landing-container">
+            <h2 className="landing-editorial-h2">Gợi ý cách luyện cùng Mate</h2>
+            <p>Các tình huống minh họa để bạn bắt đầu buổi học.</p>
             <div className="landing-stories-grid">
               {STORIES.map((story, idx) => (
                 <article
@@ -528,7 +526,7 @@ export function LandingPage({
                   <img
                     className="landing-story-photo"
                     src={story.photo}
-                    alt={story.name}
+                    alt="Linh vật Mate minh họa"
                     loading="lazy"
                     onError={(event) => {
                       const img = event.currentTarget;
@@ -685,8 +683,8 @@ export function LandingPage({
                       Tùy chọn giọng đọc AI
                     </strong>
                     <div style={{ display: 'grid', gap: 6, fontSize: 12.5 }}>
-                      <div>● Gemini Live · Phản xạ tự nhiên</div>
-                      <div>● Blaze Voice · Phát âm rõ từng âm tiết</div>
+                      <div>● Hội thoại bằng giọng nói hoặc chữ</div>
+                      <div>● Giọng mẫu để nghe và luyện lại</div>
                       <div>● Tốc độ linh hoạt 0.75x – 1.25x</div>
                     </div>
                   </div>
@@ -720,7 +718,7 @@ export function LandingPage({
                         borderRadius: 6,
                       }}
                     >
-                      ✓ Phát âm rõ toàn bộ 8/8 từ
+                      Ví dụ câu mẫu để tự đối chiếu
                     </span>
                   </div>
                 </div>
@@ -729,7 +727,10 @@ export function LandingPage({
                     <strong style={{ color: 'var(--landing-fg)', display: 'block' }}>
                       Đối chiếu phát âm trực quan
                     </strong>
-                    <span>Đặt câu bạn nói cạnh câu mẫu để sửa ngay những âm còn thiếu.</span>
+                    <span>
+                      So sánh bản chép lời với câu mẫu. Nhận dạng lời nói chưa thay thế đánh giá
+                      phát âm.
+                    </span>
                   </div>
                 </div>
               </article>
@@ -743,30 +744,30 @@ export function LandingPage({
                     className="landing-section-eyebrow"
                     style={{ color: '#60a5fa', marginBottom: 8 }}
                   >
-                    HIỆU NĂNG & ĐỘ TIN CẬY
+                    DỮ LIỆU HỌC TẬP CỦA BẠN
                   </span>
                   <h2 className="landing-editorial-h2" style={{ color: '#ffffff', margin: 0 }}>
                     Thiết kế cho những buổi học liền mạch
                   </h2>
                 </div>
                 <span style={{ fontSize: 13, color: '#94a3b8', maxWidth: 320 }}>
-                  Đồng bộ tức thì lịch sử hội thoại, tiến độ bài học và hồ sơ cá nhân trên mọi thiết
-                  bị.
+                  Lịch sử hội thoại, kết quả TOEIC và hồ sơ được lưu theo tài khoản. Dấu nhớ từ và
+                  buổi ôn giao tiếp tự ghi nhận lưu trên trình duyệt.
                 </span>
               </div>
 
               <div className="landing-dark-stats">
                 <div>
-                  <strong>99.9%</strong>
-                  <span>Độ ổn định kết nối phòng học</span>
+                  <strong>Hội thoại</strong>
+                  <span>Mở lại lịch sử trong tài khoản</span>
                 </div>
                 <div>
-                  <strong>50ms</strong>
-                  <span>Xử lý luồng âm thanh WebRTC</span>
+                  <strong>TOEIC</strong>
+                  <span>Theo dõi kết quả kiểm tra trong bài</span>
                 </div>
                 <div>
-                  <strong>100%</strong>
-                  <span>Lưu trữ bền vững tiến độ học tập</span>
+                  <strong>Hồ sơ</strong>
+                  <span>Lưu mục tiêu giao tiếp của bạn</span>
                 </div>
               </div>
 
@@ -778,8 +779,8 @@ export function LandingPage({
                 </div>
                 <div className="landing-dark-pillar">
                   <BieuTuong ten="compass" size={18} />
-                  <strong>Chuẩn CEFR A1–C1</strong>
-                  <p>Bài học phân tầng rõ ràng theo đúng năng lực.</p>
+                  <strong>Mức giao tiếp tự chọn</strong>
+                  <p>Mức tự chọn trong hồ sơ, chưa phải kết quả đánh giá đầu vào.</p>
                 </div>
                 <div className="landing-dark-pillar">
                   <BieuTuong ten="book" size={18} />
@@ -788,7 +789,7 @@ export function LandingPage({
                 </div>
                 <div className="landing-dark-pillar">
                   <BieuTuong ten="trophy" size={18} />
-                  <strong>Chuỗi ngày học</strong>
+                  <strong>Nhịp ôn tập</strong>
                   <p>Xây dựng thói quen luyện nói đều đặn mỗi ngày.</p>
                 </div>
               </div>
@@ -879,7 +880,7 @@ export function LandingPage({
             </div>
             <div className="landing-footer-links">
               <a href="#trio">Trải nghiệm</a>
-              <a href="#stories">Câu chuyện</a>
+              <a href="#stories">Cách luyện</a>
               <a href="#how-it-works">Cách hoạt động</a>
               <a href="#features">Tính năng</a>
               <a href="#faq">FAQ</a>

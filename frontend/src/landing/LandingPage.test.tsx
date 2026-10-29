@@ -37,11 +37,15 @@ describe('LandingPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders hero, interactive steps, testimonials, and FAQ on a single white canvas', () => {
+  it('renders hero, interactive steps, learning scenarios, and FAQ on a single white canvas', () => {
     const onStartLogin = vi.fn();
     const onStartRegister = vi.fn();
 
     render(<LandingPage onStartLogin={onStartLogin} onStartRegister={onStartRegister} />);
+
+    expect(screen.getByText('Gợi ý cách luyện cùng Mate')).toBeInTheDocument();
+    expect(screen.getAllByText(/Tình huống gợi ý/)).toHaveLength(4);
+    expect(screen.queryByText(/98%|99\.9%|50ms|320ms/)).not.toBeInTheDocument();
 
     expect(
       screen.getByRole('heading', {

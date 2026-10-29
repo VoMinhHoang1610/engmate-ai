@@ -1,5 +1,11 @@
 # EngMate-AI
 
+## Đăng nhập Google/Facebook
+
+GitHub đã được bỏ. Cấu hình ứng dụng OAuth, callback và bảng liên kết theo
+[OAUTH_SETUP](docs/OAUTH_SETUP.md). Client Secret chỉ nằm trong `.env` backend;
+cần cấu hình thật và cài bảng mới trước khi nghiệm thu với nhà cung cấp.
+
 ## Tối ưu chương trình — 23/10/2026
 
 Lịch sử mở 100 tin gần nhất và có nút **Tải tin nhắn cũ**; lượt mới đồng bộ phần

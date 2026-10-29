@@ -1713,3 +1713,9 @@ html {
     padding: 28px 22px;
   }
 }
+
+.landing-story-photo[src='/engmate-mark.svg'] {
+  object-fit: contain;
+  padding: 56px;
+  background: #eef4ff;
+}

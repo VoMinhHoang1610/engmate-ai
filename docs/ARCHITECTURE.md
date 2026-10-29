@@ -1,5 +1,25 @@
 # Kiến trúc hội thoại EngMate-AI
 
+## Xác nhận liên kết Google — 2026-10-30
+
+Google đã xác minh nhưng trùng email cũ sẽ tạo PendingGoogleLink trong app một
+worker, thay vì tự gộp tài khoản. Ticket và cookie browser độc lập, hạn 5 phút,
+consume một lần. Xác minh Argon2 ngoài kết nối DB, sau đó khóa user và kiểm tra lại
+hash/status/email; insert binding và issue session trong một transaction. Không
+update bản ghi user/profile/learning. Không thêm bảng hoặc migration cho bước này.
+
+## Đăng nhập nền tảng — 2026-10-29
+
+- `api/oauth_routes.py` và `services/oauth.py`: authorization code server-side,
+  state một lần gắn cookie browser, PKCE Google và kiểm tra token Facebook.
+- `db/oauth.py`: bảng bổ sung `engmate_oauth_identities` có khóa provider/subject
+  SHA-256 và ràng buộc một provider cho mỗi user. Chỉ installer tường minh tạo
+  bảng; dùng chung transaction tạo account/profile/session để tránh bản ghi dở.
+- `frontend/src/api/socialAuth.ts`: popup từ click, chỉ nhận kết quả khớp origin,
+  popup, provider và state; lưu phiên vào bộ nhớ bằng API xác thực hiện có.
+- Không tự liên kết theo email; không lưu provider token. Registry state nằm
+  trong app một worker, không phù hợp triển khai nhiều worker chưa có kho chung.
+
 ## Tối ưu sau audit — 2026-10-23
 
 - `core/admission.py`: gate event-loop fail-fast account/process, async context

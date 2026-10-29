@@ -1,5 +1,64 @@
 # Kiểm thử bản hội thoại
 
+## Liên kết Google sau xác nhận mật khẩu — 2026-10-30
+
+- 29 tests OAuth/mật khẩu/JWT backend qua; 76 tests frontend App/AuthForm/socialAuth/database qua. Không dùng credential thật trong kiểm thử tự động.
+- SQL trong bộ nhớ xác nhận mật khẩu sai không tạo binding/session, lỗi issue session rollback binding, mật khẩu đúng dùng lại PublicId cũ, và User/LearnerProfile/learning progress giữ nguyên. Google đăng nhập lại sau liên kết dùng đúng tài khoản.
+- Route tests xác nhận callback chưa cấp token khi cần liên kết; phải có đúng Origin và cookie browser, ticket một lần/hết hạn, không được gửi subject/email/UserId tùy ý. Frontend kiểm tra xác nhận, hủy và phản hồi mật khẩu sai.
+- Coverage **phạm vi OAuth backend**: 93,24% gồm branches theo cấu hình dự án. Coverage **phạm vi AuthForm/socialAuth frontend**: statements 88,52%, branches 87,64%, functions 92,85%, lines 90,05%; không phải coverage toàn dự án. Lint/type-check/format toàn repo và Vite build qua.
+- Đã restart riêng backend Docker local. Kiểm tra HTTP xác nhận endpoint `/api/auth/oauth/google/link` có mặt, frontend phục vụ form mới và request không có Google proof bị 400. Chưa xác nhận mật khẩu hoặc tạo binding trên tài khoản thật; bước này do người dùng tự thao tác.
+
+## Cấu hình Google local — 2026-10-29
+
+- Sau khi chuyển credential người dùng vào `.env` và recreate backend Docker,
+  POST `/api/auth/oauth/google/start` qua frontend trả 200, authorize host là
+  accounts.google.com, redirect URI đúng `http://127.0.0.1:5174/api/auth/oauth/google/callback`.
+  Cookie flow được đặt; bảng liên kết đã có trong database Docker đang dùng.
+- Đây là kiểm tra mở đầu luồng thật, chưa chứng minh token exchange/cấp quyền
+  Google và tạo session hoàn tất. Không tự thao tác mật khẩu/đồng ý quyền Google.
+
+## OAuth Google/Facebook — 2026-10-29
+
+- `backend/tests/unit/test_oauth.py`: 8 tests qua, gồm state/cookie/provider/expiry/replay, Google verified email, Facebook app/subject, callback CSP/origin, hủy và GitHub không hỗ trợ. SQL trong bộ nhớ kiểm tra account/profile/binding/session cùng transaction, đăng nhập lại, email trùng và tài khoản disabled.
+- `frontend/src/api/socialAuth.test.ts` và `AuthForm.test.tsx`: 13 tests qua, gồm popup bị chặn/hủy, thiếu cấu hình, URL authorization đúng nhà cung cấp, lọc origin/source/state, lưu session và chỉ hai nút nền tảng.
+- Không dùng credential thật, không chạy installer OAuth hoặc ghi database người dùng. Kiểm thử provider thật còn chờ cấu hình trong OAUTH_SETUP.
+- Hồi quy frontend toàn bộ: 402 qua, một test preview quá hạn chờ heading; chạy lại riêng file preview giữ nguyên assertion: 10/10 qua. Lượt coverage frontend đó không hoàn tất thành công, chưa báo đạt ngưỡng. Backend ngoại tuyến: 208 qua, 24 integration MySQL bỏ qua; coverage 71,79%, chưa đạt 80% khi thiếu DB test riêng, không giảm ngưỡng.
+- Ruff/Black/mypy, ESLint/TypeScript/Prettier và bản dựng Vite đã qua. Sau khi bổ sung xử lý DB mất kết nối, 8 tests OAuth chạy lại đều qua. Giao diện fixture đã xác nhận chỉ có Google/Facebook; chưa xác thực provider thật.
+
+## Sidebar chỉ đổi kích thước bằng nút menu — 2026-10-29
+
+- 10/10 kiểm thử sidebar qua: sau khi thu gọn, hover và focus không mở lại; click nút mở/thu gọn cập nhật đúng data-expanded và aria-expanded. Giữ kiểm thử drawer, focus trap và điều hướng trên mobile.
+- CSS mở chiều rộng/nhãn chỉ phụ thuộc data-expanded, không còn selector hover/focus-within cho sidebar. Các mô tả mở tạm bằng hover/focus ở nhật ký cũ được thay thế bởi yêu cầu này.
+
+## Hồi quy sidebar che nội dung — 2026-10-29
+
+- 10/10 tests WorkspaceSidebar qua. Đo trực tiếp trên trình duyệt: sidebarRight = contentLeft = 72px khi đóng và 240px khi mở (cả ghim và mở tạm). Ảnh `.artifacts/ui-sidebar-no-overlap.png`.
+- Các số đo rail 72px/inner 240px trong mục lịch sử bên dưới là hành vi cũ đã bị thay thế, do gây che nội dung.
+
+## Ba lỗi chồng lớp theo ảnh bổ sung — 2026-10-29
+
+- AuthForm, ProfilePage và WorkspaceSidebar: **24/24 tests** qua; gồm hiện/ẩn mật khẩu bằng bàn phím, upload avatar và các trạng thái pin/focus của sidebar.
+- Kiểm tra trình duyệt fixture: input file có opacity 0, clip-path inset(50%); sidebar đóng rail/inner 72px, mở tạm rail 72px và inner 240px. Nút mật khẩu đổi đúng tên Hiện/Ẩn và không còn chữ trùng biểu tượng.
+- Ảnh mẫu: `.artifacts/ui-profile-overlap-fixed.png`, `.artifacts/ui-password-toggle-fixed.png`. Không upload ảnh hoặc lưu hồ sơ thật. Quy tắc `::-ms-reveal` đã thêm cho Edge; chưa chạy trực tiếp phiên Edge của người dùng.
+
+## Hoàn thiện sau rà soát ngày 2026-10-29
+
+- Hồi quy tự động: tìm không dấu/bộ lọc, mở bài và giữ mã thử lại, ôn trực tiếp, lỗi từng nguồn dữ liệu, tổng kết TOEIC tại Hồ sơ/Cài đặt, thư viện và nút quay lại bài đang học, lưu/khôi phục giảm chuyển động, OAuth không khả dụng, hiện mật khẩu bằng bàn phím.
+- Các assertion thông báo mạng được cập nhật theo thông báo công khai mới, không hiển thị lỗi nội bộ. Test đăng ký chờ thao tác xác thực kết thúc trước khi đổi chế độ; giữ kiểm tra khóa thao tác trong lúc chờ.
+- Kết quả frontend: **396/396 tests, 34/34 files** qua. Coverage: statements **89,61%**, branches **81,65%**, functions **85,64%**, lines **92,86%**; giữ ngưỡng 80% cho cả bốn chỉ số. Lệnh: `node node_modules/vitest/vitest.mjs run --coverage --testTimeout=20000 --hookTimeout=60000 --maxWorkers=1`. Tăng thời gian nạp mô-đun vì lần coverage trước vượt hook 10 giây; không thay assertion hoặc bỏ test.
+- Ruff/Black/mypy backend và ESLint/TypeScript/Prettier frontend đều qua. Bản dựng Vite thành công; fixture kiểm tra không nằm trong output production.
+- Fixture trực quan: chạy Vite ở cổng riêng `5175`, mở `/tests/ui-audit.html`. Các tham số: `theme=dark`, `screen=auth|landing` (mặc định workspace), `width=320|390|1024`, `height=360|700`, `error=plan|progress|catalog`. Iframe tạo viewport thật theo kích thước; mọi fetch được trả bằng dữ liệu mẫu hoặc 503, không chuyển tiếp API. Không đưa fixture vào bản dựng production.
+- Đã quan sát 1280×720 (tối): hội thoại, thư viện dài và sidebar cố định khi cuộn, trang Tiến độ và chuyển trang về đầu. Đã quan sát 390×700 (sáng): hội thoại, menu và thư viện; 320×700 (tối): đăng nhập/đăng ký và ba nút nền tảng cùng hàng. Phát hiện và sửa CSS đăng ký ghi đè chiều cao phần trang trí.
+- Backend offline: 200 qua, 24 kiểm thử MySQL được bỏ qua do không cung cấp database test riêng. Coverage 68,93%, chưa đạt ngưỡng 80% khi thiếu integration MySQL; không giảm ngưỡng. Không thực hiện kiểm thử trên database người dùng.
+- Đã kiểm tra thêm viewport 390×360: thu gọn trang trí, lời chào và ô nhập vẫn nằm trong vùng hiển thị. Bàn phím ảo trên thiết bị thật và speech/provider thật chưa được nghiệm thu trong tác vụ này.
+- Đo DOM desktop khi sidebar bỏ ghim và đang mở tạm: rail vẫn rộng 72px, nội dung bắt đầu ở x=72; mở tạm không làm đẩy nội dung. Ảnh nghiệm thu dữ liệu mẫu lưu tại `.artifacts/ui-after-lessons.png` (không commit).
+
+## Hồi quy bố cục ngày 2026-10-29
+
+- `ThemeToggle.test.tsx`: nhãn Giao diện nằm trong nút điều hướng; nhấn nhãn đổi theme và lưu lựa chọn như trước.
+- Chạy lại AuthForm, WorkspaceSidebar và App tests; đồng bộ nhãn Bài học/Tiến độ sau lần tách trang, giữ kiểm tra binding/voice và dữ liệu từ vựng.
+- Đã kiểm tra trực quan hàng ba nút nền tảng trên trang đăng nhập local. Hình học sidebar sau đăng nhập và speech thật cần kiểm tra thêm trên phiên người dùng; không đăng nhập hoặc ghi dữ liệu thật trong kiểm thử.
+
 ## Một giọng và xưng hô theo giọng — 2026-10-23
 
 | Yêu cầu | Kiểm thử hồi quy |

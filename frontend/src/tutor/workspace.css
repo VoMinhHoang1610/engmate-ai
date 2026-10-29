@@ -48,8 +48,9 @@
   flex-direction: row;
   width: 100%;
   min-width: 0;
-  min-height: 100dvh;
-  overflow: clip;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -232,7 +233,7 @@
 }
 .workspace-shell.workspace-shell.workspace-shell .eyebrow {
   color: var(--workspace-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -267,7 +268,7 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
 }
 
-/* Keep the sidebar as part of normal flow so the chat pane reflows instead of overlapping it. */
+/* Sidebar and content share the same layout, including temporary expansion. */
 .workspace-sidebar {
   --sidebar-width: 72px;
   position: relative;
@@ -287,18 +288,29 @@
     flex-basis 180ms ease,
     min-width 180ms ease;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
+.workspace-sidebar[data-expanded='true'] {
   --sidebar-width: 240px;
   box-shadow: 8px 0 24px #00000008;
 }
 .workspace-sidebar-inner {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
   gap: 20px;
   width: 100%;
   height: 100%;
   padding: 20px 12px 14px;
   min-height: 0;
+  overflow-y: auto;
+}
+@media (min-width: 768px) {
+  .workspace-sidebar[data-expanded='false'] .workspace-sidebar-brand {
+    flex: 0 0 41px;
+    gap: 0;
+  }
+  .workspace-sidebar[data-expanded='false'] .workspace-sidebar-top {
+    justify-content: center;
+  }
 }
 .workspace-sidebar-top {
   display: flex;
@@ -310,7 +322,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  min-width: 41px;
   flex: 1;
   min-height: 38px;
   padding: 0 7px;
@@ -342,7 +354,7 @@
   white-space: nowrap;
   transition: opacity 140ms ease;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-nav-label {
+.workspace-sidebar[data-expanded='true'] .workspace-nav-label {
   max-width: 190px;
   opacity: 1;
 }
@@ -352,7 +364,7 @@
   gap: 4px;
   min-height: 0;
   overflow: auto;
-  flex: 1;
+  flex: 1 0 auto;
 }
 .workspace-shell.workspace-shell.workspace-shell .workspace-nav-item {
   display: flex;
@@ -409,10 +421,10 @@
   color: var(--workspace-muted);
 }
 .workspace-sidebar-toggle {
-  opacity: 0;
-  visibility: hidden;
+  opacity: 1;
+  visibility: visible;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-sidebar-toggle {
+.workspace-sidebar[data-expanded='true'] .workspace-sidebar-toggle {
   opacity: 1;
   visibility: visible;
 }
@@ -424,23 +436,6 @@
   margin-top: auto;
   border-top: 1px solid var(--workspace-line);
 }
-.workspace-sidebar-theme {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 42px;
-  padding-left: 3px;
-  font-size: 12px;
-}
-.workspace-shell.workspace-shell.workspace-shell .workspace-sidebar-theme .theme-toggle {
-  flex: 0 0 42px;
-  width: 42px;
-  height: 38px;
-  min-height: 0;
-  border: 0;
-  background: transparent;
-  color: var(--workspace-muted);
-}
 .workspace-sidebar-avatar {
   display: grid;
   place-items: center;
@@ -451,7 +446,7 @@
   border-radius: 50%;
   background: var(--workspace-blue-soft);
   color: var(--workspace-blue);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   overflow: hidden;
   object-fit: cover;
@@ -467,7 +462,7 @@
   display: none;
 }
 
-/* The conversation owns its scroll area; other pages scroll naturally. */
+/* Each content pane scrolls inside the viewport, keeping navigation visible. */
 .workspace-body {
   display: flex;
   flex-direction: column;
@@ -475,6 +470,9 @@
   width: 0;
   min-width: 0;
   min-height: 100dvh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-left: 0;
 }
 .workspace-topbar {
@@ -531,7 +529,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .workspace-status > i {
@@ -620,6 +618,7 @@
   overflow: hidden;
 }
 .workspace-shell.workspace-shell.workspace-shell.tutor-view-mate .tutor-view-stage {
+  max-width: none;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -627,7 +626,7 @@
   flex: 1;
 }
 .workspace-shell.workspace-shell.workspace-shell .room-toolbar {
-  width: min(900px, 100%);
+  width: 100%;
   min-height: 44px;
   margin: 0 auto;
   padding: 10px 0;
@@ -637,7 +636,7 @@
 .workspace-shell.workspace-shell.workspace-shell .chat-panel {
   display: flex;
   flex-direction: column;
-  width: min(900px, 100%);
+  width: 100%;
   flex: 1;
   height: auto;
   min-height: 0;
@@ -735,7 +734,7 @@
   border-radius: 6px;
   color: var(--workspace-blue);
   background: var(--workspace-blue-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -842,7 +841,7 @@
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  width: min(780px, 100%);
+  width: 100%;
   min-height: 62px;
   margin: 0 auto;
   padding: 8px 10px 8px 20px;
@@ -960,7 +959,7 @@
   display: flex;
   gap: 12px;
   margin: 0 auto 26px;
-  max-width: 760px;
+  max-width: 1100px;
 }
 .workspace-shell.workspace-shell.workspace-shell .message-row > div {
   min-width: 0;
@@ -1142,7 +1141,7 @@
   top: 20px;
   width: 100%;
   height: min(760px, calc(100dvh - 48px));
-  min-height: 500px;
+  min-height: 0;
   border: 1px solid var(--workspace-line);
   border-radius: 14px;
   padding: 0 18px 12px;
@@ -1309,7 +1308,7 @@
     background: var(--workspace-bg);
     color: var(--workspace-text);
   }
-  .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
+  .workspace-sidebar[data-expanded='true'] {
     width: min(280px, calc(100vw - 40px));
     min-width: min(280px, calc(100vw - 40px));
     transform: translateX(-100%);
@@ -1327,7 +1326,7 @@
     padding: 20px 14px;
   }
   .workspace-sidebar-toggle,
-  .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-sidebar-toggle {
+  .workspace-sidebar[data-expanded='true'] .workspace-sidebar-toggle {
     display: none;
   }
   .workspace-shell.workspace-shell.workspace-shell .workspace-sidebar-close {
@@ -1344,6 +1343,8 @@
   }
   .workspace-body {
     width: 100%;
+    height: calc(100dvh - 56px);
+    flex: 1 1 0;
     min-height: calc(100dvh - 56px);
     margin-left: 0;
   }
@@ -1376,7 +1377,7 @@
   .workspace-shell.workspace-shell.workspace-shell .tutor-footer {
     padding: 6px 20px 10px;
     min-height: 28px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .workspace-welcome {
     padding: 24px 0;
@@ -1434,7 +1435,7 @@
   }
   .workspace-shell.workspace-shell.workspace-shell .course-studio .chat-panel {
     height: min(620px, calc(100dvh - 90px));
-    min-height: 480px;
+    min-height: 0;
     padding-inline: 12px;
   }
   .workspace-shell.workspace-shell.workspace-shell .message-bubble {

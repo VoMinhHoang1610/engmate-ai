@@ -52,6 +52,35 @@ export function RoadmapPage({ onStudy, progressOnly = false }: Props) {
           progressOnly={progressOnly}
         />
       )}
+      {!state.loading && !state.data && state.catalog && (
+        <section aria-label="Giáo trình đã tải">
+          <p>
+            Bạn vẫn có thể xem giáo trình. Mục tiêu và trạng thái học sẽ xuất hiện khi tải lại thành
+            công.
+          </p>
+          {state.catalog.stages.map((stage) => (
+            <details className="learning-card learning-module" key={stage.id}>
+              <summary>
+                {stage.title} · {stage.target}
+              </summary>
+              <ul>
+                {stage.modules.map((module) => (
+                  <li key={module.id}>
+                    {module.title}
+                    <ul>
+                      {module.lessons.map((lesson) => (
+                        <li key={lesson.id}>
+                          {lesson.title} · {lesson.minutes} phút
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </section>
+      )}
     </section>
   );
 }

@@ -20,6 +20,9 @@ async function request<T>(path: string, method = 'GET', body?: unknown, signal?:
     ...(body === undefined
       ? {}
       : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  }).catch((error: unknown) => {
+    if (signal?.aborted) throw error;
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.');
   });
   if (response.status === 409)
     throw new LearningConflictError(
@@ -30,9 +33,11 @@ async function request<T>(path: string, method = 'GET', body?: unknown, signal?:
     throw new Error('Thông tin chưa hợp lệ. Kiểm tra lựa chọn và các câu trả lời rồi thử lại.');
   if (response.status === 429)
     throw new Error('Bạn thao tác quá nhanh. Hãy chờ một chút rồi thử lại.');
+  if (response.status === 403) throw new Error('Tài khoản chưa có quyền xem nội dung này.');
+  if (response.status === 404) throw new Error('Không tìm thấy nội dung học được yêu cầu.');
   if (!response.ok)
     throw new Error(
-      'Chưa kết nối được với lộ trình học. Hãy thử lại; nội dung đã nhập vẫn được giữ.',
+      'Máy chủ chưa tải được dữ liệu học tập. Hãy thử lại sau; lựa chọn của bạn vẫn được giữ.',
     );
   return await readJSON<T>(response, signal);
 }
@@ -88,42 +93,62 @@ export const submitLearningCheck = (
     signal,
   );
 
-export function useLearningRoadmap() {
-  const [data, setData] = useState<{
-    catalog: LearningCatalog;
-    plan: LearningPlan;
-    progress: LearningProgress;
-  } | null>(null);
+export function useLearningQuery<T>(load: (signal?: AbortSignal) => Promise<T>) {
+  const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    void Promise.all([
-      getLearningCatalog(controller.signal),
-      getLearningPlan(controller.signal),
-      getLearningProgress(controller.signal),
-    ])
-      .then(([catalog, plan, progress]) => {
+    void load(controller.signal)
+      .then((value) => {
         if (!controller.signal.aborted) {
-          setData({ catalog, plan, progress });
+          setData(value);
           setError('');
         }
       })
       .catch((e: unknown) => {
-        if (!controller.signal.aborted)
-          setError(e instanceof Error ? e.message : 'Chưa tải được lộ trình.');
+        if (!controller.signal.aborted) {
+          setData(null);
+          setError(e instanceof Error ? e.message : 'Chưa tải được dữ liệu.');
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [revision]);
+  }, [load, revision]);
   function reload() {
-    catalog.clear();
     setLoading(true);
     setError('');
     setRevision((old) => old + 1);
   }
   return { data, error, loading, reload };
+}
+
+export function useLearningRoadmap() {
+  const course = useLearningQuery(getLearningCatalog);
+  const plan = useLearningQuery(getLearningPlan);
+  const progress = useLearningQuery(getLearningProgress);
+  return {
+    data:
+      course.data && plan.data && progress.data
+        ? { catalog: course.data, plan: plan.data, progress: progress.data }
+        : null,
+    catalog: course.data,
+    error: [
+      course.error && `Giáo trình: ${course.error}`,
+      plan.error && `Mục tiêu: ${plan.error}`,
+      progress.error && `Tiến độ: ${progress.error}`,
+    ]
+      .filter(Boolean)
+      .join(' '),
+    loading: course.loading || plan.loading || progress.loading,
+    reload() {
+      catalog.clear();
+      course.reload();
+      plan.reload();
+      progress.reload();
+    },
+  };
 }
