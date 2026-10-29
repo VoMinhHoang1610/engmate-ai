@@ -4,6 +4,8 @@ import { apiFetch } from '../api/database';
 import { docVanBan, dungDoc } from '../speech/audio';
 import { LessonGuide } from './LessonGuide';
 import { RoadmapPage } from './RoadmapPage';
+import { LessonsPage, ProgressPage } from './LearningPages';
+import { LearningAccountSummary } from './LearningAccountSummary';
 import {
   getLearningCatalog,
   getLearningPlan,
@@ -134,6 +136,144 @@ beforeEach(() => {
 });
 
 describe('learning HTTP contracts', () => {
+  it('keeps account progress visible when the plan fails and retries only that resource', async () => {
+    const normal = vi.mocked(apiFetch).getMockImplementation()!;
+    let failed = true;
+    vi.mocked(apiFetch).mockImplementation((path, options) =>
+      path.endsWith('/plan') && failed ? Promise.resolve(json({}, 503)) : normal(path, options),
+    );
+    const onPlan = vi.fn();
+    render(<LearningAccountSummary onPlan={onPlan} />);
+    expect(await screen.findByText(/0 bài TOEIC đã hoàn thành/)).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Máy chủ');
+    failed = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Tải lại kế hoạch' }));
+    expect(await screen.findByText(/Mục tiêu 650 điểm · 20 phút/)).toBeInTheDocument();
+    expect(
+      vi.mocked(apiFetch).mock.calls.filter(([path]) => path.endsWith('/progress')),
+    ).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Điều chỉnh kế hoạch TOEIC' }));
+    expect(onPlan).toHaveBeenCalledOnce();
+  });
+
+  it('shows measured results even when the catalog cannot load', async () => {
+    const normal = vi.mocked(apiFetch).getMockImplementation()!;
+    vi.mocked(apiFetch).mockImplementation((path, options) =>
+      path.endsWith('/catalog') ? Promise.resolve(json({}, 503)) : normal(path, options),
+    );
+    render(<ProgressPage onStudy={vi.fn()} onLessons={vi.fn()} />);
+    expect(await screen.findByRole('rowheader', { name: lesson.id })).toBeInTheDocument();
+    expect(screen.getByText('Lượt thực hành').previousElementSibling).toHaveTextContent('1');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa tải được tên bài');
+  });
+
+  it('keeps the roadmap catalog readable when a personal plan is unavailable', async () => {
+    const normal = vi.mocked(apiFetch).getMockImplementation()!;
+    vi.mocked(apiFetch).mockImplementation((path, options) =>
+      path.endsWith('/plan') ? Promise.resolve(json({}, 503)) : normal(path, options),
+    );
+    render(<RoadmapPage onStudy={vi.fn()} />);
+    fireEvent.click(await screen.findByText('Hướng tới 900+ · Mục tiêu 900+'));
+    expect(screen.getByText(/Suy luận ý định người nói · 15 phút/)).toBeVisible();
+    expect(screen.getByRole('alert')).toHaveTextContent('Mục tiêu');
+    expect(screen.queryByText('Bài đã hoàn thành')).not.toBeInTheDocument();
+  });
+
+  it('filters by stage, duration, unaccented topic and review status', async () => {
+    routes({
+      'GET /api/learning/progress': {
+        lessons: [progress],
+        recommended_lesson_id: lesson.id,
+        review_lesson_ids: [lesson.id],
+      },
+    });
+    render(<LessonsPage onStudy={vi.fn()} />);
+    await screen.findByRole('heading', { name: lesson.title });
+    await waitFor(() => expect(screen.getByLabelText('Trạng thái')).toBeEnabled());
+    fireEvent.change(screen.getByLabelText('Tìm bài học'), { target: { value: 'chao hoi' } });
+    fireEvent.change(screen.getByLabelText('Trạng thái'), { target: { value: 'review' } });
+    expect(screen.getByRole('heading', { name: lesson.title })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Chặng học'), { target: { value: 'advanced' } });
+    expect(screen.queryByRole('heading', { name: lesson.title })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }));
+    fireEvent.change(screen.getByLabelText('Thời lượng'), { target: { value: 'short' } });
+    expect(screen.getByText(/Không có bài học phù hợp/)).toBeInTheDocument();
+  });
+
+  it('keeps the catalog usable on progress failure without inventing unstarted states', async () => {
+    vi.mocked(apiFetch).mockImplementation(async (path) =>
+      path.endsWith('/catalog') ? json(catalog) : json({}, 503),
+    );
+    render(<LessonsPage onStudy={vi.fn()} />);
+    await screen.findByRole('heading', { name: lesson.title });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa tải được trạng thái');
+    expect(screen.getByLabelText('Trạng thái')).toBeDisabled();
+    expect(screen.getAllByText('Chưa tải trạng thái học')).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Mở bài học' })).toHaveLength(2);
+    expect(apiFetch).not.toHaveBeenCalledWith('/api/learning/plan', expect.anything());
+  });
+
+  it('only labels the chosen lesson as opening and keeps the same retry identity', async () => {
+    let finish!: (value: Response) => void;
+    const normal = vi.mocked(apiFetch).getMockImplementation()!;
+    vi.mocked(apiFetch).mockImplementation((path, options) =>
+      path.endsWith('/start')
+        ? new Promise((resolve) => {
+            finish = resolve;
+          })
+        : normal(path, options),
+    );
+    render(<LessonsPage onStudy={vi.fn()} />);
+    await screen.findByRole('heading', { name: lesson.title });
+    await waitFor(() => expect(screen.getByLabelText('Trạng thái')).toBeEnabled());
+    const card = screen.getByRole('heading', { name: lesson.title }).closest('article')!;
+    fireEvent.click(within(card).getByRole('button', { name: 'Tiếp tục học' }));
+    expect(screen.getAllByText('Đang mở buổi học…')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Bắt đầu học' })).toBeDisabled();
+    await act(async () => finish(json({}, 503)));
+    fireEvent.click(within(card).getByRole('button', { name: 'Tiếp tục học' }));
+    const calls = vi.mocked(apiFetch).mock.calls.filter(([path]) => path.endsWith('/start'));
+    expect(calls[0][1]?.body).toBe(calls[1][1]?.body);
+    await act(async () => finish(json({}, 503)));
+  });
+
+  it('opens a due review directly from progress', async () => {
+    routes({
+      'GET /api/learning/progress': {
+        lessons: [progress],
+        recommended_lesson_id: advanced.id,
+        review_lesson_ids: [lesson.id],
+      },
+    });
+    const onStudy = vi.fn();
+    render(<ProgressPage onStudy={onStudy} onLessons={vi.fn()} />);
+    const reviewButton = await screen.findByRole('button', { name: 'Ôn bài này' });
+    await waitFor(() => expect(reviewButton).toBeEnabled());
+    fireEvent.click(reviewButton);
+    await waitFor(() => expect(onStudy).toHaveBeenCalledWith(lesson, conversation, progress));
+  });
+  it('keeps lesson search and filters separate from planning', async () => {
+    render(<LessonsPage onStudy={vi.fn()} />);
+    await screen.findByLabelText('Tìm bài học');
+    fireEvent.change(screen.getByLabelText('Tìm bài học'), { target: { value: lesson.title } });
+    expect(screen.getByRole('heading', { name: lesson.title })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: advanced.title })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Trạng thái'), { target: { value: 'completed' } });
+    expect(screen.getByText(/Không có bài học phù hợp/)).toBeInTheDocument();
+    expect(screen.queryByText('Mục tiêu & thời gian học')).not.toBeInTheDocument();
+  });
+
+  it('shows recorded progress with navigation to the lesson library', async () => {
+    const onLessons = vi.fn();
+    render(<ProgressPage onLessons={onLessons} onStudy={vi.fn()} />);
+    await screen.findByRole('table');
+    expect(screen.getByRole('rowheader', { name: lesson.title })).toBeInTheDocument();
+    expect(screen.getByText('Lượt thực hành').previousElementSibling).toHaveTextContent('1');
+    expect(screen.queryByLabelText('Tìm bài học')).not.toBeInTheDocument();
+    expect(screen.queryByText('Mục tiêu & thời gian học')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Mở danh sách bài học' }));
+    expect(onLessons).toHaveBeenCalledOnce();
+  });
   it('sends ownership through the authenticated API helper and keeps answer keys off start/phase requests', async () => {
     const controller = new AbortController();
     await startLearningLesson('foundation/01', 'request-1', controller.signal);
@@ -157,7 +297,7 @@ describe('learning HTTP contracts', () => {
     [401, 'đăng nhập lại'],
     [422, 'chưa hợp lệ'],
     [429, 'quá nhanh'],
-    [503, 'Chưa kết nối'],
+    [503, 'Máy chủ'],
   ])('explains HTTP %i without exposing server internals', async (status, message) => {
     vi.mocked(apiFetch).mockResolvedValue(
       json({ detail: 'internal SQL and provider secret' }, status),
@@ -202,7 +342,7 @@ describe('voice-first roadmap', () => {
   it('retries a load error and cancels outstanding reads on unmount', async () => {
     vi.mocked(apiFetch).mockRejectedValueOnce(new Error('Mất kết nối.'));
     const view = render(<RoadmapPage onStudy={vi.fn()} />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Mất kết nối.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không kết nối được máy chủ');
     fireEvent.click(screen.getByRole('button', { name: 'Tải lại lộ trình' }));
     await screen.findByRole('heading', { name: lesson.title });
     const signals = vi
@@ -227,7 +367,7 @@ describe('voice-first roadmap', () => {
     render(<RoadmapPage onStudy={onStudy} />);
     const start = await screen.findByRole('button', { name: 'Tiếp tục học bằng giọng nói' });
     fireEvent.click(start);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Mất kết nối khi mở bài.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không kết nối được máy chủ');
     fireEvent.click(start);
     await waitFor(() => expect(onStudy).toHaveBeenCalledOnce());
     const ids = vi
@@ -405,7 +545,7 @@ describe('lesson guide', () => {
       'aria-current',
       'step',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Về lộ trình' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Về thư viện bài học' }));
     expect(props.onExit).toHaveBeenCalledOnce();
   });
 
@@ -413,7 +553,7 @@ describe('lesson guide', () => {
     const props = guide({ phase: 1 });
     vi.mocked(apiFetch).mockResolvedValue(json({}, 503));
     fireEvent.click(screen.getByRole('button', { name: /Bước trước/ }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Chưa kết nối');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Máy chủ');
     expect(props.onProgress).not.toHaveBeenCalled();
     expect(screen.getByText(lesson.explanation)).toBeInTheDocument();
     expect(screen.getByText(lesson.vocabulary[0].meaning)).toBeInTheDocument();
@@ -499,7 +639,7 @@ describe('lesson guide', () => {
     guide({ phase: 4, practice_turns: 3 });
     answerAll();
     fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra câu trả lời' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Mất kết nối.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Không kết nối được máy chủ');
     expect(screen.getByLabelText('A. am')).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra câu trả lời' }));
     await screen.findByText(/2\/2 câu đúng. Đã hoàn thành/);

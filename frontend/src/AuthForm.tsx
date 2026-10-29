@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { authenticate } from './api/database';
+import {
+  authenticateSocial,
+  completeGoogleLink,
+  GoogleLinkRequired,
+  type SocialProvider,
+} from './api/socialAuth';
 import { Logo } from './components/Logo';
 import { LinhThu } from './components/LinhThu';
 import { BieuTuong } from './components/BieuTuong';
 import './auth-restored.css';
+import { readReducedMotion } from './settings/motion';
+import { Eye, EyeOff } from 'lucide-react';
 
 const INTRO_KEY = 'engmate-auth-intro-done';
 function skipIntro() {
+  if (readReducedMotion()) return true;
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
   try {
     return sessionStorage.getItem(INTRO_KEY) === '1';
@@ -31,6 +40,7 @@ export function AuthForm({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [googleLink, setGoogleLink] = useState<GoogleLinkRequired | null>(null);
   const [intro, setIntro] = useState<'jump' | 'greet' | 'morph' | 'ready'>(() =>
     skipIntro() || onOpenLanding ? 'ready' : 'jump',
   );
@@ -77,13 +87,46 @@ export function AuthForm({
     setPassword('');
     setConfirmation('');
     setError('');
+    setGoogleLink(null);
   }
 
-  function handleSocialLogin(provider: 'Google' | 'GitHub' | 'Facebook') {
-    if (busy) return;
-    setError(
-      `Đăng nhập nhanh bằng ${provider} đang được cấu hình OAuth. Vui lòng dùng tài khoản bên dưới.`,
-    );
+  async function socialSignIn(provider: SocialProvider) {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    setGoogleLink(null);
+    try {
+      await authenticateSocial(provider);
+      setPassword('');
+      setConfirmation('');
+    } catch (e) {
+      if (e instanceof GoogleLinkRequired) {
+        setGoogleLink(e);
+        setPassword('');
+      } else setError(e instanceof Error ? e.message : 'Chưa đăng nhập được. Hãy thử lại.');
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function confirmGoogleLink(event: FormEvent) {
+    event.preventDefault();
+    if (lock.current || !googleLink) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      await completeGoogleLink(googleLink.ticket, password);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Chưa liên kết được. Bấm Google để thử lại.');
+    } finally {
+      setGoogleLink(null);
+      setPassword('');
+      lock.current = false;
+      setBusy(false);
+    }
   }
 
   async function submit(event: FormEvent) {
@@ -171,13 +214,13 @@ export function AuthForm({
                   </span>
                 </h1>
 
-                {/* SOCIAL AUTH: Google, GitHub, Facebook */}
+                {/* SOCIAL AUTH: Google and Facebook */}
                 <div className="auth-social-grid" role="group" aria-label="Đăng nhập mạng xã hội">
                   <button
                     type="button"
                     className="social-login auth-social-btn social-google"
+                    onClick={() => void socialSignIn('google')}
                     disabled={busy}
-                    onClick={() => handleSocialLogin('Google')}
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                       <path
@@ -202,27 +245,9 @@ export function AuthForm({
 
                   <button
                     type="button"
-                    className="social-login auth-social-btn social-github"
-                    disabled={busy}
-                    onClick={() => handleSocialLogin('GitHub')}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="18"
-                      height="18"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.09 3.29 9.4 7.86 10.92.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.38-3.88-1.38-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.2 1.77 1.2 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11.02 11.02 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
-                    </svg>
-                    <span>GitHub</span>
-                  </button>
-
-                  <button
-                    type="button"
                     className="social-login auth-social-btn social-facebook"
+                    onClick={() => void socialSignIn('facebook')}
                     disabled={busy}
-                    onClick={() => handleSocialLogin('Facebook')}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -237,114 +262,161 @@ export function AuthForm({
                   </button>
                 </div>
 
+                <p className="auth-social-status">
+                  Tiếp tục bằng Google hoặc Facebook. Cửa sổ xác thực sẽ mở để bạn cấp quyền.
+                </p>
                 <div className="auth-divider" aria-hidden="true">
                   <span>hoặc</span>
                 </div>
 
-                <form onSubmit={(e) => void submit(e)} className="auth-minimal-form">
-                  {register && (
+                {googleLink ? (
+                  <form onSubmit={(e) => void confirmGoogleLink(e)} className="auth-minimal-form">
+                    <p role="status">
+                      Email Google này đã có tài khoản EngMate. Nhập mật khẩu EngMate hiện tại để
+                      liên kết và giữ nguyên hồ sơ, tiến độ. Đây không phải mật khẩu Google.
+                    </p>
                     <label className="auth-field">
-                      Tên hiển thị
+                      Mật khẩu EngMate hiện tại
                       <span className="auth-input-wrap">
                         <input
+                          type="password"
+                          autoComplete="current-password"
                           required
-                          maxLength={60}
-                          autoComplete="name"
-                          placeholder="Ví dụ: Minh Quân"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          maxLength={128}
+                          value={password}
+                          disabled={busy}
+                          onChange={(event) => setPassword(event.target.value)}
+                          autoFocus
                         />
                       </span>
                     </label>
-                  )}
+                    <button className="btn primary full-width auth-submit-btn" disabled={busy}>
+                      {busy ? 'Đang xác nhận…' : 'Liên kết Google và đăng nhập'}
+                    </button>
+                    <button
+                      className="auth-switch-link"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => {
+                        setGoogleLink(null);
+                        setPassword('');
+                        setError('');
+                      }}
+                    >
+                      Hủy liên kết
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={(e) => void submit(e)} className="auth-minimal-form">
+                    {register && (
+                      <label className="auth-field">
+                        Tên hiển thị
+                        <span className="auth-input-wrap">
+                          <input
+                            required
+                            maxLength={60}
+                            autoComplete="name"
+                            placeholder="Ví dụ: Minh Quân"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                          />
+                        </span>
+                      </label>
+                    )}
 
-                  <label className="auth-field">
-                    {register ? 'Tên tài khoản' : 'Tài khoản hoặc email'}
-                    <span className="auth-input-wrap">
-                      <input
-                        required
-                        autoComplete="username"
-                        maxLength={register ? 64 : 254}
-                        minLength={register ? 3 : 1}
-                        pattern={register ? '[a-zA-Z0-9_.-]+' : undefined}
-                        placeholder={register ? 'minhquan_99' : 'Nhập username hoặc email'}
-                        value={identifier}
-                        onChange={(e) => setIdentifier(e.target.value)}
-                      />
-                    </span>
-                  </label>
-
-                  {register && (
                     <label className="auth-field">
-                      Email
+                      {register ? 'Tên tài khoản' : 'Tài khoản hoặc email'}
                       <span className="auth-input-wrap">
                         <input
                           required
-                          type="email"
-                          maxLength={254}
-                          autoComplete="email"
-                          placeholder="ban@example.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          autoComplete="username"
+                          maxLength={register ? 64 : 254}
+                          minLength={register ? 3 : 1}
+                          pattern={register ? '[a-zA-Z0-9_.-]+' : undefined}
+                          placeholder={register ? 'minhquan_99' : 'Nhập username hoặc email'}
+                          value={identifier}
+                          onChange={(e) => setIdentifier(e.target.value)}
                         />
                       </span>
                     </label>
-                  )}
 
-                  <label className="auth-field">
-                    Mật khẩu
-                    <span className="auth-input-wrap">
-                      <input
-                        required
-                        type={showPassword ? 'text' : 'password'}
-                        minLength={register ? 10 : 1}
-                        maxLength={128}
-                        autoComplete={register ? 'new-password' : 'current-password'}
-                        placeholder={register ? 'Tối thiểu 10 ký tự' : 'Nhập mật khẩu'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        className="auth-pwd-toggle"
-                        aria-hidden="true"
-                        tabIndex={-1}
-                        onClick={() => setShowPassword((v) => !v)}
-                      >
-                        {showPassword ? 'Ẩn' : 'Hiện'}
-                      </button>
-                    </span>
-                  </label>
+                    {register && (
+                      <label className="auth-field">
+                        Email
+                        <span className="auth-input-wrap">
+                          <input
+                            required
+                            type="email"
+                            maxLength={254}
+                            autoComplete="email"
+                            placeholder="ban@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                          />
+                        </span>
+                      </label>
+                    )}
 
-                  {register && (
                     <label className="auth-field">
-                      Nhập lại mật khẩu
+                      Mật khẩu
                       <span className="auth-input-wrap">
                         <input
                           required
                           type={showPassword ? 'text' : 'password'}
-                          autoComplete="new-password"
-                          minLength={10}
+                          aria-label="Mật khẩu"
+                          minLength={register ? 10 : 1}
                           maxLength={128}
-                          placeholder="Nhập lại mật khẩu"
-                          value={confirmation}
-                          onChange={(e) => setConfirmation(e.target.value)}
+                          autoComplete={register ? 'new-password' : 'current-password'}
+                          placeholder={register ? 'Tối thiểu 10 ký tự' : 'Nhập mật khẩu'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
                         />
+                        <button
+                          type="button"
+                          className="auth-pwd-toggle"
+                          aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                          aria-pressed={showPassword}
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? (
+                            <EyeOff size={18} aria-hidden="true" />
+                          ) : (
+                            <Eye size={18} aria-hidden="true" />
+                          )}
+                        </button>
                       </span>
                     </label>
-                  )}
 
-                  {error && (
-                    <p className="error-text" role="alert">
-                      {error}
-                    </p>
-                  )}
+                    {register && (
+                      <label className="auth-field">
+                        Nhập lại mật khẩu
+                        <span className="auth-input-wrap">
+                          <input
+                            required
+                            type={showPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            minLength={10}
+                            maxLength={128}
+                            placeholder="Nhập lại mật khẩu"
+                            value={confirmation}
+                            onChange={(e) => setConfirmation(e.target.value)}
+                          />
+                        </span>
+                      </label>
+                    )}
 
-                  <button className="btn primary full-width auth-submit-btn" disabled={busy}>
-                    <span>{busy ? 'Đang xử lý…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}</span>
-                    <BieuTuong ten="arrow" size={16} />
-                  </button>
-                </form>
+                    {error && (
+                      <p className="error-text" role="alert">
+                        {error}
+                      </p>
+                    )}
+
+                    <button className="btn primary full-width auth-submit-btn" disabled={busy}>
+                      <span>{busy ? 'Đang xử lý…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}</span>
+                      <BieuTuong ten="arrow" size={16} />
+                    </button>
+                  </form>
+                )}
 
                 <div className="auth-switch-footer">
                   <span>{register ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}</span>

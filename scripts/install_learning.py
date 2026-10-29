@@ -9,10 +9,15 @@ accounts or modification of existing application tables is performed.
 
 import argparse
 import os
+import sys
+from pathlib import Path
 
 from pydantic import SecretStr
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
+
+# Direct script execution adds scripts/, rather than backend/, to sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.core.config import Settings, get_settings
 from app.db.database import Database

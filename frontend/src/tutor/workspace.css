@@ -48,8 +48,9 @@
   flex-direction: row;
   width: 100%;
   min-width: 0;
-  min-height: 100dvh;
-  overflow: clip;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -130,82 +131,112 @@
   color: var(--workspace-text);
   background: var(--workspace-bg);
   border: 1px solid var(--workspace-line);
-  border-radius: 14px;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  transform: none;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 20px -4px rgba(15, 23, 42, 0.05),
+    0 1px 3px rgba(15, 23, 42, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+}
+:root[data-theme='dark']
+  .workspace-shell.workspace-shell.workspace-shell
+  :is(.glass, .tutor-card, .learning-card, .settings-card, .panel) {
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.35);
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.tutor-card, .settings-card, .panel)::before,
 .workspace-shell.workspace-shell.workspace-shell :is(.tutor-card, .settings-card, .panel)::after {
   display: none;
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.tutor-button, .btn) {
-  min-height: 40px;
-  padding: 10px 16px;
+  min-height: 42px;
+  padding: 10px 18px;
   border: 1px solid var(--workspace-line);
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--workspace-text);
   background: var(--workspace-bg);
   background-image: none;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
   text-shadow: none;
-  transform: none;
+  cursor: pointer;
   transition:
-    background-color 150ms ease,
-    border-color 150ms ease;
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.tutor-button, .btn):hover:not(:disabled) {
   background: var(--workspace-soft);
   border-color: var(--workspace-muted);
-  box-shadow: none;
-  transform: none;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+.workspace-shell.workspace-shell.workspace-shell :is(.tutor-button, .btn):active:not(:disabled) {
+  transform: translateY(0);
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.tutor-button.primary, .btn.primary) {
   color: var(--workspace-on-primary);
-  background: var(--workspace-primary);
+  background: linear-gradient(
+    135deg,
+    var(--workspace-primary) 0%,
+    var(--workspace-primary-hover) 100%
+  );
   border-color: var(--workspace-primary);
-  box-shadow: none;
+  box-shadow: 0 4px 14px rgba(36, 88, 219, 0.22);
 }
 .workspace-shell.workspace-shell.workspace-shell
   :is(.tutor-button.primary, .btn.primary):hover:not(:disabled) {
-  background: var(--workspace-primary-hover);
+  background: linear-gradient(
+    135deg,
+    var(--workspace-primary-hover) 0%,
+    var(--workspace-primary) 100%
+  );
   border-color: var(--workspace-primary-hover);
-  box-shadow: 0 3px 10px #2458db20;
+  box-shadow: 0 6px 20px rgba(36, 88, 219, 0.32);
+  transform: translateY(-1.5px);
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.icon-button, .tutor-chip) {
   border: 1px solid var(--workspace-line);
   color: var(--workspace-blue);
   background: var(--workspace-bg);
   background-image: none;
-  border-radius: 9px;
-  box-shadow: none;
-  backdrop-filter: none;
-  transform: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 .workspace-shell.workspace-shell.workspace-shell
   :is(.icon-button, .tutor-chip):hover:not(:disabled) {
   color: var(--workspace-blue);
   background: var(--workspace-soft);
-  border-color: var(--workspace-line);
-  box-shadow: none;
-  transform: none;
+  border-color: var(--workspace-blue-line);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
 }
 .workspace-shell.workspace-shell.workspace-shell .text-button {
   color: var(--workspace-blue);
+  font-weight: 550;
+  transition: color 160ms ease;
 }
 .workspace-shell.workspace-shell.workspace-shell .text-button:hover {
   color: var(--workspace-violet);
 }
 .workspace-shell.workspace-shell.workspace-shell .eyebrow {
   color: var(--workspace-muted);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 650;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .workspace-shell.workspace-shell.workspace-shell .eyebrow > i {
   box-shadow: none;
@@ -217,15 +248,27 @@
 }
 .workspace-shell.workspace-shell.workspace-shell
   input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
-.workspace-shell.workspace-shell.workspace-shell select {
+.workspace-shell.workspace-shell.workspace-shell select,
+.workspace-shell.workspace-shell.workspace-shell textarea {
   color: var(--workspace-text);
   background: var(--workspace-bg);
-  border-color: var(--workspace-line);
-  border-radius: 9px;
-  box-shadow: none;
+  border: 1px solid var(--workspace-line);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.workspace-shell.workspace-shell.workspace-shell
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus,
+.workspace-shell.workspace-shell.workspace-shell select:focus,
+.workspace-shell.workspace-shell.workspace-shell textarea:focus {
+  border-color: var(--workspace-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
 }
 
-/* Keep the sidebar as part of normal flow so the chat pane reflows instead of overlapping it. */
+/* Sidebar and content share the same layout, including temporary expansion. */
 .workspace-sidebar {
   --sidebar-width: 72px;
   position: relative;
@@ -245,18 +288,29 @@
     flex-basis 180ms ease,
     min-width 180ms ease;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
+.workspace-sidebar[data-expanded='true'] {
   --sidebar-width: 240px;
   box-shadow: 8px 0 24px #00000008;
 }
 .workspace-sidebar-inner {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
   gap: 20px;
   width: 100%;
   height: 100%;
   padding: 20px 12px 14px;
   min-height: 0;
+  overflow-y: auto;
+}
+@media (min-width: 768px) {
+  .workspace-sidebar[data-expanded='false'] .workspace-sidebar-brand {
+    flex: 0 0 41px;
+    gap: 0;
+  }
+  .workspace-sidebar[data-expanded='false'] .workspace-sidebar-top {
+    justify-content: center;
+  }
 }
 .workspace-sidebar-top {
   display: flex;
@@ -268,7 +322,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
+  min-width: 41px;
   flex: 1;
   min-height: 38px;
   padding: 0 7px;
@@ -300,7 +354,7 @@
   white-space: nowrap;
   transition: opacity 140ms ease;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-nav-label {
+.workspace-sidebar[data-expanded='true'] .workspace-nav-label {
   max-width: 190px;
   opacity: 1;
 }
@@ -310,7 +364,7 @@
   gap: 4px;
   min-height: 0;
   overflow: auto;
-  flex: 1;
+  flex: 1 0 auto;
 }
 .workspace-shell.workspace-shell.workspace-shell .workspace-nav-item {
   display: flex;
@@ -367,10 +421,10 @@
   color: var(--workspace-muted);
 }
 .workspace-sidebar-toggle {
-  opacity: 0;
-  visibility: hidden;
+  opacity: 1;
+  visibility: visible;
 }
-.workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-sidebar-toggle {
+.workspace-sidebar[data-expanded='true'] .workspace-sidebar-toggle {
   opacity: 1;
   visibility: visible;
 }
@@ -382,23 +436,6 @@
   margin-top: auto;
   border-top: 1px solid var(--workspace-line);
 }
-.workspace-sidebar-theme {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 42px;
-  padding-left: 3px;
-  font-size: 12px;
-}
-.workspace-shell.workspace-shell.workspace-shell .workspace-sidebar-theme .theme-toggle {
-  flex: 0 0 42px;
-  width: 42px;
-  height: 38px;
-  min-height: 0;
-  border: 0;
-  background: transparent;
-  color: var(--workspace-muted);
-}
 .workspace-sidebar-avatar {
   display: grid;
   place-items: center;
@@ -409,7 +446,7 @@
   border-radius: 50%;
   background: var(--workspace-blue-soft);
   color: var(--workspace-blue);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   overflow: hidden;
   object-fit: cover;
@@ -425,7 +462,7 @@
   display: none;
 }
 
-/* The conversation owns its scroll area; other pages scroll naturally. */
+/* Each content pane scrolls inside the viewport, keeping navigation visible. */
 .workspace-body {
   display: flex;
   flex-direction: column;
@@ -433,6 +470,9 @@
   width: 0;
   min-width: 0;
   min-height: 100dvh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-left: 0;
 }
 .workspace-topbar {
@@ -489,14 +529,27 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .workspace-status > i {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #4f9a76;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  animation: workspace-status-pulse 2.2s infinite;
+}
+@keyframes workspace-status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 .workspace-shell.workspace-shell.workspace-shell .tutor-main {
   width: 100%;
@@ -565,6 +618,7 @@
   overflow: hidden;
 }
 .workspace-shell.workspace-shell.workspace-shell.tutor-view-mate .tutor-view-stage {
+  max-width: none;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -572,7 +626,7 @@
   flex: 1;
 }
 .workspace-shell.workspace-shell.workspace-shell .room-toolbar {
-  width: min(900px, 100%);
+  width: 100%;
   min-height: 44px;
   margin: 0 auto;
   padding: 10px 0;
@@ -582,7 +636,7 @@
 .workspace-shell.workspace-shell.workspace-shell .chat-panel {
   display: flex;
   flex-direction: column;
-  width: min(900px, 100%);
+  width: 100%;
   flex: 1;
   height: auto;
   min-height: 0;
@@ -680,7 +734,7 @@
   border-radius: 6px;
   color: var(--workspace-blue);
   background: var(--workspace-blue-soft);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -787,25 +841,29 @@
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  width: min(780px, 100%);
+  width: 100%;
   min-height: 62px;
   margin: 0 auto;
-  padding: 7px 9px 7px 18px;
+  padding: 8px 10px 8px 20px;
   gap: 10px;
-  border: 1px solid var(--workspace-blue-line);
-  border-radius: 16px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 18px;
   color: var(--workspace-text);
-  background: var(--workspace-sidebar);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  transform: none;
+  background: var(--workspace-bg);
+  box-shadow:
+    0 4px 20px -2px rgba(15, 23, 42, 0.06),
+    0 1px 4px rgba(15, 23, 42, 0.04);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+:root[data-theme='dark'] .workspace-shell.workspace-shell.workspace-shell .conversation-composer {
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
 }
 .workspace-shell.workspace-shell.workspace-shell .conversation-composer:focus-within {
-  background: var(--workspace-sidebar);
   border-color: var(--workspace-focus);
-  box-shadow: 0 0 0 3px var(--workspace-blue-soft);
-  transform: none;
+  box-shadow:
+    0 0 0 3.5px rgba(37, 99, 235, 0.15),
+    0 8px 28px -4px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
 }
 .workspace-shell.workspace-shell.workspace-shell .conversation-composer textarea {
   flex: 1;
@@ -826,38 +884,46 @@
   opacity: 1;
 }
 .workspace-shell.workspace-shell.workspace-shell .composer-toolbar {
-  gap: 5px;
+  gap: 6px;
 }
 .workspace-shell.workspace-shell.workspace-shell :is(.composer-icon, .composer-send) {
   display: grid;
   place-items: center;
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
   padding: 0;
   border: 0;
-  border-radius: 10px;
+  border-radius: 11px;
   color: var(--workspace-blue);
   background: transparent;
-  box-shadow: none;
-  transform: none;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .workspace-shell.workspace-shell.workspace-shell .composer-icon:hover:not(:disabled) {
   background: var(--workspace-blue-soft);
   color: var(--workspace-blue);
-  box-shadow: none;
-  transform: none;
+  transform: scale(1.05);
 }
 .workspace-shell.workspace-shell.workspace-shell .composer-send {
   color: var(--workspace-on-primary);
-  background: var(--workspace-primary);
+  background: linear-gradient(
+    135deg,
+    var(--workspace-primary) 0%,
+    var(--workspace-primary-hover) 100%
+  );
   border-color: var(--workspace-primary);
+  box-shadow: 0 3px 10px rgba(36, 88, 219, 0.25);
 }
 .workspace-shell.workspace-shell.workspace-shell .composer-send:hover:not(:disabled) {
-  background: var(--workspace-primary-hover);
-  box-shadow: none;
-  transform: none;
+  background: linear-gradient(
+    135deg,
+    var(--workspace-primary-hover) 0%,
+    var(--workspace-primary) 100%
+  );
+  box-shadow: 0 5px 16px rgba(36, 88, 219, 0.35);
+  transform: scale(1.05);
 }
 .workspace-shell.workspace-shell.workspace-shell .voice-toggle {
   color: var(--workspace-violet);
@@ -893,7 +959,7 @@
   display: flex;
   gap: 12px;
   margin: 0 auto 26px;
-  max-width: 760px;
+  max-width: 1100px;
 }
 .workspace-shell.workspace-shell.workspace-shell .message-row > div {
   min-width: 0;
@@ -924,14 +990,12 @@
   border: 0;
 }
 .workspace-shell.workspace-shell.workspace-shell .message-row.ban > div {
-  padding: 11px 16px;
-  border: 0;
-  border-radius: 14px;
+  padding: 12px 18px;
+  border: 1px solid var(--workspace-blue-line);
+  border-radius: 16px 16px 4px 16px;
   background: var(--workspace-blue-soft);
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  transform: none;
+  box-shadow: 0 2px 8px rgba(36, 88, 219, 0.06);
+  transition: all 180ms ease;
 }
 .workspace-shell.workspace-shell.workspace-shell .message-row.ban .message-author {
   color: var(--workspace-muted);
@@ -1077,7 +1141,7 @@
   top: 20px;
   width: 100%;
   height: min(760px, calc(100dvh - 48px));
-  min-height: 500px;
+  min-height: 0;
   border: 1px solid var(--workspace-line);
   border-radius: 14px;
   padding: 0 18px 12px;
@@ -1244,7 +1308,7 @@
     background: var(--workspace-bg);
     color: var(--workspace-text);
   }
-  .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) {
+  .workspace-sidebar[data-expanded='true'] {
     width: min(280px, calc(100vw - 40px));
     min-width: min(280px, calc(100vw - 40px));
     transform: translateX(-100%);
@@ -1262,7 +1326,7 @@
     padding: 20px 14px;
   }
   .workspace-sidebar-toggle,
-  .workspace-sidebar:is(:hover, :focus-within, [data-expanded='true']) .workspace-sidebar-toggle {
+  .workspace-sidebar[data-expanded='true'] .workspace-sidebar-toggle {
     display: none;
   }
   .workspace-shell.workspace-shell.workspace-shell .workspace-sidebar-close {
@@ -1279,6 +1343,8 @@
   }
   .workspace-body {
     width: 100%;
+    height: calc(100dvh - 56px);
+    flex: 1 1 0;
     min-height: calc(100dvh - 56px);
     margin-left: 0;
   }
@@ -1311,7 +1377,7 @@
   .workspace-shell.workspace-shell.workspace-shell .tutor-footer {
     padding: 6px 20px 10px;
     min-height: 28px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .workspace-welcome {
     padding: 24px 0;
@@ -1369,7 +1435,7 @@
   }
   .workspace-shell.workspace-shell.workspace-shell .course-studio .chat-panel {
     height: min(620px, calc(100dvh - 90px));
-    min-height: 480px;
+    min-height: 0;
     padding-inline: 12px;
   }
   .workspace-shell.workspace-shell.workspace-shell .message-bubble {
@@ -1442,6 +1508,29 @@
   .workspace-shell.workspace-shell.workspace-shell .settings-item {
     gap: 14px;
   }
+}
+
+/* Modern elegant scrollbars for workspace containers */
+.workspace-shell *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.workspace-shell *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.workspace-shell *::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+  border-radius: 999px;
+  transition: background 180ms ease;
+}
+.workspace-shell *::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+:root[data-theme='dark'] .workspace-shell *::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+}
+:root[data-theme='dark'] .workspace-shell *::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.38);
 }
 
 @media (prefers-reduced-motion: reduce) {

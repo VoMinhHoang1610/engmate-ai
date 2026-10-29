@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { saveSession, hasSession } from './api/database';
@@ -366,11 +366,18 @@ describe('conversation-only application', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Tin nhắn' }), {
       target: { value: 'Keep my speaking question' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Hồ sơ học tập' }));
+    fireEvent.click(screen.getByRole('button', { name: 'A1 → A2' }));
     await screen.findByRole('heading', { name: 'Hồ sơ học tập' });
     expect(await screen.findByLabelText('Họ và tên')).toHaveValue('Learner');
+    expect(await screen.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cài đặt' }));
     expect(screen.getByRole('heading', { name: 'Cài đặt' })).toBeInTheDocument();
+    expect(await screen.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Bật hoặc tắt âm thanh tương tác')).toBeDisabled();
+    const motion = screen.getByLabelText('Bật hoặc tắt giảm chuyển động');
+    fireEvent.click(motion);
+    expect(document.documentElement.dataset.reducedMotion).toBe('true');
+    fireEvent.click(motion);
     fireEvent.click(screen.getByRole('button', { name: 'Cùng Mate' }));
     expect(screen.getByRole('textbox', { name: 'Tin nhắn' })).toHaveValue(
       'Keep my speaking question',
@@ -409,7 +416,10 @@ describe('conversation-only application', () => {
           : undefined;
     await open(false);
     fireEvent.click(screen.getByRole('button', { name: 'Vào lớp học hôm nay' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Học bằng giọng nói' }));
+    const lessonCard = (await screen.findByRole('heading', { name: courseLesson.title })).closest(
+      'article',
+    )!;
+    fireEvent.click(within(lessonCard).getByRole('button', { name: 'Bắt đầu học' }));
     await screen.findByText('Đang nghe');
     expect(screen.getAllByRole('heading', { name: courseLesson.title })).toHaveLength(2);
     expect(
@@ -424,11 +434,19 @@ describe('conversation-only application', () => {
     expect(calls.find((c) => c.path.endsWith('/messages'))?.body.message).toBe(
       'I am Linh. I work as a designer.',
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Bài học' }));
+    await screen.findByRole('heading', { name: 'Bài học TOEIC' });
+    expect(screen.getByRole('button', { name: 'Quay lại bài đang học' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Quay lại bài đang học' }));
+    await screen.findByRole('button', { name: 'Về thư viện bài học' });
+    fireEvent.click(screen.getByRole('button', { name: 'Về thư viện bài học' }));
+    await screen.findByRole('heading', { name: 'Bài học TOEIC' });
+    expect(calls.filter((c) => c.path.endsWith('/start'))).toHaveLength(1);
   });
 
   it('saves a TOEIC goal and daily plan without inventing an assessment level', async () => {
     await open(false);
-    fireEvent.click(screen.getByRole('button', { name: 'A1 → A2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lộ trình' }));
     await screen.findByRole('heading', { name: 'Lộ trình TOEIC bằng giọng nói' });
     fireEvent.click(screen.getByText('Mục tiêu & thời gian học'));
     fireEvent.change(screen.getByLabelText('Mục tiêu điểm'), { target: { value: '800' } });
@@ -461,16 +479,14 @@ describe('conversation-only application', () => {
     expect(screen.getByText('1 cụm từ')).toBeInTheDocument();
     expect(screen.queryByText('86 / 100')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Xem tiến độ học tập' }));
-    await screen.findByRole('heading', { name: 'Tiến độ học TOEIC' });
+    await screen.findByRole('heading', { name: 'Tiến độ học tập' });
     expect(
-      await screen.findByText(
-        'Bạn chưa bắt đầu bài TOEIC nào. Chọn bài bên dưới để học cùng Mate.',
-      ),
+      await screen.findByText('Bạn chưa bắt đầu bài học nào. Mở Bài học để bắt đầu cùng Mate.'),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Từ vựng' }));
     fireEvent.click(screen.getByRole('button', { name: 'Đã nhớ' }));
     fireEvent.click(screen.getByRole('button', { name: 'Tiến độ' }));
-    await screen.findByText('Bạn chưa bắt đầu bài TOEIC nào. Chọn bài bên dưới để học cùng Mate.');
+    await screen.findByText('Bạn chưa bắt đầu bài học nào. Mở Bài học để bắt đầu cùng Mate.');
     expect(screen.queryByText('86 / 100')).not.toBeInTheDocument();
   });
 

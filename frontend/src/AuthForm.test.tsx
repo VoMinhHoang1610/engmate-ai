@@ -2,15 +2,77 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthForm } from './AuthForm';
 import { authenticate } from './api/database';
+import { authenticateSocial, completeGoogleLink, GoogleLinkRequired } from './api/socialAuth';
 
 vi.mock('./api/database', () => ({ authenticate: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('./api/socialAuth', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./api/socialAuth')>()),
+  authenticateSocial: vi.fn().mockResolvedValue(undefined),
+  completeGoogleLink: vi.fn().mockResolvedValue(undefined),
+}));
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.mocked(authenticate).mockClear();
+  vi.mocked(authenticateSocial).mockReset().mockResolvedValue(undefined);
+  vi.mocked(completeGoogleLink).mockReset().mockResolvedValue(undefined);
 });
 
 describe('Trang tài khoản theo giao diện gốc', () => {
+  it('requires deliberate local-password confirmation before linking an existing Google email', async () => {
+    const ticket = 'verified-google-ticket-with-enough-characters';
+    vi.mocked(authenticateSocial).mockRejectedValueOnce(new GoogleLinkRequired(ticket));
+    render(<AuthForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Google' }));
+    const password = await screen.findByLabelText('Mật khẩu EngMate hiện tại');
+    expect(completeGoogleLink).not.toHaveBeenCalled();
+    expect(screen.getByRole('status')).toHaveTextContent('giữ nguyên hồ sơ, tiến độ');
+    fireEvent.change(password, { target: { value: 'existing-engmate-password' } });
+    fireEvent.submit(
+      screen.getByRole('button', { name: 'Liên kết Google và đăng nhập' }).closest('form')!,
+    );
+    await waitFor(() =>
+      expect(completeGoogleLink).toHaveBeenCalledWith(ticket, 'existing-engmate-password'),
+    );
+    expect(authenticate).not.toHaveBeenCalled();
+  });
+
+  it('allows cancelling a Google link without changing the account', async () => {
+    vi.mocked(authenticateSocial).mockRejectedValueOnce(new GoogleLinkRequired('verified-ticket'));
+    render(<AuthForm />);
+    fireEvent.click(screen.getByRole('button', { name: 'Google' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Hủy liên kết' }));
+    expect(screen.getByLabelText('Mật khẩu')).toHaveValue('');
+    expect(completeGoogleLink).not.toHaveBeenCalled();
+  });
+  it('offers only Google and Facebook and exposes the password toggle to keyboard users', () => {
+    render(<AuthForm />);
+    for (const name of ['Google', 'Facebook']) {
+      const provider = screen.getByRole('button', { name });
+      expect(provider).toBeEnabled();
+    }
+    expect(screen.queryByRole('button', { name: 'GitHub' })).not.toBeInTheDocument();
+    const password = screen.getByLabelText('Mật khẩu');
+    const show = screen.getByRole('button', { name: 'Hiện mật khẩu' });
+    expect(show.tabIndex).toBe(0);
+    fireEvent.click(show);
+    expect(password).toHaveAttribute('type', 'text');
+    fireEvent.click(screen.getByRole('button', { name: 'Ẩn mật khẩu' }));
+    expect(password).toHaveAttribute('type', 'password');
+    expect(authenticate).not.toHaveBeenCalled();
+  });
+  it.each(['Google', 'Facebook'] as const)(
+    'starts %s and explains provider errors without submitting passwords',
+    async (name) => {
+      vi.mocked(authenticateSocial).mockRejectedValueOnce(new Error('Chưa cấu hình nền tảng.'));
+      render(<AuthForm />);
+      fireEvent.click(screen.getByRole('button', { name }));
+      await screen.findByText('Chưa cấu hình nền tảng.');
+      expect(authenticateSocial).toHaveBeenCalledWith(name.toLowerCase());
+      expect(authenticate).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name })).toBeEnabled();
+    },
+  );
   it('keeps the sliding panels and validates confirmation before registering', async () => {
     const { container } = render(<AuthForm />);
     expect(container.querySelector('.auth-stage')).toBeInTheDocument();
@@ -38,6 +100,9 @@ describe('Trang tài khoản theo giao diện gốc', () => {
         display_name: 'Người học',
         password: 'password-for-test',
       }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Chọn đăng nhập' })).toBeEnabled(),
     );
     fireEvent.click(screen.getByRole('button', { name: 'Chọn đăng nhập' }));
     expect(container.querySelector('.auth-stage')).not.toHaveClass('is-register');

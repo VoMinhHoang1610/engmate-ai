@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
@@ -51,6 +52,14 @@ class Settings(BaseModel):
     database_odbc_connection: SecretStr | None = None
     database_mysql_url: SecretStr | None = None
     jwt_secret: SecretStr | None = None
+    oauth_public_origin: str = Field(
+        default="http://127.0.0.1:5174", pattern=r"^https?://[^/?#]+$"
+    )
+    google_client_id: str | None = None
+    google_client_secret: SecretStr | None = None
+    facebook_client_id: str | None = None
+    facebook_client_secret: SecretStr | None = None
+    facebook_graph_version: str = Field(default="v24.0", pattern=r"^v[0-9]+\.0$")
     access_token_minutes: int = Field(default=15, ge=1, le=60)
     refresh_token_days: int = Field(default=30, ge=1, le=90)
     auth_requests_per_minute: int = Field(default=30, ge=1, le=1000)
@@ -61,6 +70,11 @@ class Settings(BaseModel):
     @model_validator(mode="after")
     def validate_database_auth(self) -> "Settings":
         """Require an explicit signing secret when private data is enabled."""
+        origin = urlsplit(self.oauth_public_origin)
+        if not origin.hostname or origin.username or origin.password:
+            raise ValueError(
+                "OAUTH_PUBLIC_ORIGIN must be an origin without credentials."
+            )
         if self.database_mysql_url and self.database_odbc_connection:
             raise ValueError("Configure only one database connection.")
         if self.database_mysql_url:
@@ -152,6 +166,14 @@ def get_settings() -> Settings:
             "database_odbc_connection": os.getenv("DATABASE_ODBC_CONNECTION") or None,
             "database_mysql_url": os.getenv("DATABASE_MYSQL_URL") or None,
             "jwt_secret": os.getenv("JWT_SECRET") or None,
+            "oauth_public_origin": os.getenv(
+                "OAUTH_PUBLIC_ORIGIN", "http://127.0.0.1:5174"
+            ),
+            "google_client_id": os.getenv("GOOGLE_CLIENT_ID") or None,
+            "google_client_secret": os.getenv("GOOGLE_CLIENT_SECRET") or None,
+            "facebook_client_id": os.getenv("FACEBOOK_CLIENT_ID") or None,
+            "facebook_client_secret": os.getenv("FACEBOOK_CLIENT_SECRET") or None,
+            "facebook_graph_version": os.getenv("FACEBOOK_GRAPH_VERSION", "v24.0"),
             "access_token_minutes": os.getenv("ACCESS_TOKEN_MINUTES", "15"),
             "refresh_token_days": os.getenv("REFRESH_TOKEN_DAYS", "30"),
             "auth_requests_per_minute": os.getenv("AUTH_REQUESTS_PER_MINUTE", "30"),

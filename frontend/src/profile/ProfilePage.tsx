@@ -147,13 +147,17 @@ export function ProfilePage({
           </div>
           <div>
             <strong>{remembered}</strong>
-            <span>Cụm đã nhớ</span>
+            <span>Cụm tự đánh dấu đã nhớ</span>
           </div>
           <div>
             <strong>{completed}</strong>
-            <span>Bài hoàn thành</span>
+            <span>Buổi ôn giao tiếp tự ghi nhận</span>
           </div>
         </div>
+        <p className="profile-image-hint">
+          Cụm từ và buổi ôn tự ghi nhận lưu trên trình duyệt này. Kết quả TOEIC được hiển thị riêng
+          ở trên.
+        </p>
         {avatarError && (
           <p className="error-text" role="alert">
             {avatarError}
@@ -265,7 +269,7 @@ export function ProfilePage({
             </select>
           </label>
           <label>
-            Thời gian học mỗi ngày{' '}
+            Thời gian luyện giao tiếp mỗi ngày{' '}
             <strong className="accent">{form.daily_goal_minutes} phút</strong>
             <input
               type="range"
@@ -282,7 +286,8 @@ export function ProfilePage({
             </span>
           </label>
           <p className="profile-help">
-            Mức tiếng Anh do bạn tự chọn. Thông tin cá nhân và mục tiêu được lưu trong tài khoản.
+            Mục tiêu giao tiếp này độc lập với kế hoạch TOEIC trong Lộ trình. Mức tiếng Anh do bạn
+            tự chọn. Thông tin cá nhân và mục tiêu được lưu trong tài khoản.
           </p>
         </fieldset>
         {error && (

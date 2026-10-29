@@ -1,5 +1,16 @@
 # Quyết định kỹ thuật
 
+## 2026-10-29 — OAuth qua backend, không tự liên kết bằng email
+
+- Dùng authorization code và popup; secret/đổi code ở backend, browser chỉ nhận
+  phiên EngMate qua thông điệp khớp origin/source/state. Tái sử dụng httpx và cơ
+  chế session hiện có, không thêm SDK hoặc phụ thuộc mới.
+- Lưu provider subject dưới dạng hash trong bảng bổ sung, không thay schema
+  tài khoản cũ. Không tự liên kết email trùng để tránh chiếm quyền tài khoản;
+  người dùng được hướng dẫn dùng phương thức đăng nhập ban đầu.
+- Registry state có giới hạn/hết hạn/consume một lần phù hợp kiến trúc một worker
+  hiện tại. Cấu hình ứng dụng thật và cài bảng là bước vận hành tường minh.
+
 ## 2026-10-23 — Lỗi âm thanh không kết thúc phiên, fallback STT có kiểm soát
 
 Khi TTS hoặc phát MP3 lỗi, frontend dừng queue/clip hiện tại và báo lỗi nhưng giữ

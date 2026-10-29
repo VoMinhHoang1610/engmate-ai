@@ -1,5 +1,139 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-30 — Xác nhận mật khẩu trước khi liên kết Google
+
+- Người dùng đã đồng ý cụ thể thêm chức năng liên kết Google với tài khoản hiện có và cấp phiên sau khi xác nhận mật khẩu EngMate; triển khai theo xác nhận này.
+- Callback Google khi trùng email tạo challenge 5 phút gắn cookie browser. Frontend hiện form mật khẩu EngMate và nút xác nhận/hủy; chưa cấp session ở bước Google trả về.
+- Endpoint `/api/auth/oauth/google/link` consume challenge một lần, xác minh mật khẩu, lock/revalidate tài khoản, insert binding và issue session trong một transaction. Không cập nhật tài khoản, hồ sơ, mật khẩu hoặc tiến độ cũ.
+- Chưa tạo liên kết trên tài khoản thật: bước xác nhận mật khẩu do người dùng tự thực hiện. Facebook và tài khoản chỉ dùng nền tảng khác không bị tự ghép.
+- Chốt: 29 backend OAuth/security và 76 frontend auth/session tests qua; scoped coverage OAuth backend 93,24%, frontend AuthForm/socialAuth branches 87,64%. Lint/type-check/format/build qua. Đã nạp vào Docker local, xác nhận API/form mới và request thiếu Google proof bị 400. Chờ người dùng bấm Google rồi tự xác nhận mật khẩu để nghiệm thu binding thật.
+
+## 2026-10-29 — Nạp cấu hình Google vào môi trường local
+
+- Theo yêu cầu người dùng, chuyển riêng cấu hình Google/origin từ `.env.example` sang `.env`, xóa giá trị credential Google khỏi file mẫu và xác nhận `.env` bị Git ignore. Không ghi giá trị khóa vào nhật ký.
+- Cài riêng bảng bổ sung `engmate_oauth_identities`; tài khoản/hồ sơ/tiến độ hiện có không bị sửa.
+- Phát hiện website đang chạy bằng Docker với backend cũ. Bổ sung biến OAuth vào docker-compose và recreate riêng backend local để nạp code/config mới; giữ frontend và database.
+- Kiểm tra qua website thật `127.0.0.1:5174`: POST Google start trả 200, đích accounts.google.com, callback đúng origin, cookie browser được đặt. Xác nhận bảng OAuth có trong database mà Docker sử dụng.
+- Chưa có kết quả cấp quyền Google/quay lại và tạo phiên người dùng; bước chọn tài khoản/cấp quyền cần người dùng thao tác trong trình duyệt. Chưa nghiệm thu Facebook.
+
+## 2026-10-29 — Triển khai đăng nhập Google/Facebook, bỏ GitHub
+
+- Được yêu cầu tích hợp thật hai nền tảng. Thêm OAuth authorization-code backend, cookie browser-bound/state một lần, PKCE Google và xác minh app/subject Facebook; popup frontend chỉ nhận kết quả khớp origin/source/provider/state và dùng phiên EngMate hiện có.
+- Tạo account/profile/binding/session trong một transaction; không tự ghép email trùng. GitHub được bỏ khỏi giao diện và không là provider hợp lệ trong API.
+- Thêm `scripts/install_oauth.py` để tạo riêng bảng liên kết khi người vận hành chạy rõ ràng; không tự cài schema lúc app khởi động, chưa chạy installer trên database người dùng.
+- Cấu hình mẫu và hướng dẫn: `docs/OAUTH_SETUP.md`. Môi trường chưa có Client ID/Secret Google/Facebook, chưa nghiệm thu tài khoản thật; người dùng đã được hỏi thông tin cấu hình, không yêu cầu gửi secret qua chat.
+- Kiểm thử mới: 8 backend OAuth qua với provider doubles/SQL trong bộ nhớ; 13 frontend AuthForm/socialAuth qua. Kết quả hồi quy toàn bộ và coverage ghi ở TESTING.md sau khi chạy xong.
+- Kết quả chốt: lint/type-check/format/build qua. Frontend hồi quy 402 qua/1 test preview timeout; file preview chạy lại 10/10 qua, chưa xác nhận coverage frontend toàn bộ. Backend 208 qua/24 MySQL bỏ qua, coverage 71,79%. Hoạt động thật còn chờ credential và cài bảng liên kết.
+
+## 2026-10-29 — Giữ logo khi sidebar thu gọn
+
+- Theo yêu cầu mới, trạng thái thu gọn chỉ giữ logo EngMate ở đầu rail, không render nút menu riêng. Click logo mở rộng, không chuyển trang giới thiệu; khi mở rộng giữ logo và nút thu gọn như trước. Hover/focus vẫn không đổi trạng thái.
+- 10/10 tests sidebar qua, bổ sung kiểm tra logo hiện trong nút mở rộng, không có nút menu riêng khi đóng và click logo không gọi điều hướng landing.
+
+## 2026-10-29 — Sidebar chỉ đóng/mở bằng nút menu
+
+- Theo yêu cầu mới, bỏ state và sự kiện tự mở bằng hover/focus, đồng thời bỏ các selector CSS tự mở tương ứng.
+- Nút menu luôn có mặt trên desktop; khi thu gọn, nút thay vị trí logo ở đầu rail để không chồng nhau. Khi mở rộng, logo và menu hiển thị cạnh nhau. Giữ drawer mobile và bố cục nội dung theo chiều rộng sidebar.
+- Test hồi quy kiểm tra hover/focus không mở rail, click nút chuyển đúng trạng thái và aria-expanded.
+
+## 2026-10-29 — Giới hạn sửa chồng logo vào phần đầu sidebar
+
+- Theo làm rõ của người dùng, chỉ giữ chỗ cố định cho logo ở phần đầu thanh thu gọn (41px gồm padding), bỏ khoảng cách nhãn khi nhãn ẩn. Nút menu hiển thị trong phần đầu khi mở rộng.
+- Không đổi state, sự kiện hover/focus/ghim, chiều rộng sidebar hoặc vùng nội dung trong lượt sửa này.
+
+## 2026-10-29 — Sửa hồi quy sidebar che nội dung
+
+- Người dùng phát hiện sidebar mở tạm che phần đầu nội dung sau lần sửa chồng logo. Bỏ quy tắc giữ rail 72px trong khi inner mở 240px; cả sidebar và nội dung dùng chung bố cục flex ở mọi trạng thái desktop.
+- Giữ input file ẩn và nút mật khẩu từ lần sửa trước; giữ nút menu ẩn khi thu gọn để tránh đè logo.
+- Kiểm tra trình duyệt fixture: đóng sidebarRight/contentLeft đều 72px; ghim mở và mở tạm đều 240px. 10/10 tests sidebar qua; ảnh `.artifacts/ui-sidebar-no-overlap.png`. Quy tắc overlay ở các nhật ký trước đã được thay thế bởi sửa này.
+
+## 2026-10-29 — Sửa ba lỗi chồng lớp theo ảnh bổ sung
+
+- Ô file avatar bị `input:read-only` áp dụng opacity 0,85: loại file khỏi quy tắc chỉ đọc và cắt vùng hiển thị của input ẩn, giữ khả năng chọn ảnh bằng bàn phím.
+- Sidebar mở tạm có inner 240px nhưng bị flex-shrink ép xuống 72px: chặn co chiều rộng và ẩn nút ghim khi rail đóng, logo không còn chồng nút menu.
+- Thay chữ Hiện/Ẩn bằng biểu tượng mắt có nhãn truy cập; ẩn nút reveal/clear tích hợp của Edge để tránh trùng điều khiển.
+- Kiểm chứng: 24/24 tests AuthForm/Profile/Sidebar qua; kiểm tra DOM xác nhận file opacity 0 và clip inset(50%), sidebar đóng 72px/mở tạm inner 240px. Đã thao tác hiện/ẩn mật khẩu bằng dữ liệu mẫu và lưu ảnh tại `.artifacts/`. Không ghi dữ liệu thật.
+
+## 2026-10-29 — Hoàn thiện các vấn đề từ rà soát giao diện
+
+- Đã được người dùng yêu cầu sửa toàn bộ vấn đề rà soát. Phạm vi là frontend và kiểm thử; không cài bảng, chạy migration hoặc sửa dữ liệu thật.
+- Thư viện luôn truy cập được, có nút quay lại bài đang học; lọc chặng, thời lượng, trạng thái/cần ôn, tìm không dấu và xem thêm từng 12 bài. Tiến độ mở trực tiếp bài cần ôn.
+- Tách tải giáo trình/kế hoạch/kết quả: lỗi một phần không che toàn bộ trang; trạng thái chưa tải không bị gán là chưa học. Chỉ bài được chọn hiện đang mở; giữ mã yêu cầu khi thử lại.
+- Hồ sơ/Cài đặt hiển thị tổng kết TOEIC từ cùng API với Lộ trình/Tiến độ, ghi rõ mục tiêu giao tiếp và các chỉ số tự ghi nhận trên trình duyệt. Nhãn mức giao tiếp dẫn tới Hồ sơ.
+- OAuth và hiệu ứng âm thanh chưa được hỗ trợ được ghi rõ và vô hiệu hóa. Hiện/ẩn mật khẩu có nhãn và bàn phím; giảm chuyển động được khôi phục ngay khi mở app.
+- Ghim sidebar mặc định, cuộn nội dung riêng, reset đầu trang khi đổi chức năng; mở tạm sidebar đã bỏ ghim không đẩy nội dung. Tăng chữ phụ/nút cảm ứng, thu gọn đăng nhập/đăng ký trên điện thoại, giảm chiều cao tối thiểu của vùng thoại.
+- Landing bỏ số đo hiệu năng/độ chính xác và lời chứng thực chưa được xác nhận, thay bằng tình huống minh họa đúng chức năng.
+- Thêm fixture `frontend/tests/ui-audit.html` dùng origin riêng và chặn toàn bộ fetch, để kiểm tra màn hình mà không đăng nhập tài khoản thật. Chi tiết kiểm chứng ghi ở TESTING.md.
+- Kiểm chứng cuối: frontend 396/396 tests qua, cả bốn chỉ số coverage trên 80%; lint/type-check/format và bản dựng qua. Backend 200 qua, 24 integration MySQL chưa chạy; coverage backend 68,93% vì thiếu DB test riêng. Đã kiểm tra trực quan sáng/tối, sidebar khi cuộn, viewport 320/390px và chiều cao 360px. Speech và bàn phím ảo thiết bị thật chưa nghiệm thu.
+
+## 2026-10-29 — Sửa bốn vấn đề bố cục theo ảnh người dùng
+
+- Đọc AGENT.md, CLAUDE.md và yêu cầu/kiểm thử liên quan; chỉ sửa trình bày frontend, không thao tác database.
+- Bỏ grid-span của nút nền tảng; ThemeToggle hỗ trợ hiển thị nguyên mục điều hướng với hover/focus chung.
+- Khung ứng dụng cao bằng viewport, vùng nội dung cuộn riêng giữ sidebar; mở rộng chat/composer và giảm phụ đề thoại.
+- Kiểm tra trực quan đăng nhập local xác nhận ba nút cùng hàng. Thêm test nhấn nhãn Giao diện; đồng bộ hai App tests còn theo nhãn trước lần tách trang.
+- Kiểm chứng: lượt hồi quy 66/67 qua, một test cài đặt giọng nói timeout 5 giây; chạy riêng giữ nguyên assertion với timeout 20 giây đã qua (thực tế 3,13 giây). TypeScript, ESLint và bản dựng Vite qua; Prettier/diff được kiểm tra. Chưa chạy lại coverage hoặc toàn bộ backend vì phạm vi trình bày frontend.
+- Giới hạn: mới xác nhận trực quan trang đăng nhập; chưa nghiệm thu hình học desktop/mobile sau đăng nhập hoặc speech thật. Không thay đổi dữ liệu người dùng.
+
+## 2026-10-29 — Tách giao diện Lộ trình, Bài học và Tiến độ
+
+- Điều hướng Bài học và Tiến độ dùng component riêng thay vì cùng mở RoadmapPage.
+- Bài học hiển thị thư viện thẻ, tìm tên và lọc trạng thái; giữ API bắt đầu/tiếp tục học và mã yêu cầu khi thử lại.
+- Tiến độ hiển thị dữ liệu thực: tổng hoàn thành, lượt luyện, câu đúng, thanh tiến độ chặng, bảng kết quả và bài đến lịch ôn; có nút chuyển sang Bài học.
+- Lộ trình giữ mục tiêu và cấu trúc chặng học. Thêm kiểm thử phân biệt nội dung, bộ lọc và chuyển trang.
+- Kiểm chứng: 26/26 tests trong `learning.test.tsx` qua khi chạy với threads worker; lần chạy trong môi trường hạn chế bị timeout khởi động worker.
+- TypeScript, ESLint các file TSX liên quan và bản dựng Vite thành công. Chưa kiểm tra trực quan trên trình duyệt trong lượt này.
+
+## 2026-10-29 — Sửa khởi chạy installer lộ trình
+
+- Script `scripts/install_learning.py` tự thêm đường dẫn backend dựa trên vị trí file, sửa lỗi `ModuleNotFoundError: app` khi chạy lệnh trong README.
+- Thêm kiểm thử chạy `--help` từ thư mục khác và bỏ `PYTHONPATH`; bước này không truy cập database.
+- Lệnh `--help` đã chạy thành công; chưa thực hiện cài bảng trên database người dùng.
+
+## 2026-10-29 — Tách thay đổi giao diện khỏi develop
+
+- Chuyển bảy file CSS và nhật ký giao diện đang sửa trên `develop` sang nhánh
+  `giao-dien/tinh-chinh-giao-dien-20261029`; giữ nội dung sửa giao diện, chuẩn hóa
+  định dạng bốn file CSS theo Prettier.
+- `develop` và `origin/develop` cùng ở `dd0aab3` sau fetch; không có commit
+  giao diện mới cần hoàn tác trên nhánh dùng chung.
+- Kiểm chứng: backend lint/type-check và frontend ESLint/TypeScript qua ở lần
+  commit đầu; Prettier phát hiện bốn file cần định dạng. Commit được kiểm tra
+  lại bằng hook sau khi chuẩn hóa. Không chạy lại test/coverage hoặc đánh giá
+  trực quan trong tác vụ chỉ tách nhánh này; các kết quả của đợt sửa giao diện
+  bên dưới là nhật ký có sẵn.
+- Tiếp theo: tiếp tục rà soát giao diện trên nhánh riêng trước khi đề xuất merge.
+
+## 2026-10-29 — Làm đẹp và tinh chỉnh toàn diện giao diện EngMate-AI
+
+- **Yêu cầu:** Giữ nguyên phong cách thương hiệu hiện tại (brand identity, tone màu xanh dương/tím/xanh ngọc, linh thú Mate, font Inter), rà soát toàn bộ các giao diện tìm các điểm còn thô/xấu và làm đẹp.
+- **Rà soát & Điểm đã cải tiến:**
+  1. **Không gian làm việc chính & Sidebar (`workspace.css`):**
+     - Thay thế các thuộc tính phẳng `box-shadow: none` và `transform: none` thành hệ thống đổ bóng đa tầng tinh tế (`0 4px 20px -2px rgba(15, 23, 42, 0.05)`) kết hợp bo góc mềm mại 16px cho toàn bộ cards, panels.
+     - Nâng cấp button & action chips: gradient primary sang trọng, hiệu ứng hover nhấc nhẹ (`translateY(-1px)`), đổ bóng động có chiều sâu.
+     - Nâng cấp ô nhập liệu (inputs, select, textarea): bo góc 10px, padding cân đối, hiệu ứng focus ring êm dịu `rgba(37, 99, 235, 0.16)`.
+     - Chấm trạng thái kết nối (`.workspace-status > i`): bổ sung animation xung nhịp (pulse animation) tạo cảm giác AI đang hoạt động thời gian thực.
+     - Khung soạn thảo tin nhắn (`.conversation-composer`): thiết kế floating pill dock cao cấp, hover & focus mượt mà.
+     - Bong bóng tin nhắn người dùng: bo góc uốn lượn hiện đại (`16px 16px 4px 16px`), viền mảnh và bóng đổ dịu mắt.
+     - Bổ sung thanh cuộn thanh mảnh (sleek modern custom scrollbar) cho toàn bộ workspace.
+  2. **Trang Giới thiệu (`landing.css`):**
+     - Chuẩn hóa typography sang font `Inter` kết hợp font-smoothing antialiased.
+  3. **Trang Đăng nhập / Đăng ký (`auth-restored.css`):**
+     - Nâng cấp các nút đăng nhập mạng xã hội (Google, GitHub, Facebook) với bóng đổ tinh tế, hover lift nhẹ và viền chuyển tiếp mượt mà.
+     - Trau chuốt ô nhập mật khẩu/tài khoản và nút submit tạo tài khoản/đăng nhập.
+  4. **Lộ trình học & Luyện thi (`learning.css`):**
+     - Thẻ Stage chọn bài học: hiệu ứng nâng nhẹ, bóng đổ có chiều sâu, trạng thái đang chọn viền sáng mềm.
+     - Hàng bài học (`.learning-lesson-row`): hover trượt ngang nhẹ (`translateX(4px)`), badge hoàn thành có nền xanh ngọc tươi mới.
+  5. **Hồ sơ cá nhân & Cài đặt (`profile.css`, `voice-settings.css`):**
+     - Khung ảnh đại diện (Avatar): viền halo gradient kép sang trọng, hiệu ứng hover phóng to nhẹ.
+     - Thẻ chọn giọng đọc (`.voice-choice`): bo góc 14px, badge ngôn ngữ EN/VI dạng pill sắc nét, nút Preview nghe thử với hover lift.
+  6. **Danh sách lịch sử hội thoại (`index.css`):**
+     - Thẻ mục lịch sử (`.history-item`): bổ sung hiệu ứng transition chuyển màu mượt mà khi di chuột và kích hoạt.
+- **Kiểm chứng:**
+  - TypeScript strict (`tsc --noEmit`): 0 lỗi.
+  - Production build (`vite build`): hoàn tất thành công trong 30.5s (2477 modules), 0 lỗi.
+  - Vitest component tests: toàn bộ test liên quan giao diện đều PASS 100%, không làm hỏng bất kỳ test ID, role hay assertion nào.
+
 ## 2026-10-26 — Rà soát trước commit và hợp nhất develop
 
 - **Phạm vi:** rà soát thay đổi backend/frontend, tài khoản và quyền sở hữu,

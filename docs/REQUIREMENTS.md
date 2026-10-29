@@ -1,5 +1,42 @@
 # Yêu cầu EngMate-AI — lớp học đối thoại TOEIC, 2026-10-18
 
+## Liên kết Google với tài khoản cũ — 2026-10-30
+
+- Đã được người dùng đồng ý cụ thể: Google trùng email chỉ liên kết sau khi xác
+  nhận mật khẩu EngMate. Có thể hủy; lần sau đăng nhập Google trực tiếp.
+- Đã triển khai, kiểm thử trạng thái/lỗi và bảo toàn user/profile/progress, nạp
+  website local. Chưa nghiệm thu mật khẩu/binding trên tài khoản thật do người
+  dùng tự thao tác. Không tự liên kết Facebook hoặc tài khoản không có mật khẩu.
+
+## Đăng nhập nền tảng — 2026-10-29
+
+| Yêu cầu | Trạng thái |
+| --- | --- |
+| Chỉ giữ Google/Facebook, bỏ GitHub | Đã triển khai và kiểm thử |
+| Code exchange ở server, state/cookie, kiểm tra popup/origin | Đã triển khai và kiểm thử ngoại tuyến |
+| Tạo/đăng nhập tài khoản nền tảng qua session hiện có | Đã kiểm thử bằng provider doubles và database trong bộ nhớ |
+| Cấu hình client, cài bảng liên kết, nghiệm thu provider thật | Chờ Client ID/Secret, cấu hình ứng dụng nhà cung cấp và installer tường minh |
+
+Không tự liên kết email trùng tài khoản cũ. Hướng dẫn: [OAUTH_SETUP](OAUTH_SETUP.md).
+
+## Hoàn thiện sau rà soát — 2026-10-29
+
+- Lộ trình, Bài học, Tiến độ có trách nhiệm riêng. Điều hướng Bài học luôn mở thư viện, cho phép quay lại bài đang học.
+- Thư viện tìm không dấu, lọc chặng/thời lượng/trạng thái/cần ôn và hiển thị tăng dần; Tiến độ mở bài ôn trực tiếp.
+- Không diễn giải lỗi tải thành chưa học/0 tiến độ. Giáo trình và kết quả tải độc lập; lỗi nêu phần thiếu và có nút thử lại.
+- Hồ sơ/Cài đặt lấy tổng kết TOEIC từ API tài khoản; mục tiêu giao tiếp và thống kê tự ghi nhận trên thiết bị được ghi nhãn riêng.
+- Chỉ hiển thị chức năng đang được hỗ trợ như chức năng khả dụng; OAuth/âm báo chưa có tích hợp phải ghi rõ. Không đưa độ chính xác, tốc độ hoặc lời chứng thực chưa xác nhận lên trang giới thiệu.
+- Khôi phục giảm chuyển động từ lúc khởi động; nút mật khẩu và công tắc có tên truy cập được. Desktop ghim sidebar mặc định; mobile có menu cố định và drawer, biểu mẫu thu gọn, nút cảm ứng đủ lớn.
+- Giữ nguyên hợp đồng API và dữ liệu; kiểm thử trực quan dùng tài khoản/dữ liệu giả lập.
+
+## Tinh chỉnh giao diện — 2026-10-29
+
+- Ba nút Google/GitHub/Facebook cùng một hàng ở đăng nhập và đăng ký; giữ nguyên xử lý xác thực.
+- Toàn bộ mục Giao diện là nút đổi theme, dùng hover/focus chung với điều hướng.
+- Vùng chat và ô nhập tận dụng chiều rộng nội dung, phụ đề thoại 15–20px tùy màn hình.
+- Khung ứng dụng giới hạn trong viewport; trang chức năng cuộn trong vùng nội dung để sidebar desktop luôn hiển thị. Mobile giữ drawer có focus trap.
+- Không thay đổi schema, API, tài khoản hoặc dữ liệu học tập.
+
 ## Đồng nhất giọng và danh xưng — 2026-10-23
 
 | Mã | Yêu cầu | Trạng thái |

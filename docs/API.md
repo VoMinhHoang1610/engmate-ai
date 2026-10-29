@@ -1,5 +1,27 @@
 # REST API EngMate-AI — hội thoại
 
+## OAuth Google/Facebook — 2026-10-29
+
+Cập nhật 2026-10-30: Google trùng email trả popup payload có `link_ticket`
+thay vì từ chối chung. Ticket không phải token đăng nhập, gắn cookie HttpOnly
+`engmate_google_link`, hạn 300 giây và dùng một lần.
+`POST /api/auth/oauth/google/link` nhận `{ticket,password}`; Origin phải khớp
+frontend. Chỉ sau khi xác minh mật khẩu EngMate hiện tại và kiểm tra lại tài khoản
+dưới khóa mới insert liên kết và phát session trong cùng transaction. Không nhận
+email/subject/UserId từ client. 400 hết hạn/sai browser; 401 sai mật khẩu hoặc
+tài khoản không hoạt động; 409 liên kết bị xung đột. Sai thì bắt đầu Google lại.
+
+- `POST /api/auth/oauth/{provider}/start`: provider chỉ `google|facebook`; Origin
+  phải trùng `OAUTH_PUBLIC_ORIGIN`. Trả `{url,state}`, đặt cookie ràng buộc browser
+  HttpOnly/SameSite=Lax, hạn 600 giây. 503 khi thiếu cấu hình, 403 sai origin.
+- `GET /api/auth/oauth/{provider}/callback?state=...&code=...`: consume state một
+  lần, xác minh provider, tạo/đọc tài khoản và phát phiên EngMate. Trả HTML không
+  cache có CSP nonce, postMessage về đúng origin/opener; token không ở query.
+- Facebook hủy dùng `error=access_denied`. Lỗi được gửi bằng thông báo cố định;
+  không phản chiếu thông báo provider hoặc secret. Email trùng chưa liên kết bị
+  từ chối 409 nội bộ, không tự gộp tài khoản. GitHub bị 422.
+- Cấu hình và giới hạn: [OAUTH_SETUP](OAUTH_SETUP.md).
+
 ## Xưng hô theo giọng — 2026-10-23
 
 Chat JSON/SSE nhận thêm `voice_gender: "male" | "female" | null` (mặc định null).

@@ -54,6 +54,158 @@
   border-color: var(--line);
 }
 
+.auth-minimal .auth-social-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.auth-minimal .auth-social-btn {
+  grid-column: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: clamp(12px, 2.5vw, 13px);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-minimal .auth-social-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface-soft);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.auth-minimal .auth-social-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .auth-minimal .auth-social-grid {
+    gap: 6px;
+  }
+  .auth-minimal .auth-social-btn {
+    gap: 4px;
+    padding-inline: 4px;
+  }
+  .auth-minimal .auth-social-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.auth-minimal .auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.auth-minimal .auth-pwd-toggle {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset-inline-end: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+.auth-minimal input::-ms-reveal,
+.auth-minimal input::-ms-clear {
+  display: none;
+}
+.auth-minimal .auth-pwd-toggle:hover {
+  background: var(--surface-soft);
+}
+.auth-minimal .auth-pwd-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.auth-social-status {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 8px 0 12px;
+}
+.auth-minimal .auth-social-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.auth-minimal .auth-input-wrap input {
+  min-width: 0;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 56px 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.auth-minimal .auth-input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  outline: none;
+}
+
+.auth-minimal .auth-field {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--text);
+}
+
+.auth-minimal .auth-submit-btn,
+.auth-minimal .btn.primary {
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-minimal .auth-submit-btn:hover:not(:disabled),
+.auth-minimal .btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.38);
+}
+
+.auth-minimal .auth-submit-btn:active:not(:disabled),
+.auth-minimal .btn.primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .auth-minimal .auth-social-btn:focus-visible,
 .auth-minimal .auth-switch-link:focus-visible {
   outline: 3px solid var(--accent);
@@ -61,9 +213,23 @@
 }
 
 @media (max-width: 880px) {
-  .auth-minimal .auth-slide-pane {
-    min-height: 300px;
-    padding-bottom: 88px;
+  .auth-minimal .auth-slide-pane,
+  .auth-minimal .auth-stage.is-register .auth-slide-pane {
+    min-height: 0;
+    padding: 12px 16px;
+  }
+  .auth-minimal .auth-slide-face,
+  .auth-minimal .auth-slide-orbit {
+    display: none;
+  }
+  .auth-minimal .auth-mode-switch {
+    position: static;
+    translate: none;
+    margin: 0 auto;
+  }
+  .auth-minimal .auth-form-pane,
+  .auth-minimal .auth-stage.is-register .auth-form-pane {
+    padding: 20px 18px;
   }
 
   .auth-minimal .auth-slide-face p {

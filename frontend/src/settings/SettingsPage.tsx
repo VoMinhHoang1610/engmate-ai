@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { BieuTuong } from '../components/BieuTuong';
 import { applyTheme, readAppliedTheme, subscribeTheme, type Theme } from '../theme';
 import type { Account } from '../types';
@@ -7,6 +7,8 @@ import { setSpeechRate, useSpeechPreferences } from '../speech/preferences';
 import { dungDoc } from '../speech/audio';
 import { VoiceSettings } from './VoiceSettings';
 import { VoiceDiagnostics } from './VoiceDiagnostics';
+import { applyReducedMotion, readReducedMotion, saveReducedMotion } from './motion';
+import { LearningAccountSummary } from '../learning/LearningAccountSummary';
 
 interface Props {
   account: Account;
@@ -25,24 +27,11 @@ export function SettingsPage({
 }: Props) {
   const theme = useSyncExternalStore(subscribeTheme, readAppliedTheme);
 
-  const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('engmate-reduced-motion') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [reducedMotion, setReducedMotion] = useState(readReducedMotion);
+  useEffect(() => applyReducedMotion(readReducedMotion()), []);
 
   const { rate: speechRate } = useSpeechPreferences();
   const [rateStatus, setRateStatus] = useState('');
-
-  const [soundFeedback, setSoundFeedback] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('engmate-sound-feedback') !== 'false';
-    } catch {
-      return true;
-    }
-  });
 
   function handleThemeChange(nextTheme: Theme) {
     try {
@@ -55,16 +44,7 @@ export function SettingsPage({
 
   function handleMotionChange(checked: boolean) {
     setReducedMotion(checked);
-    try {
-      localStorage.setItem('engmate-reduced-motion', String(checked));
-    } catch {
-      /* ignore */
-    }
-    if (checked) {
-      document.documentElement.classList.add('reduced-motion');
-    } else {
-      document.documentElement.classList.remove('reduced-motion');
-    }
+    saveReducedMotion(checked);
   }
 
   function handleSpeechRateChange(rate: number) {
@@ -77,19 +57,9 @@ export function SettingsPage({
     );
   }
 
-  function handleSoundFeedbackChange(checked: boolean) {
-    setSoundFeedback(checked);
-    try {
-      localStorage.setItem('engmate-sound-feedback', String(checked));
-    } catch {
-      /* ignore */
-    }
-  }
-
   return (
     <div className="settings-page">
       <div className="settings-grid">
-        <VoiceDiagnostics />
         {/* Section 1: Giao diện & Trải nghiệm */}
         <section className="tutor-card settings-card">
           <div className="settings-section-head">
@@ -130,9 +100,10 @@ export function SettingsPage({
               <strong>Giảm chuyển động</strong>
               <span>Tối ưu cho người thích giao diện tĩnh, hạn chế animation.</span>
             </div>
-            <label className="switch-toggle" aria-label="Bật hoặc tắt giảm chuyển động">
+            <label className="switch-toggle">
               <input
                 type="checkbox"
+                aria-label="Bật hoặc tắt giảm chuyển động"
                 checked={reducedMotion}
                 onChange={(e) => handleMotionChange(e.target.checked)}
               />
@@ -185,13 +156,14 @@ export function SettingsPage({
           <div className="settings-item">
             <div className="settings-item-copy">
               <strong>Hiệu ứng âm thanh tương tác</strong>
-              <span>Phát âm thanh nhẹ khi hoàn thành bài hoặc ghi nhận tiến độ.</span>
+              <span>Chưa hỗ trợ. Kết quả học tập hiện được thông báo bằng chữ trên màn hình.</span>
             </div>
-            <label className="switch-toggle" aria-label="Bật hoặc tắt âm thanh tương tác">
+            <label className="switch-toggle">
               <input
                 type="checkbox"
-                checked={soundFeedback}
-                onChange={(e) => handleSoundFeedbackChange(e.target.checked)}
+                aria-label="Bật hoặc tắt âm thanh tương tác"
+                checked={false}
+                disabled
               />
               <span className="slider" />
             </label>
@@ -225,14 +197,14 @@ export function SettingsPage({
 
           <div className="settings-item">
             <div className="settings-item-copy">
-              <strong>Mục tiêu học tập hiện tại</strong>
+              <strong>Mục tiêu giao tiếp trong hồ sơ</strong>
               <span>
                 Mức {learning.level} · {learning.minutes} phút/ngày
               </span>
             </div>
             <div className="settings-actions">
-              <button type="button" className="tutor-button" onClick={onNavigateSetup}>
-                <BieuTuong ten="settings" size={16} /> Đổi mục tiêu
+              <button type="button" className="tutor-button" onClick={onNavigateProfile}>
+                <BieuTuong ten="settings" size={16} /> Đổi mục tiêu giao tiếp
               </button>
             </div>
           </div>
@@ -251,6 +223,12 @@ export function SettingsPage({
             </button>
           </div>
         </section>
+        <LearningAccountSummary onPlan={onNavigateSetup} />
+        <details className="tutor-card settings-card">
+          <summary>Công cụ hỗ trợ nâng cao</summary>
+          <p>Chỉ mở khi bạn cần kiểm tra sự cố thoại hoặc gửi số đo cho người hỗ trợ.</p>
+          <VoiceDiagnostics />
+        </details>
       </div>
     </div>
   );

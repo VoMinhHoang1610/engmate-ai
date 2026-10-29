@@ -32,11 +32,15 @@ html {
   color: #0a0d14;
   color-scheme: light;
   font-family:
-    'Segoe UI',
-    system-ui,
+    'Inter',
     -apple-system,
     BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    system-ui,
     sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
 }
 
@@ -1708,4 +1712,10 @@ html {
   .auth-modern .auth-form-pane {
     padding: 28px 22px;
   }
+}
+
+.landing-story-photo[src='/engmate-mark.svg'] {
+  object-fit: contain;
+  padding: 56px;
+  background: #eef4ff;
 }

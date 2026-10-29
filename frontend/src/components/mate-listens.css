@@ -39,7 +39,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.1em;
   color: var(--mate-muted);
@@ -104,7 +104,7 @@
 }
 .mate-home .mate-home-voice > small {
   align-self: start;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.7;
 }
 .mate-home .mate-suggestions {
@@ -130,7 +130,7 @@
   top: 10px;
   right: 0;
   transform: none;
-  font-size: 11px;
+  font-size: 12px;
   padding: 10px 12px;
 }
 .mate-today-strip {
@@ -158,7 +158,7 @@
   margin-bottom: 5px;
 }
 .mate-today-strip small {
-  font-size: 11px;
+  font-size: 12px;
 }
 .mate-today-strip button {
   display: flex;
@@ -168,7 +168,7 @@
   margin-left: auto;
   background: transparent;
   border: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--mate-accent);
   cursor: pointer;
 }
@@ -258,7 +258,7 @@
 }
 .mate-session-stage .mate-session-caption > p {
   text-align: left;
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(16px, 1.6vw, 20px);
   line-height: 1.5;
 }
 .mate-session-stage .mate-session-wave {
@@ -279,7 +279,7 @@
   background: transparent;
   padding: 0;
   color: var(--workspace-muted);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.14em;
 }
 .workspace-shell .workspace-welcome h1 {
@@ -353,7 +353,7 @@
   display: none;
 }
 .workspace-shell .workspace-starter strong {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--workspace-muted);
   font-weight: 500;
 }
@@ -381,7 +381,7 @@
 }
 .mate-live-eyebrow {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   color: var(--workspace-muted);
   margin-bottom: 24px;
@@ -483,7 +483,7 @@
   margin-top: 22px;
   padding-top: 16px;
   color: var(--workspace-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .workspace-shell .workspace-progress-strip svg {
   color: var(--workspace-primary);
@@ -508,13 +508,13 @@
 .mate-practice-complete small {
   display: block;
   margin-top: 4px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .mate-app .mate-pronunciation-actions {
   flex-wrap: wrap;
 }
 .workspace-shell.workspace-shell.workspace-shell .tutor-live-teacher .mate-current-caption {
-  font-size: clamp(20px, 2.3vw, 28px);
+  font-size: clamp(15px, 1.4vw, 18px);
   color: var(--workspace-text);
   line-height: 1.6;
   overflow-wrap: anywhere;
@@ -602,7 +602,7 @@
     top: 15px;
     right: -5px;
     padding: 8px 10px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .mate-app .mate-session-stage {
     display: flex;
@@ -629,7 +629,7 @@
   }
   .mate-session-stage .mate-session-caption > p {
     text-align: center;
-    font-size: 24px;
+    font-size: 17px;
   }
   .em-orb--session {
     --em-size: 220px;
@@ -736,5 +736,91 @@
   }
   .workspace-shell .workspace-welcome-badge {
     margin-bottom: 10px;
+  }
+}
+
+/* Keep controls reachable on short viewports and when the mobile keyboard opens. */
+.workspace-shell.workspace-shell.workspace-shell .tutor-live-teacher {
+  min-height: 0;
+  overflow-y: auto;
+}
+.workspace-shell .practice-topic {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.workspace-shell .practice-topic span {
+  color: var(--workspace-muted);
+  font-size: 13px;
+}
+@media (max-height: 600px) {
+  .workspace-shell.workspace-shell.workspace-shell .tutor-live-teacher {
+    padding: 12px;
+    gap: 12px;
+  }
+  .tutor-live-teacher > .em-orb {
+    --em-size: 80px;
+  }
+  .mate-live-welcome-orb .em-orb {
+    --em-size: 100px;
+  }
+  .workspace-shell.workspace-shell.workspace-shell .tutor-live-teacher h3 {
+    font-size: 18px;
+  }
+}
+@media (max-width: 767px) {
+  .workspace-shell.workspace-shell.workspace-shell
+    :is(.composer-icon, .composer-send, .workspace-mobile-toggle, .workspace-sidebar-close) {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  .workspace-shell.workspace-shell.workspace-shell .conversation-composer {
+    gap: 4px;
+    padding-inline: 8px;
+  }
+  .workspace-shell.workspace-shell.workspace-shell .tutor-live-teacher .mate-current-caption {
+    font-size: 16px;
+  }
+}
+@media (max-width: 359px) {
+  .workspace-shell.workspace-shell.workspace-shell .conversation-composer {
+    flex-wrap: wrap;
+  }
+  .workspace-shell.workspace-shell.workspace-shell .conversation-composer textarea {
+    flex-basis: 100%;
+  }
+}
+@media (max-height: 500px) {
+  .workspace-shell.workspace-shell.workspace-shell
+    :is(
+      .mate-live-welcome-orb,
+      .workspace-welcome-badge,
+      .workspace-progress-strip,
+      .workspace-starters,
+      .tutor-footer
+    ) {
+    display: none;
+  }
+  .workspace-shell.workspace-shell.workspace-shell
+    .tutor-chat-empty:not([data-voice-active='true'])
+    .chat-messages {
+    justify-content: flex-start;
+    align-content: start;
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+  .workspace-shell .workspace-welcome {
+    flex-shrink: 0;
+  }
+  .workspace-shell .workspace-welcome h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+  }
+  .workspace-shell .mate-start-speaking {
+    min-height: 44px;
+    padding: 10px 16px;
+    margin-top: 8px;
   }
 }

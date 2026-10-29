@@ -13,6 +13,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError, NoSuchTableError
 
 from app.api.chat_routes import router as chat_router
 from app.api.learning_routes import router as learning_router
+from app.api.oauth_routes import router as oauth_router
 from app.api.routes import router
 from app.api.speech_routes import router as speech_router
 from app.api.voice_routes import router as voice_router
@@ -23,6 +24,7 @@ from app.core.voice_timing import VoiceTimingMiddleware
 from app.db.database import Database
 from app.services.blaze_stt import BlazeSTTManager
 from app.services.gemini_voice import GeminiVoiceManager
+from app.services.oauth import OAuthService
 from app.services.realtime import RealtimeManager
 from app.services.speech import VoiceCatalogCache
 
@@ -119,6 +121,8 @@ def create_app(
     )
     application.include_router(router)
     application.include_router(chat_router)
+    application.state.oauth = OAuthService(config)
+    application.include_router(oauth_router)
     application.include_router(learning_router)
     application.include_router(speech_router)
     application.include_router(voice_router)

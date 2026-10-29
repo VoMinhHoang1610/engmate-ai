@@ -101,7 +101,7 @@ export function LessonGuide({
           <h2 id="active-lesson-title">{lesson.title}</h2>
         </div>
         <button className="tutor-button" onClick={onExit} disabled={busy}>
-          Về lộ trình
+          Về thư viện bài học
         </button>
       </header>
       <p className="learning-guide-objective">{lesson.objective}</p>

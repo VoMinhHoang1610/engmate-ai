@@ -17,6 +17,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('theme preference', () => {
+  it('makes the entire navigation label part of the theme button', () => {
+    render(<ThemeToggle navigation />);
+    const button = screen.getByRole('button', { name: 'Chuyển sang giao diện tối' });
+    expect(button).toHaveClass('workspace-nav-item');
+    expect(button).toContainElement(screen.getByText('Giao diện'));
+    fireEvent.click(screen.getByText('Giao diện'));
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  });
   it('toggles both directions, updates the root and persists the preference', () => {
     render(<ThemeToggle />);
     fireEvent.click(screen.getByRole('button', { name: 'Chuyển sang giao diện tối' }));

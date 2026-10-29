@@ -42,29 +42,44 @@ afterEach(() => {
 });
 
 describe('workspace navigation', () => {
-  it('starts as a rail, expands on hover, and keeps expansion while pinned', () => {
+  it('starts pinned and only collapses after the learner unpins it', () => {
     const { rail } = open();
-    expect(rail).toHaveAttribute('data-expanded', 'false');
+    expect(rail).toHaveAttribute('data-expanded', 'true');
     expect(screen.queryByRole('button', { name: 'Mở menu điều hướng' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Đóng thanh bên' })).not.toBeInTheDocument();
     fireEvent.mouseEnter(rail);
     expect(rail).toHaveAttribute('data-expanded', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Ghim thanh bên' }));
     fireEvent.mouseLeave(rail);
     expect(rail).toHaveAttribute('data-expanded', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Bỏ ghim thanh bên' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Thu gọn thanh bên' }));
     expect(rail).toHaveAttribute('data-expanded', 'false');
   });
 
-  it('expands for keyboard focus and collapses when focus leaves the rail', () => {
-    const { rail } = open();
+  it('keeps the logo as the collapsed expand control and ignores hover and focus', () => {
+    const { rail, props } = open();
+    fireEvent.click(screen.getByRole('button', { name: 'Thu gọn thanh bên' }));
     const outside = document.createElement('button');
     outside.textContent = 'Nội dung học';
     document.body.append(outside);
     act(() => screen.getByRole('button', { name: 'Lộ trình' }).focus());
-    expect(rail).toHaveAttribute('data-expanded', 'true');
+    expect(rail).toHaveAttribute('data-expanded', 'false');
+    fireEvent.mouseEnter(rail);
+    expect(rail).toHaveAttribute('data-expanded', 'false');
+    fireEvent.mouseLeave(rail);
     act(() => outside.focus());
     expect(rail).toHaveAttribute('data-expanded', 'false');
+    const toggle = screen.getByRole('button', { name: 'Mở rộng thanh bên' });
+    expect(toggle).toHaveClass('workspace-sidebar-brand');
+    expect(within(toggle).getByRole('img', { name: 'EngMate AI' })).toBeInTheDocument();
+    expect(rail.querySelector('.workspace-sidebar-toggle')).not.toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(rail).toHaveAttribute('data-expanded', 'true');
+    expect(props.onOpenLanding).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Thu gọn thanh bên' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
     outside.remove();
   });
 
@@ -145,7 +160,7 @@ describe('mobile navigation drawer', () => {
     fireEvent.click(trigger);
     const drawer = screen.getByRole('dialog', { name: 'Menu học tập' });
     expect(drawer).toHaveAttribute('aria-modal', 'true');
-    expect(screen.queryByRole('button', { name: 'Ghim thanh bên' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mở rộng thanh bên' })).not.toBeInTheDocument();
     expect(document.body.style.overflow).toBe('hidden');
     const first = within(drawer).getByRole('button', { name: 'EngMate AI · Trang giới thiệu' });
     const last = within(drawer).getByRole('button', { name: 'Đăng xuất' });
