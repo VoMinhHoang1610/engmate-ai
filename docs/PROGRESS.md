@@ -1,5 +1,49 @@
 # Nhật ký tiến trình EngMate-AI
 
+## 2026-10-29 — Tách thay đổi giao diện khỏi develop
+
+- Chuyển bảy file CSS và nhật ký giao diện đang sửa trên `develop` sang nhánh
+  `giao-dien/tinh-chinh-giao-dien-20261029`; giữ nội dung sửa giao diện, chuẩn hóa
+  định dạng bốn file CSS theo Prettier.
+- `develop` và `origin/develop` cùng ở `dd0aab3` sau fetch; không có commit
+  giao diện mới cần hoàn tác trên nhánh dùng chung.
+- Kiểm chứng: backend lint/type-check và frontend ESLint/TypeScript qua ở lần
+  commit đầu; Prettier phát hiện bốn file cần định dạng. Commit được kiểm tra
+  lại bằng hook sau khi chuẩn hóa. Không chạy lại test/coverage hoặc đánh giá
+  trực quan trong tác vụ chỉ tách nhánh này; các kết quả của đợt sửa giao diện
+  bên dưới là nhật ký có sẵn.
+- Tiếp theo: tiếp tục rà soát giao diện trên nhánh riêng trước khi đề xuất merge.
+
+## 2026-10-29 — Làm đẹp và tinh chỉnh toàn diện giao diện EngMate-AI
+
+- **Yêu cầu:** Giữ nguyên phong cách thương hiệu hiện tại (brand identity, tone màu xanh dương/tím/xanh ngọc, linh thú Mate, font Inter), rà soát toàn bộ các giao diện tìm các điểm còn thô/xấu và làm đẹp.
+- **Rà soát & Điểm đã cải tiến:**
+  1. **Không gian làm việc chính & Sidebar (`workspace.css`):**
+     - Thay thế các thuộc tính phẳng `box-shadow: none` và `transform: none` thành hệ thống đổ bóng đa tầng tinh tế (`0 4px 20px -2px rgba(15, 23, 42, 0.05)`) kết hợp bo góc mềm mại 16px cho toàn bộ cards, panels.
+     - Nâng cấp button & action chips: gradient primary sang trọng, hiệu ứng hover nhấc nhẹ (`translateY(-1px)`), đổ bóng động có chiều sâu.
+     - Nâng cấp ô nhập liệu (inputs, select, textarea): bo góc 10px, padding cân đối, hiệu ứng focus ring êm dịu `rgba(37, 99, 235, 0.16)`.
+     - Chấm trạng thái kết nối (`.workspace-status > i`): bổ sung animation xung nhịp (pulse animation) tạo cảm giác AI đang hoạt động thời gian thực.
+     - Khung soạn thảo tin nhắn (`.conversation-composer`): thiết kế floating pill dock cao cấp, hover & focus mượt mà.
+     - Bong bóng tin nhắn người dùng: bo góc uốn lượn hiện đại (`16px 16px 4px 16px`), viền mảnh và bóng đổ dịu mắt.
+     - Bổ sung thanh cuộn thanh mảnh (sleek modern custom scrollbar) cho toàn bộ workspace.
+  2. **Trang Giới thiệu (`landing.css`):**
+     - Chuẩn hóa typography sang font `Inter` kết hợp font-smoothing antialiased.
+  3. **Trang Đăng nhập / Đăng ký (`auth-restored.css`):**
+     - Nâng cấp các nút đăng nhập mạng xã hội (Google, GitHub, Facebook) với bóng đổ tinh tế, hover lift nhẹ và viền chuyển tiếp mượt mà.
+     - Trau chuốt ô nhập mật khẩu/tài khoản và nút submit tạo tài khoản/đăng nhập.
+  4. **Lộ trình học & Luyện thi (`learning.css`):**
+     - Thẻ Stage chọn bài học: hiệu ứng nâng nhẹ, bóng đổ có chiều sâu, trạng thái đang chọn viền sáng mềm.
+     - Hàng bài học (`.learning-lesson-row`): hover trượt ngang nhẹ (`translateX(4px)`), badge hoàn thành có nền xanh ngọc tươi mới.
+  5. **Hồ sơ cá nhân & Cài đặt (`profile.css`, `voice-settings.css`):**
+     - Khung ảnh đại diện (Avatar): viền halo gradient kép sang trọng, hiệu ứng hover phóng to nhẹ.
+     - Thẻ chọn giọng đọc (`.voice-choice`): bo góc 14px, badge ngôn ngữ EN/VI dạng pill sắc nét, nút Preview nghe thử với hover lift.
+  6. **Danh sách lịch sử hội thoại (`index.css`):**
+     - Thẻ mục lịch sử (`.history-item`): bổ sung hiệu ứng transition chuyển màu mượt mà khi di chuột và kích hoạt.
+- **Kiểm chứng:**
+  - TypeScript strict (`tsc --noEmit`): 0 lỗi.
+  - Production build (`vite build`): hoàn tất thành công trong 30.5s (2477 modules), 0 lỗi.
+  - Vitest component tests: toàn bộ test liên quan giao diện đều PASS 100%, không làm hỏng bất kỳ test ID, role hay assertion nào.
+
 ## 2026-10-26 — Rà soát trước commit và hợp nhất develop
 
 - **Phạm vi:** rà soát thay đổi backend/frontend, tài khoản và quyền sở hữu,

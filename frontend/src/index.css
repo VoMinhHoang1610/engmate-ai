@@ -21,6 +21,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--text);
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .history-item:hover,
 .history-item.active {
