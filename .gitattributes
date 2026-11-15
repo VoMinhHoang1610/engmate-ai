@@ -1,3 +1,10 @@
 * text=auto eol=lf
 *.cmd text eol=crlf
 *.png binary
+
+# Scope-eval locks hash exact bytes; preserve the recorded line endings.
+backend/evals/scope/manifest.json -text !eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+backend/evals/scope/results/final-default-vi-20261113/full/attempts.jsonl -text !eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+backend/evals/scope/results/final-default-vi-20261113/full/results.jsonl -text !eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+backend/evals/scope/results/judge-approved-20261115*/**/*.json -text !eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+backend/evals/scope/results/judge-approved-20261115*/**/*.jsonl -text !eol whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
