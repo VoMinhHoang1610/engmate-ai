@@ -1,0 +1,1577 @@
+{
+  "date": "2026-11-15",
+  "model": "gemini-3.5-flash-lite",
+  "main_slots": 221,
+  "request_budget": 442,
+  "historical_judge_request_cap": 1296,
+  "prompt_sha256": "e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680",
+  "corpus_sha256": "506b2c9b1a9807e5218b594d53002f9f7d3f182a34e8ae9002fc8ab99fe6bd4c",
+  "rubric_sha256": "8227a0d38ae4f0671eb03a4fd5e60dab808e927d66b5a689b333a9341016eb75",
+  "runner_sha256": "c9971dc44834bce4b86f446f0809b059def95d04574b325894fb6325bfc7f7c8",
+  "source_hashes": {
+    "attempts.jsonl": "489064b23341d862fc98fe3a8ef06fab23dd5ddf5228545f23ac4467589ca33d",
+    "results.jsonl": "c6fdfb2ba242afcff6aecc9c9c92af4ef88c55bcfb0b0bb0675668cd602964c8"
+  },
+  "interval_seconds": 6,
+  "max_output_tokens": 2048,
+  "temperature": "provider_default",
+  "authorization": "user_approved_rubric_and_same_old_model_budget_20261115",
+  "generation_calls": 0,
+  "blaze_calls": 0,
+  "slots": [
+    {
+      "review_id": "J0002",
+      "slot": 82,
+      "case_id": "out_of_scope-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0003",
+      "slot": 83,
+      "case_id": "out_of_scope-003",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0004",
+      "slot": 84,
+      "case_id": "out_of_scope-004",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0005",
+      "slot": 85,
+      "case_id": "out_of_scope-005",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0006",
+      "slot": 86,
+      "case_id": "out_of_scope-006",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0007",
+      "slot": 87,
+      "case_id": "out_of_scope-007",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0008",
+      "slot": 88,
+      "case_id": "out_of_scope-008",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0009",
+      "slot": 89,
+      "case_id": "out_of_scope-009",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0010",
+      "slot": 90,
+      "case_id": "out_of_scope-010",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0011",
+      "slot": 91,
+      "case_id": "out_of_scope-011",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0012",
+      "slot": 92,
+      "case_id": "out_of_scope-012",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0013",
+      "slot": 93,
+      "case_id": "out_of_scope-013",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0014",
+      "slot": 94,
+      "case_id": "out_of_scope-014",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0015",
+      "slot": 95,
+      "case_id": "out_of_scope-015",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0016",
+      "slot": 96,
+      "case_id": "out_of_scope-016",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0017",
+      "slot": 97,
+      "case_id": "out_of_scope-017",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0018",
+      "slot": 98,
+      "case_id": "out_of_scope-018",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0019",
+      "slot": 99,
+      "case_id": "out_of_scope-019",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0020",
+      "slot": 100,
+      "case_id": "out_of_scope-020",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0021",
+      "slot": 101,
+      "case_id": "out_of_scope-021",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0022",
+      "slot": 102,
+      "case_id": "out_of_scope-022",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0023",
+      "slot": 103,
+      "case_id": "out_of_scope-023",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0024",
+      "slot": 104,
+      "case_id": "out_of_scope-024",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0025",
+      "slot": 105,
+      "case_id": "out_of_scope-025",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0026",
+      "slot": 106,
+      "case_id": "out_of_scope-026",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0027",
+      "slot": 107,
+      "case_id": "out_of_scope-027",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0028",
+      "slot": 108,
+      "case_id": "out_of_scope-028",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0029",
+      "slot": 109,
+      "case_id": "out_of_scope-029",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0030",
+      "slot": 110,
+      "case_id": "out_of_scope-030",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0031",
+      "slot": 111,
+      "case_id": "out_of_scope-031",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0032",
+      "slot": 112,
+      "case_id": "out_of_scope-032",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0033",
+      "slot": 113,
+      "case_id": "out_of_scope-033",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0034",
+      "slot": 114,
+      "case_id": "out_of_scope-034",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0035",
+      "slot": 115,
+      "case_id": "out_of_scope-035",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0036",
+      "slot": 116,
+      "case_id": "out_of_scope-036",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0037",
+      "slot": 117,
+      "case_id": "out_of_scope-037",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0038",
+      "slot": 118,
+      "case_id": "out_of_scope-038",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0039",
+      "slot": 119,
+      "case_id": "out_of_scope-039",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0040",
+      "slot": 120,
+      "case_id": "out_of_scope-040",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0041",
+      "slot": 121,
+      "case_id": "out_of_scope-041",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0042",
+      "slot": 122,
+      "case_id": "out_of_scope-042",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0043",
+      "slot": 123,
+      "case_id": "out_of_scope-043",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0044",
+      "slot": 124,
+      "case_id": "out_of_scope-044",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0045",
+      "slot": 125,
+      "case_id": "out_of_scope-045",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0046",
+      "slot": 126,
+      "case_id": "out_of_scope-046",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0047",
+      "slot": 127,
+      "case_id": "out_of_scope-047",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0048",
+      "slot": 128,
+      "case_id": "out_of_scope-048",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0049",
+      "slot": 129,
+      "case_id": "out_of_scope-049",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0050",
+      "slot": 130,
+      "case_id": "out_of_scope-050",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0051",
+      "slot": 131,
+      "case_id": "out_of_scope-051",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0052",
+      "slot": 132,
+      "case_id": "out_of_scope-052",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0053",
+      "slot": 133,
+      "case_id": "out_of_scope-053",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0054",
+      "slot": 134,
+      "case_id": "out_of_scope-054",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0055",
+      "slot": 135,
+      "case_id": "out_of_scope-055",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0056",
+      "slot": 136,
+      "case_id": "out_of_scope-056",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0057",
+      "slot": 137,
+      "case_id": "out_of_scope-057",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0058",
+      "slot": 138,
+      "case_id": "out_of_scope-058",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0059",
+      "slot": 139,
+      "case_id": "out_of_scope-059",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0060",
+      "slot": 140,
+      "case_id": "out_of_scope-060",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0061",
+      "slot": 141,
+      "case_id": "adversarial-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0062",
+      "slot": 142,
+      "case_id": "adversarial-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0063",
+      "slot": 143,
+      "case_id": "adversarial-003",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0064",
+      "slot": 144,
+      "case_id": "adversarial-004",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0065",
+      "slot": 145,
+      "case_id": "adversarial-005",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0066",
+      "slot": 146,
+      "case_id": "adversarial-006",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0067",
+      "slot": 147,
+      "case_id": "adversarial-007",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0068",
+      "slot": 148,
+      "case_id": "adversarial-008",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0069",
+      "slot": 149,
+      "case_id": "adversarial-009",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0070",
+      "slot": 150,
+      "case_id": "adversarial-010",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0071",
+      "slot": 151,
+      "case_id": "adversarial-011",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0072",
+      "slot": 152,
+      "case_id": "adversarial-012",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0073",
+      "slot": 153,
+      "case_id": "adversarial-013",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0074",
+      "slot": 154,
+      "case_id": "adversarial-014",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0075",
+      "slot": 155,
+      "case_id": "adversarial-015",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0076",
+      "slot": 156,
+      "case_id": "adversarial-016",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0077",
+      "slot": 157,
+      "case_id": "adversarial-017",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0078",
+      "slot": 158,
+      "case_id": "adversarial-018",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0079",
+      "slot": 159,
+      "case_id": "adversarial-019",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0080",
+      "slot": 160,
+      "case_id": "adversarial-020",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0081",
+      "slot": 161,
+      "case_id": "adversarial-021",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0082",
+      "slot": 162,
+      "case_id": "adversarial-022",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0083",
+      "slot": 163,
+      "case_id": "adversarial-023",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0084",
+      "slot": 164,
+      "case_id": "adversarial-024",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0085",
+      "slot": 165,
+      "case_id": "adversarial-025",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0086",
+      "slot": 166,
+      "case_id": "adversarial-026",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0087",
+      "slot": 167,
+      "case_id": "adversarial-027",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0088",
+      "slot": 168,
+      "case_id": "adversarial-028",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0089",
+      "slot": 169,
+      "case_id": "adversarial-029",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0090",
+      "slot": 170,
+      "case_id": "adversarial-030",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0091",
+      "slot": 186,
+      "case_id": "safety-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0092",
+      "slot": 187,
+      "case_id": "safety-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0093",
+      "slot": 188,
+      "case_id": "safety-003",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0094",
+      "slot": 189,
+      "case_id": "safety-004",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0095",
+      "slot": 190,
+      "case_id": "safety-005",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0096",
+      "slot": 191,
+      "case_id": "safety-006",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0097",
+      "slot": 192,
+      "case_id": "safety-007",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0098",
+      "slot": 193,
+      "case_id": "safety-008",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0099",
+      "slot": 194,
+      "case_id": "safety-009",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0100",
+      "slot": 221,
+      "case_id": "revision-identity-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0101",
+      "slot": 222,
+      "case_id": "revision-identity-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0102",
+      "slot": 223,
+      "case_id": "revision-identity-003",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0103",
+      "slot": 224,
+      "case_id": "revision-identity-004",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0104",
+      "slot": 225,
+      "case_id": "revision-identity-005",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0105",
+      "slot": 226,
+      "case_id": "revision-identity-006",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0106",
+      "slot": 227,
+      "case_id": "revision-checkpoint-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0107",
+      "slot": 228,
+      "case_id": "revision-checkpoint-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0108",
+      "slot": 231,
+      "case_id": "revision-out_of_scope-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0109",
+      "slot": 232,
+      "case_id": "revision-out_of_scope-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0110",
+      "slot": 237,
+      "case_id": "revision-safety-001",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0111",
+      "slot": 238,
+      "case_id": "revision-safety-002",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0112",
+      "slot": 239,
+      "case_id": "refusal-language-A1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0113",
+      "slot": 240,
+      "case_id": "refusal-language-A1-voice",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0114",
+      "slot": 241,
+      "case_id": "refusal-language-B1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0115",
+      "slot": 242,
+      "case_id": "refusal-language-B1-voice",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0116",
+      "slot": 243,
+      "case_id": "refusal-language-C1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0117",
+      "slot": 244,
+      "case_id": "refusal-language-C1-voice",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0118",
+      "slot": 245,
+      "case_id": "refusal-english-conversation-A1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0119",
+      "slot": 246,
+      "case_id": "refusal-english-conversation-B1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0120",
+      "slot": 247,
+      "case_id": "refusal-english-conversation-C1-text",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0121",
+      "slot": 248,
+      "case_id": "refusal-english-conversation-B1-voice",
+      "version": "persona.v7",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0122",
+      "slot": 249,
+      "case_id": "out_of_scope-001",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0123",
+      "slot": 250,
+      "case_id": "out_of_scope-002",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0124",
+      "slot": 251,
+      "case_id": "out_of_scope-003",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0125",
+      "slot": 252,
+      "case_id": "out_of_scope-004",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0126",
+      "slot": 253,
+      "case_id": "out_of_scope-005",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0127",
+      "slot": 254,
+      "case_id": "out_of_scope-006",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0128",
+      "slot": 255,
+      "case_id": "out_of_scope-007",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0129",
+      "slot": 256,
+      "case_id": "out_of_scope-008",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0130",
+      "slot": 257,
+      "case_id": "out_of_scope-009",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0131",
+      "slot": 258,
+      "case_id": "out_of_scope-010",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0132",
+      "slot": 259,
+      "case_id": "out_of_scope-011",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0133",
+      "slot": 260,
+      "case_id": "out_of_scope-012",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0134",
+      "slot": 261,
+      "case_id": "out_of_scope-013",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0135",
+      "slot": 262,
+      "case_id": "out_of_scope-014",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0136",
+      "slot": 263,
+      "case_id": "out_of_scope-015",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0137",
+      "slot": 264,
+      "case_id": "out_of_scope-016",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0138",
+      "slot": 265,
+      "case_id": "out_of_scope-017",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0139",
+      "slot": 266,
+      "case_id": "out_of_scope-018",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0140",
+      "slot": 267,
+      "case_id": "out_of_scope-019",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0141",
+      "slot": 268,
+      "case_id": "out_of_scope-020",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0142",
+      "slot": 269,
+      "case_id": "out_of_scope-021",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0143",
+      "slot": 270,
+      "case_id": "out_of_scope-022",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0144",
+      "slot": 271,
+      "case_id": "out_of_scope-023",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0145",
+      "slot": 272,
+      "case_id": "out_of_scope-024",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0146",
+      "slot": 273,
+      "case_id": "out_of_scope-025",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0147",
+      "slot": 274,
+      "case_id": "out_of_scope-026",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0148",
+      "slot": 275,
+      "case_id": "out_of_scope-027",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0149",
+      "slot": 276,
+      "case_id": "out_of_scope-028",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0150",
+      "slot": 277,
+      "case_id": "out_of_scope-029",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0151",
+      "slot": 278,
+      "case_id": "out_of_scope-030",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0152",
+      "slot": 279,
+      "case_id": "out_of_scope-031",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0153",
+      "slot": 280,
+      "case_id": "out_of_scope-032",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0154",
+      "slot": 281,
+      "case_id": "out_of_scope-033",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0155",
+      "slot": 282,
+      "case_id": "out_of_scope-034",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0156",
+      "slot": 283,
+      "case_id": "out_of_scope-035",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0157",
+      "slot": 284,
+      "case_id": "out_of_scope-036",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0158",
+      "slot": 285,
+      "case_id": "out_of_scope-037",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0159",
+      "slot": 286,
+      "case_id": "out_of_scope-038",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0160",
+      "slot": 287,
+      "case_id": "out_of_scope-039",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0161",
+      "slot": 288,
+      "case_id": "out_of_scope-040",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0162",
+      "slot": 289,
+      "case_id": "out_of_scope-041",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0163",
+      "slot": 290,
+      "case_id": "out_of_scope-042",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0164",
+      "slot": 291,
+      "case_id": "out_of_scope-043",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0165",
+      "slot": 292,
+      "case_id": "out_of_scope-044",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0166",
+      "slot": 293,
+      "case_id": "out_of_scope-045",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0167",
+      "slot": 294,
+      "case_id": "out_of_scope-046",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0168",
+      "slot": 295,
+      "case_id": "out_of_scope-047",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0169",
+      "slot": 296,
+      "case_id": "out_of_scope-048",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0170",
+      "slot": 297,
+      "case_id": "out_of_scope-049",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0171",
+      "slot": 298,
+      "case_id": "out_of_scope-050",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0172",
+      "slot": 299,
+      "case_id": "out_of_scope-051",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0173",
+      "slot": 300,
+      "case_id": "out_of_scope-052",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0174",
+      "slot": 301,
+      "case_id": "out_of_scope-053",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0175",
+      "slot": 302,
+      "case_id": "out_of_scope-054",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0176",
+      "slot": 303,
+      "case_id": "out_of_scope-055",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0177",
+      "slot": 304,
+      "case_id": "out_of_scope-056",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0178",
+      "slot": 305,
+      "case_id": "out_of_scope-057",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0179",
+      "slot": 306,
+      "case_id": "out_of_scope-058",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0180",
+      "slot": 307,
+      "case_id": "out_of_scope-059",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0181",
+      "slot": 308,
+      "case_id": "out_of_scope-060",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0182",
+      "slot": 309,
+      "case_id": "adversarial-001",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0183",
+      "slot": 310,
+      "case_id": "adversarial-002",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0184",
+      "slot": 311,
+      "case_id": "adversarial-003",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0185",
+      "slot": 312,
+      "case_id": "adversarial-004",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0186",
+      "slot": 313,
+      "case_id": "adversarial-005",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0187",
+      "slot": 314,
+      "case_id": "adversarial-006",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0188",
+      "slot": 315,
+      "case_id": "adversarial-007",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0189",
+      "slot": 316,
+      "case_id": "adversarial-008",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0190",
+      "slot": 317,
+      "case_id": "adversarial-009",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0191",
+      "slot": 318,
+      "case_id": "adversarial-010",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0192",
+      "slot": 319,
+      "case_id": "adversarial-011",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0193",
+      "slot": 320,
+      "case_id": "adversarial-012",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0194",
+      "slot": 321,
+      "case_id": "adversarial-013",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0195",
+      "slot": 322,
+      "case_id": "adversarial-014",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0196",
+      "slot": 323,
+      "case_id": "adversarial-015",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0197",
+      "slot": 324,
+      "case_id": "adversarial-016",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0198",
+      "slot": 325,
+      "case_id": "adversarial-017",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0199",
+      "slot": 326,
+      "case_id": "adversarial-018",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0200",
+      "slot": 327,
+      "case_id": "adversarial-019",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0201",
+      "slot": 328,
+      "case_id": "adversarial-020",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0202",
+      "slot": 329,
+      "case_id": "adversarial-021",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0203",
+      "slot": 330,
+      "case_id": "adversarial-022",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0204",
+      "slot": 331,
+      "case_id": "adversarial-023",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0205",
+      "slot": 332,
+      "case_id": "adversarial-024",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0206",
+      "slot": 333,
+      "case_id": "adversarial-025",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0207",
+      "slot": 334,
+      "case_id": "adversarial-026",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0208",
+      "slot": 335,
+      "case_id": "adversarial-027",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0209",
+      "slot": 336,
+      "case_id": "adversarial-028",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0210",
+      "slot": 337,
+      "case_id": "adversarial-029",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0211",
+      "slot": 338,
+      "case_id": "adversarial-030",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0212",
+      "slot": 339,
+      "case_id": "revision-out_of_scope-001",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0213",
+      "slot": 340,
+      "case_id": "revision-out_of_scope-002",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0214",
+      "slot": 341,
+      "case_id": "refusal-language-A1-text",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0215",
+      "slot": 342,
+      "case_id": "refusal-language-A1-voice",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0216",
+      "slot": 344,
+      "case_id": "refusal-language-B1-voice",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0217",
+      "slot": 345,
+      "case_id": "refusal-language-C1-text",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0218",
+      "slot": 346,
+      "case_id": "refusal-language-C1-voice",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0219",
+      "slot": 347,
+      "case_id": "refusal-english-conversation-A1-text",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0220",
+      "slot": 348,
+      "case_id": "refusal-english-conversation-B1-text",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0221",
+      "slot": 349,
+      "case_id": "refusal-english-conversation-C1-text",
+      "version": "persona.v6",
+      "repetition": 1
+    },
+    {
+      "review_id": "J0222",
+      "slot": 350,
+      "case_id": "refusal-english-conversation-B1-voice",
+      "version": "persona.v6",
+      "repetition": 1
+    }
+  ],
+  "prior_judge_requests": 1,
+  "combined_request_ceiling": 443,
+  "parent_hashes": {
+    "LOCK.json": "0c7cddc358920cfad510cb7307543eeed055e3e87b997d74258b234412cdb0f2",
+    "attempts.jsonl": "16618ecd94b2ed345dd573b07b935139b3ff0542deb52863b634db5eecae79aa",
+    "results.jsonl": "f950d924f67bcaa3610ffdc94e9713303cac87ea7cf66cebd9fbe1b0e372c078"
+  }
+}

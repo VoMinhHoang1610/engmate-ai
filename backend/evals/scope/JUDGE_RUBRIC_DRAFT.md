@@ -1,11 +1,18 @@
-# Rubric judge — BẢN NHÁP, CHƯA ĐƯỢC DUYỆT CHẠY
+# Rubric judge — đã duyệt 15/11/2026
 
-Rà ngày 15/11/2026. Dùng để người dùng xem trước, **không có lời gọi judge**.
+Người dùng đã duyệt rubric và yêu cầu dùng model/ngân sách “như cũ” ngày
+15/11/2026. Chốt model `gemini-3.5-flash-lite`, phạm vi judge cũ gồm
+out_of_scope/adversarial/safety/checkpoint/identity. Có 222 phản hồi sẵn có:
+222 lượt chấm đầu, tối đa 444 request gồm một retry 502/lượt, dưới trần cũ
+648 lượt/1.296 request. Không chấm dữ liệu chưa có, không chạy lại sinh.
+Gặp 429 dừng ngay; không tự resume. Đây là lượt chấm đầu bằng cùng họ model,
+có nguy cơ tự thiên lệch; không thay chấm tay hoặc nghiệm thu.
 Chính sách mục tiêu: persona.v7 SHA-256
 `e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
 Áp dụng cùng chính sách mục tiêu khi đối chiếu v6/v7; v6 là baseline.
 Kết quả judge tương lai chỉ là lượt chấm đầu, không thay giáo viên hoặc
-quyết định nghiệm thu. Model/budget judge cần duyệt riêng, chưa cấu hình.
+quyết định nghiệm thu. Quyền này chỉ cho judge phạm vi/trần nêu trên;
+không cấp quyền resume chiến dịch sinh hoặc đổi model/ngân sách khác.
 
 Đầu vào dự kiến: ID/nhóm/mode/level, user message, history, phase, lesson
 context đã bỏ checks, expected/must/must_not, phản hồi và cờ tự động.
@@ -46,9 +53,9 @@ chỉ chặn trên 45 từ do chương trình tính; không trừ vì câu dư�
 Đầu ra dự kiến: ID, repetition, version, từng tiêu chí, kết luận
 `pass/fail/uncertain/no_data`, một lý do ngắn và trích đoạn bằng chứng;
 không yêu cầu chuỗi suy luận. Mọi `fail/uncertain` vào phiếu giáo viên,
-cộng mẫu ngẫu nhiên ≥20% mỗi nhóm. Chưa được triển khai runner judge.
+cộng mẫu ngẫu nhiên ≥20% mỗi nhóm. Runner judge riêng không đổi runner sinh đã khóa.
 
-## Phiếu mới và cách tổng hợp chờ duyệt
+## Phiếu mới và cách tổng hợp đã duyệt
 
 [215 phản hồi cần chấm](results/available-review-20261114/manual_review.csv)
 lấy từ 422 phản hồi đã có. Bao gồm mọi lượt safety, identity, checkpoint,
@@ -82,6 +89,7 @@ toàn corpus; báo theo nhóm/version và phân biệt mẫu ngẫu nhiên với
 }
 ```
 
-Đây là ví dụ schema, không phải điểm đã chấm. Duyệt rubric không tự cho phép
-gọi API: model judge, số lượt, ngân sách và xử lý dữ liệu cần được duyệt trước
-khi xây/chạy runner. **Hiện tại 0 judge calls; dừng chờ người dùng duyệt.**
+Đây là ví dụ schema, không phải điểm đã chấm. Cấu hình thực thi hiện được chốt
+ở đầu tài liệu theo trả lời “như cũ”; xem ledger/summary của runner riêng để biết
+số gọi thật, không suy ra đã chạy từ việc được duyệt. Phiếu tay 215 phản hồi vẫn
+giữ nguyên; judge chỉ xét năm nhóm cũ (222 phản hồi), không tự mở rộng sang nhóm khác.

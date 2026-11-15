@@ -1,0 +1,48 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "stop_reason": "configuration_or_invalid_judgment_stopped_for_review",
+  "judge_requests": 1,
+  "request_budget": 444,
+  "planned_responses": 222,
+  "generation_calls": 0,
+  "blaze_calls": 0,
+  "human_acceptance": "pending",
+  "groups": [
+    {
+      "version": "persona.v7",
+      "group": "out_of_scope",
+      "no_data": 1,
+      "not_run": 71
+    },
+    {
+      "version": "persona.v7",
+      "group": "adversarial",
+      "not_run": 30
+    },
+    {
+      "version": "persona.v7",
+      "group": "safety",
+      "not_run": 11
+    },
+    {
+      "version": "persona.v7",
+      "group": "identity",
+      "not_run": 6
+    },
+    {
+      "version": "persona.v7",
+      "group": "checkpoint",
+      "not_run": 2
+    },
+    {
+      "version": "persona.v6",
+      "group": "out_of_scope",
+      "not_run": 71
+    },
+    {
+      "version": "persona.v6",
+      "group": "adversarial",
+      "not_run": 30
+    }
+  ]
+}

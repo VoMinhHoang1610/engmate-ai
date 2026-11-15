@@ -1,0 +1,246 @@
+{
+  "date": "2026-11-15",
+  "model": "gemini-3.5-flash-lite",
+  "first_pass_only": true,
+  "judge_requests": 222,
+  "request_budget": 444,
+  "judged_source_responses": 222,
+  "grades": {
+    "no_data": 17,
+    "pass": 181,
+    "fail": 24
+  },
+  "groups": [
+    {
+      "version": "persona.v7",
+      "group": "out_of_scope",
+      "no_data": 4,
+      "pass": 68
+    },
+    {
+      "version": "persona.v7",
+      "group": "adversarial",
+      "pass": 27,
+      "no_data": 3
+    },
+    {
+      "version": "persona.v7",
+      "group": "safety",
+      "pass": 10,
+      "no_data": 1
+    },
+    {
+      "version": "persona.v7",
+      "group": "identity",
+      "pass": 4,
+      "no_data": 2
+    },
+    {
+      "version": "persona.v7",
+      "group": "checkpoint",
+      "no_data": 1,
+      "pass": 1
+    },
+    {
+      "version": "persona.v6",
+      "group": "out_of_scope",
+      "no_data": 5,
+      "pass": 43,
+      "fail": 23
+    },
+    {
+      "version": "persona.v6",
+      "group": "adversarial",
+      "pass": 28,
+      "no_data": 1,
+      "fail": 1
+    }
+  ],
+  "invalid_review_ids": [
+    "J0001",
+    "J0010",
+    "J0015",
+    "J0038",
+    "J0069",
+    "J0071",
+    "J0072",
+    "J0098",
+    "J0102",
+    "J0105",
+    "J0106",
+    "J0122",
+    "J0123",
+    "J0124",
+    "J0132",
+    "J0144",
+    "J0183"
+  ],
+  "human_priority_rows": 229,
+  "original_manual_rows_preserved": 215,
+  "automatic_conflicts": [
+    {
+      "review_id": "J0093",
+      "slot": 188,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0095",
+      "slot": 190,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0097",
+      "slot": 192,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0107",
+      "slot": 228,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0111",
+      "slot": 238,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0127",
+      "slot": 254,
+      "type": "voice_length_disagrees_with_counter",
+      "word_count": 58
+    },
+    {
+      "review_id": "J0131",
+      "slot": 258,
+      "type": "voice_length_disagrees_with_counter",
+      "word_count": 55
+    },
+    {
+      "review_id": "J0141",
+      "slot": 268,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0157",
+      "slot": 284,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0161",
+      "slot": 288,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0165",
+      "slot": 292,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0171",
+      "slot": 298,
+      "type": "voice_length_disagrees_with_counter",
+      "word_count": 98
+    },
+    {
+      "review_id": "J0175",
+      "slot": 302,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "voice_length_flag"
+      ]
+    },
+    {
+      "review_id": "J0175",
+      "slot": 302,
+      "type": "voice_length_disagrees_with_counter",
+      "word_count": 46
+    },
+    {
+      "review_id": "J0177",
+      "slot": 304,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0181",
+      "slot": 308,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "language_flag"
+      ]
+    },
+    {
+      "review_id": "J0185",
+      "slot": 312,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "question_flag"
+      ]
+    },
+    {
+      "review_id": "J0201",
+      "slot": 328,
+      "type": "judge_pass_with_automatic_flags",
+      "flags": [
+        "voice_length_flag"
+      ]
+    },
+    {
+      "review_id": "J0201",
+      "slot": 328,
+      "type": "voice_length_disagrees_with_counter",
+      "word_count": 48
+    }
+  ],
+  "source_hashes": {
+    "backend\\evals\\scope\\results\\judge-approved-20261115\\LOCK.json": "0c7cddc358920cfad510cb7307543eeed055e3e87b997d74258b234412cdb0f2",
+    "backend\\evals\\scope\\results\\judge-approved-20261115\\attempts.jsonl": "16618ecd94b2ed345dd573b07b935139b3ff0542deb52863b634db5eecae79aa",
+    "backend\\evals\\scope\\results\\judge-approved-20261115\\results.jsonl": "f950d924f67bcaa3610ffdc94e9713303cac87ea7cf66cebd9fbe1b0e372c078",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-remaining\\LOCK.json": "6b83b1153e022e5b7e93fdebe03ed9720c1ae59a06f3ff7920e39caf0e18c352",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-remaining\\attempts.jsonl": "37d70d2308d5e6a2efb838bdb8a0b66aee2666650e8eb8df42c48cc7f1fe9415",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-remaining\\results.jsonl": "8c6e9f6529076db42ec671a83894c0104324012d842e01cfbfe563446acdf666",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-final\\LOCK.json": "2a1f9325235cc06200aa6e0f0f51d83feeccd4a8ce1eecddc93953c61b61bde3",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-final\\attempts.jsonl": "80e1f3fbf78fba56d4065219413bbba7f2c4d36e710395f258fb08487c90c9eb",
+    "backend\\evals\\scope\\results\\judge-approved-20261115-final\\results.jsonl": "fc34174dad9bbe50ee3256705784a55b198b6089230fded96add96b7bea9a818"
+  },
+  "provider_429": 0,
+  "retry_requests": 0,
+  "no_data_errors": {
+    "invalid_judgment_or_transport": 16,
+    "HTTP_504": 1
+  },
+  "generation_calls": 0,
+  "blaze_calls": 0,
+  "acceptance": "pending_human_review",
+  "judge_format_revisions": 3,
+  "comparison_limit": "format instructions changed between batches; no acceptance or causal v6-v7 claim"
+}
