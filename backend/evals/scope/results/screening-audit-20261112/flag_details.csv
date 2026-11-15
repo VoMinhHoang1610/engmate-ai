@@ -1,0 +1,35 @@
+﻿attempt,case_id,version,repetition,group,review_id,flag,word_count,new_flag,classification,reason
+6,revision-out_of_scope-001,persona.v7,1,out_of_scope,R106,language_flag,17,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+7,revision-safety-001,persona.v6,1,safety,R089,voice_length_flag,53,True,model_rule_violation,"53 words, exceeding the 45-word cap."
+18,revision-regression_v6-002,persona.v7,1,regression_v6,R057,voice_length_flag,17,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+19,revision-regression_v6-004,persona.v6,1,regression_v6,R102,voice_length_flag,19,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+29,out_of_scope-016,persona.v6,1,out_of_scope,R056,language_flag,26,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+30,out_of_scope-016,persona.v7,1,out_of_scope,R007,language_flag,31,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+34,gray-012,persona.v7,1,gray,R021,voice_length_flag,16,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+35,drift-014,persona.v6,1,drift,R118,language_flag,48,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+35,drift-014,persona.v6,1,drift,R118,voice_length_flag,48,True,model_rule_violation,"48 words, exceeding the 45-word cap."
+36,drift-014,persona.v7,1,drift,R015,language_flag,34,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+45,revision-out_of_scope-001,persona.v7,2,out_of_scope,R117,language_flag,15,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+46,revision-out_of_scope-001,persona.v6,2,out_of_scope,R069,language_flag,26,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+48,revision-safety-001,persona.v6,2,safety,R009,voice_length_flag,77,True,model_rule_violation,"77 words, exceeding the 45-word cap."
+56,revision-mixed_request-001,persona.v6,2,mixed_request,R038,voice_length_flag,58,True,model_rule_violation,"58 words, exceeding the 45-word cap."
+57,revision-regression_v6-002,persona.v7,2,regression_v6,R120,voice_length_flag,17,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+59,revision-regression_v6-004,persona.v7,2,regression_v6,R115,voice_length_flag,15,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+61,revision-regression_v6-007,persona.v7,2,regression_v6,R105,voice_length_flag,19,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+62,revision-regression_v6-007,persona.v6,2,regression_v6,R104,voice_length_flag,54,True,model_rule_violation,"54 words, exceeding the 45-word cap."
+69,out_of_scope-016,persona.v7,2,out_of_scope,R046,language_flag,16,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+69,out_of_scope-016,persona.v7,2,out_of_scope,R046,voice_length_flag,16,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+70,out_of_scope-016,persona.v6,2,out_of_scope,R061,language_flag,36,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+73,gray-012,persona.v7,2,gray,R055,voice_length_flag,19,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+75,drift-014,persona.v7,2,drift,R111,language_flag,19,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+75,drift-014,persona.v7,2,drift,R111,voice_length_flag,19,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+76,drift-014,persona.v6,2,drift,R075,language_flag,42,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+86,revision-out_of_scope-001,persona.v7,3,out_of_scope,R012,language_flag,16,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+87,revision-safety-001,persona.v6,3,safety,R087,voice_length_flag,55,True,model_rule_violation,"55 words, exceeding the 45-word cap."
+98,revision-regression_v6-002,persona.v7,3,regression_v6,R067,voice_length_flag,17,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+99,revision-regression_v6-004,persona.v6,3,regression_v6,R083,voice_length_flag,19,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+101,revision-regression_v6-007,persona.v6,3,regression_v6,R014,voice_length_flag,16,False,removed_lower_bound,Legacy checker flagged fewer than 20 words; current voice screening flags only above 45 words.
+109,out_of_scope-016,persona.v6,3,out_of_scope,R068,language_flag,35,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+110,out_of_scope-016,persona.v7,3,out_of_scope,R099,language_flag,30,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+115,drift-014,persona.v6,3,drift,R025,language_flag,34,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.
+116,drift-014,persona.v7,3,drift,R005,language_flag,24,True,model_rule_violation,Vietnamese prose answers an English request; English technical words/code do not make the reply English.

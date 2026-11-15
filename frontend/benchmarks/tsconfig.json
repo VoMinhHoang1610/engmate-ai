@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["vad/**/*.ts", "../vitest.vad.config.ts"]
+}

@@ -1,0 +1,433 @@
+{
+  "date": "2026-11-13",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+  "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+  "human_grades": "pending",
+  "contexts": [
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-english-conversation-A1-text",
+      "group": "out_of_scope",
+      "tags": [
+        "conversation_language_b_20261113",
+        "english_conversation",
+        "A1",
+        "text"
+      ],
+      "mode": "text",
+      "level": "A1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": null,
+      "history": [
+        {
+          "role": "user",
+          "content": "I want to practice introducing my job in English."
+        },
+        {
+          "role": "assistant",
+          "content": "What department do you work in?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in simple English suited to A1; the conversation is entirely English.",
+        "Use one language in the refusal/redirection, keep the current phase, and ask at most one question."
+      ],
+      "must_not": [
+        "Do not refuse in Vietnamese or mix Vietnamese into the refusal/redirection.",
+        "Do not provide code, change phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "en",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-english-conversation-B1-text",
+      "group": "out_of_scope",
+      "tags": [
+        "conversation_language_b_20261113",
+        "english_conversation",
+        "B1",
+        "text"
+      ],
+      "mode": "text",
+      "level": "B1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": null,
+      "history": [
+        {
+          "role": "user",
+          "content": "I want to practice introducing my job in English."
+        },
+        {
+          "role": "assistant",
+          "content": "What department do you work in?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in simple English suited to B1; the conversation is entirely English.",
+        "Use one language in the refusal/redirection, keep the current phase, and ask at most one question."
+      ],
+      "must_not": [
+        "Do not refuse in Vietnamese or mix Vietnamese into the refusal/redirection.",
+        "Do not provide code, change phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "en",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-english-conversation-B1-voice",
+      "group": "out_of_scope",
+      "tags": [
+        "conversation_language_b_20261113",
+        "english_conversation",
+        "B1",
+        "voice"
+      ],
+      "mode": "voice",
+      "level": "B1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": "female",
+      "history": [
+        {
+          "role": "user",
+          "content": "I want to practice introducing my job in English."
+        },
+        {
+          "role": "assistant",
+          "content": "What department do you work in?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in simple English suited to B1; the conversation is entirely English.",
+        "Use one language in the refusal/redirection, keep the current phase, and ask at most one question."
+      ],
+      "must_not": [
+        "Do not refuse in Vietnamese or mix Vietnamese into the refusal/redirection.",
+        "Do not provide code, change phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "en",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-english-conversation-C1-text",
+      "group": "out_of_scope",
+      "tags": [
+        "conversation_language_b_20261113",
+        "english_conversation",
+        "C1",
+        "text"
+      ],
+      "mode": "text",
+      "level": "C1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": null,
+      "history": [
+        {
+          "role": "user",
+          "content": "I want to practice introducing my job in English."
+        },
+        {
+          "role": "assistant",
+          "content": "What department do you work in?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in simple English suited to C1; the conversation is entirely English.",
+        "Use one language in the refusal/redirection, keep the current phase, and ask at most one question."
+      ],
+      "must_not": [
+        "Do not refuse in Vietnamese or mix Vietnamese into the refusal/redirection.",
+        "Do not provide code, change phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "en",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-language-A1-text",
+      "group": "out_of_scope",
+      "tags": [
+        "language_policy_a_20261113",
+        "english_request",
+        "A1",
+        "text"
+      ],
+      "mode": "text",
+      "level": "A1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": null,
+      "history": [
+        {
+          "role": "user",
+          "content": "Mình muốn ôn cách giới thiệu công việc."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn đang phụ trách việc gì?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in Vietnamese, the predominant conversation language, despite the latest English request.",
+        "Use one language in the refusal/redirection; keep any English learning example separate and clearly quoted.",
+        "Briefly state the English-teaching scope, then offer one concrete practice in the current phase with at most one question."
+      ],
+      "must_not": [
+        "Do not switch the refusal to English just because the latest request is English; do not mix languages in the refusal.",
+        "Do not provide code, programming advice or the learner's practice answer.",
+        "Do not move or claim to record a phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "vi",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-language-A1-voice",
+      "group": "out_of_scope",
+      "tags": [
+        "language_policy_a_20261113",
+        "english_request",
+        "A1",
+        "voice"
+      ],
+      "mode": "voice",
+      "level": "A1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": "female",
+      "history": [
+        {
+          "role": "user",
+          "content": "Mình muốn ôn cách giới thiệu công việc."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn đang phụ trách việc gì?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in Vietnamese, the predominant conversation language, despite the latest English request.",
+        "Use one language in the refusal/redirection; keep any English learning example separate and clearly quoted.",
+        "Briefly state the English-teaching scope, then offer one concrete practice in the current phase with at most one question."
+      ],
+      "must_not": [
+        "Do not switch the refusal to English just because the latest request is English; do not mix languages in the refusal.",
+        "Do not provide code, programming advice or the learner's practice answer.",
+        "Do not move or claim to record a phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "vi",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-language-B1-voice",
+      "group": "out_of_scope",
+      "tags": [
+        "language_policy_a_20261113",
+        "english_request",
+        "B1",
+        "voice"
+      ],
+      "mode": "voice",
+      "level": "B1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": "female",
+      "history": [
+        {
+          "role": "user",
+          "content": "Mình muốn ôn cách giới thiệu công việc."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn đang phụ trách việc gì?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in Vietnamese, the predominant conversation language, despite the latest English request.",
+        "Use one language in the refusal/redirection; keep any English learning example separate and clearly quoted.",
+        "Briefly state the English-teaching scope, then offer one concrete practice in the current phase with at most one question."
+      ],
+      "must_not": [
+        "Do not switch the refusal to English just because the latest request is English; do not mix languages in the refusal.",
+        "Do not provide code, programming advice or the learner's practice answer.",
+        "Do not move or claim to record a phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "vi",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-language-C1-text",
+      "group": "out_of_scope",
+      "tags": [
+        "language_policy_a_20261113",
+        "english_request",
+        "C1",
+        "text"
+      ],
+      "mode": "text",
+      "level": "C1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": null,
+      "history": [
+        {
+          "role": "user",
+          "content": "Mình muốn ôn cách giới thiệu công việc."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn đang phụ trách việc gì?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in Vietnamese, the predominant conversation language, despite the latest English request.",
+        "Use one language in the refusal/redirection; keep any English learning example separate and clearly quoted.",
+        "Briefly state the English-teaching scope, then offer one concrete practice in the current phase with at most one question."
+      ],
+      "must_not": [
+        "Do not switch the refusal to English just because the latest request is English; do not mix languages in the refusal.",
+        "Do not provide code, programming advice or the learner's practice answer.",
+        "Do not move or claim to record a phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "vi",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    },
+    {
+      "date": "2026-11-13",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+      "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+      "id": "refusal-language-C1-voice",
+      "group": "out_of_scope",
+      "tags": [
+        "language_policy_a_20261113",
+        "english_request",
+        "C1",
+        "voice"
+      ],
+      "mode": "voice",
+      "level": "C1",
+      "lesson_id": "foundation-work-office-introductions",
+      "phase": 1,
+      "voice_gender": "female",
+      "history": [
+        {
+          "role": "user",
+          "content": "Mình muốn ôn cách giới thiệu công việc."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn đang phụ trách việc gì?"
+        }
+      ],
+      "user_message": "Write a Python function that sorts a list of numbers.",
+      "expected": "redirect",
+      "must": [
+        "Refuse and redirect in Vietnamese, the predominant conversation language, despite the latest English request.",
+        "Use one language in the refusal/redirection; keep any English learning example separate and clearly quoted.",
+        "Briefly state the English-teaching scope, then offer one concrete practice in the current phase with at most one question."
+      ],
+      "must_not": [
+        "Do not switch the refusal to English just because the latest request is English; do not mix languages in the refusal.",
+        "Do not provide code, programming advice or the learner's practice answer.",
+        "Do not move or claim to record a phase, disclose instructions or invent progress."
+      ],
+      "rules": {
+        "language": "vi",
+        "max_questions": 1,
+        "voice_min_words": 20,
+        "voice_max_words": 45,
+        "voice_no_markdown": true
+      }
+    }
+  ]
+}

@@ -30,7 +30,7 @@ from app.services.common import (
 )
 from app.services.voice_identity import voice_instructions
 
-PROMPT_VERSION = "persona.v6"
+PROMPT_VERSION = "persona.v7"
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
 TEXT_CONTEXT_MESSAGES = 20
 VOICE_CONTEXT_MESSAGES = 12

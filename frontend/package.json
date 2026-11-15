@@ -12,6 +12,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "benchmark:vad": "tsc --project benchmarks/tsconfig.json && vitest run --config vitest.vad.config.ts",
     "lint": "eslint . --max-warnings 0 && tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

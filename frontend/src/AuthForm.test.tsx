@@ -19,6 +19,22 @@ afterEach(() => {
 });
 
 describe('Trang tài khoản theo giao diện gốc', () => {
+  it.each([false, true])(
+    'continues with Facebook without requiring local credentials (register=%s)',
+    async (register) => {
+      render(<AuthForm initialRegister={register} />);
+      const group = screen.getByRole('group', {
+        name: register ? 'Đăng ký mạng xã hội' : 'Đăng nhập mạng xã hội',
+      });
+      expect(group).toContainElement(screen.getByRole('button', { name: 'Facebook' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
+      await waitFor(() => expect(authenticateSocial).toHaveBeenCalledWith('facebook'));
+      expect(authenticate).not.toHaveBeenCalled();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Facebook' })).toBeEnabled());
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
+
   it('requires deliberate local-password confirmation before linking an existing Google email', async () => {
     const ticket = 'verified-google-ticket-with-enough-characters';
     vi.mocked(authenticateSocial).mockRejectedValueOnce(new GoogleLinkRequired(ticket));

@@ -1,0 +1,4 @@
+{"original_attempt": 4, "case_id": "adversarial-005", "version": "persona.v7", "repetition": 1, "retry": 1, "at": "2026-11-12T01:59:34.746556+07:00"}
+{"original_attempt": 16, "case_id": "revision-mixed_request-001", "version": "persona.v7", "repetition": 1, "retry": 1, "at": "2026-11-12T01:59:47.447850+07:00"}
+{"original_attempt": 17, "case_id": "revision-regression_v6-002", "version": "persona.v6", "repetition": 1, "retry": 1, "at": "2026-11-12T01:59:58.832284+07:00"}
+{"original_attempt": 44, "case_id": "adversarial-005", "version": "persona.v6", "repetition": 2, "retry": 1, "at": "2026-11-12T02:00:09.918941+07:00"}

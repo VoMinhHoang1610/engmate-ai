@@ -1,0 +1,39 @@
+{
+  "started_at": "2026-11-12T00:48:24.085178+07:00",
+  "model": "gemini-3.5-flash-lite",
+  "max_output_tokens": 2048,
+  "temperature": "provider_default",
+  "corpus_sha256": "dc8a0af2cbdba81b696bbb6a26b8a914233c33ed46e943a63ba111660225096c",
+  "prompt_sha256": {
+    "persona.v6": "9182194098261c8b2a1c7fea098cf31b1285c3e19692ca27268d4217d6f4f399",
+    "persona.v7": "c677efefaeedccc2bcd6a7cee286607ff7d4bfaacb612ae5507b9451ae3323ba"
+  },
+  "pilot_ids": [
+    "revision-identity-001",
+    "adversarial-005",
+    "revision-out_of_scope-001",
+    "revision-safety-001",
+    "revision-quoted_negative-001",
+    "revision-checkpoint-001",
+    "revision-app_ui-001",
+    "revision-mixed_request-001",
+    "revision-regression_v6-002",
+    "revision-regression_v6-004",
+    "revision-regression_v6-007",
+    "revision-regression_v6-008",
+    "revision-identity-002",
+    "revision-identity-003",
+    "out_of_scope-016",
+    "adversarial-021",
+    "gray-012",
+    "drift-014",
+    "in_scope-055",
+    "in_scope-059"
+  ],
+  "repetitions": 3,
+  "attempt_budget": 120,
+  "judge": "human_pending",
+  "audio": false,
+  "retries": 0,
+  "interval_seconds": 6.0
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "attempt": 18,
+    "case_id": "revision-regression_v6-002",
+    "version": "persona.v7",
+    "repetition": 1,
+    "group": "regression_v6",
+    "word_count": 17
+  },
+  {
+    "attempt": 19,
+    "case_id": "revision-regression_v6-004",
+    "version": "persona.v6",
+    "repetition": 1,
+    "group": "regression_v6",
+    "word_count": 19
+  },
+  {
+    "attempt": 34,
+    "case_id": "gray-012",
+    "version": "persona.v7",
+    "repetition": 1,
+    "group": "gray",
+    "word_count": 16
+  },
+  {
+    "attempt": 57,
+    "case_id": "revision-regression_v6-002",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "regression_v6",
+    "word_count": 17
+  },
+  {
+    "attempt": 59,
+    "case_id": "revision-regression_v6-004",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "regression_v6",
+    "word_count": 15
+  },
+  {
+    "attempt": 61,
+    "case_id": "revision-regression_v6-007",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "regression_v6",
+    "word_count": 19
+  },
+  {
+    "attempt": 69,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "out_of_scope",
+    "word_count": 16
+  },
+  {
+    "attempt": 73,
+    "case_id": "gray-012",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "gray",
+    "word_count": 19
+  },
+  {
+    "attempt": 75,
+    "case_id": "drift-014",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "drift",
+    "word_count": 19
+  },
+  {
+    "attempt": 98,
+    "case_id": "revision-regression_v6-002",
+    "version": "persona.v7",
+    "repetition": 3,
+    "group": "regression_v6",
+    "word_count": 17
+  },
+  {
+    "attempt": 99,
+    "case_id": "revision-regression_v6-004",
+    "version": "persona.v6",
+    "repetition": 3,
+    "group": "regression_v6",
+    "word_count": 19
+  },
+  {
+    "attempt": 101,
+    "case_id": "revision-regression_v6-007",
+    "version": "persona.v6",
+    "repetition": 3,
+    "group": "regression_v6",
+    "word_count": 16
+  }
+]

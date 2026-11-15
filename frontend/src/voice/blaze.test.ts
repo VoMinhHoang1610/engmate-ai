@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, apiFetch } from '../api/database';
 import { streamTurn } from '../api/chatStream';
 import { BlazeVoiceSession } from './blaze';
+import { AdaptiveVad } from './adaptiveVad';
 import type { Turn } from '../types';
 
 vi.mock('../api/database', () => ({ api: vi.fn(), apiFetch: vi.fn() }));
@@ -84,7 +85,13 @@ const json = (data: unknown, status = 200) =>
     status,
     headers: { 'Content-Type': 'application/json' },
   });
-const events = () => ({ state: vi.fn(), transcript: vi.fn(), error: vi.fn(), sync: vi.fn() });
+const events = () => ({
+  state: vi.fn(),
+  transcript: vi.fn(),
+  error: vi.fn(),
+  notice: vi.fn(),
+  sync: vi.fn(),
+});
 async function flush() {
   for (let i = 0; i < 35; i++) await Promise.resolve();
 }
@@ -139,9 +146,324 @@ afterEach(async () => {
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe('Blaze speech with a text-only Gemini brain', () => {
+  it('does not inspect or print local diagnostics when debug is off, including explicit env override', async () => {
+    const log = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    const inspect = vi.spyOn(AdaptiveVad.prototype, 'diagnostics');
+    for (const override of [undefined, false]) {
+      vi.stubEnv('VITE_VOICE_DEBUG', override === undefined ? 'false' : 'true');
+      const { instance } = session({ adaptiveVad: true, debug: override });
+      await instance.start();
+      for (let i = 0; i < 10; i++) Capture.instances.at(-1)!.frame(1000);
+      await instance.stop();
+    }
+    expect(log).not.toHaveBeenCalled();
+    expect(inspect).not.toHaveBeenCalled();
+  });
+
+  it('reports realtime attempts and capture dwell on noise discard; debug resets on a new session', async () => {
+    const log = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    vi.stubEnv('VITE_VOICE_DEBUG', 'true');
+    vi.stubGlobal('WebSocket', STTSocket);
+    vi.mocked(api).mockResolvedValue({ session_id: crypto.randomUUID(), ticket: 't'.repeat(43) });
+    const { instance } = session({ adaptiveVad: true, sttMode: 'realtime' });
+    await instance.start();
+    for (let i = 0; i < 10; i++) {
+      vi.advanceTimersByTime(100);
+      Capture.instances[0].frame(1000);
+    }
+    await flush();
+    await instance.stop();
+    expect(log).toHaveBeenLastCalledWith(
+      '[voice-debug]',
+      expect.objectContaining({
+        activations: 1,
+        discarded: 1,
+        discardedByReason: { stationary_noise: 1, transcript_gate: 0 },
+        sttRequests: { batch: 0, realtime: 1 },
+        captureStateMs: 800,
+      }),
+    );
+    expect(apiFetch).not.toHaveBeenCalled();
+    await instance.start();
+    await instance.stop();
+    expect(log.mock.calls.at(-1)?.[1]).toMatchObject({
+      activations: 0,
+      discarded: 0,
+      captureStateMs: 0,
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('counts batch STT before a soft transcript rejection, logging no transcript or PCM', async () => {
+    const log = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    const { instance } = session({ debug: true, softTranscriptGate: true });
+    vi.mocked(apiFetch).mockResolvedValueOnce(
+      json({ text: 'privateword privateword privateword' }),
+    );
+    await instance.start();
+    const capture = Capture.instances[0];
+    capture.frame(1000);
+    capture.frame(1000);
+    for (let i = 0; i < 9; i++) capture.frame();
+    await flush();
+    await instance.stop();
+    expect(log).toHaveBeenLastCalledWith(
+      '[voice-debug]',
+      expect.objectContaining({
+        activations: 1,
+        discarded: 1,
+        discardedByReason: { stationary_noise: 0, transcript_gate: 1 },
+        sttRequests: { batch: 1, realtime: 0 },
+        detector: 'energy',
+      }),
+    );
+    expect(JSON.stringify(log.mock.calls)).not.toContain('privateword');
+    expect(streamTurn).not.toHaveBeenCalled();
+  });
+
+  it('discards continuous noise in realtime without batch retry or a dangling socket', async () => {
+    vi.stubGlobal('WebSocket', STTSocket);
+    vi.mocked(api).mockResolvedValue({ session_id: crypto.randomUUID(), ticket: 't'.repeat(43) });
+    const { instance, callbacks } = session({ sttMode: 'realtime', adaptiveVad: true });
+    await instance.start();
+    const capture = Capture.instances[0];
+    capture.frame(1000);
+    capture.frame(1000);
+    await flush();
+    const socket = STTSocket.instances[0];
+    socket.onopen?.();
+    socket.event({ type: 'ready' });
+    for (let i = 0; i < 598; i++) capture.frame(1000);
+    await flush();
+    expect(instance.currentState).toBe('listening');
+    expect(callbacks.notice).toHaveBeenCalledOnce();
+    expect(callbacks.error).not.toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalledOnce();
+    expect(socket.onmessage).toBeNull();
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(streamTurn).not.toHaveBeenCalled();
+    expect(api).toHaveBeenCalledTimes(1);
+    instance.mute(true);
+    instance.mute(false);
+    capture.frame(1000);
+    capture.frame(1000);
+    await flush();
+    expect(STTSocket.instances).toHaveLength(2);
+    await instance.stop();
+    expect(STTSocket.instances[1].close).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('retains a short answer and valid barge-in with both gates enabled', async () => {
+    const { instance, callbacks } = session({ adaptiveVad: true, softTranscriptGate: true });
+    await instance.start();
+    const capture = Capture.instances[0];
+    capture.utterance();
+    await flush();
+    expect(instance.currentState).toBe('assistant_speaking');
+    vi.mocked(apiFetch).mockResolvedValueOnce(json({ text: 'Yes.' }));
+    capture.frame(2000);
+    capture.frame(2000);
+    expect(callbacks.state).toHaveBeenCalledWith('interrupting');
+    for (let i = 0; i < 9; i++) capture.frame();
+    await flush();
+    expect(streamTurn).toHaveBeenCalledTimes(2);
+    expect(streamTurn).toHaveBeenLastCalledWith(
+      7,
+      expect.objectContaining({ message: 'Yes.' }),
+      expect.any(AbortSignal),
+      expect.any(Function),
+      expect.any(String),
+    );
+    expect(Player.instances[0].pause).toHaveBeenCalled();
+    expect(callbacks.notice).not.toHaveBeenCalled();
+  });
+
+  it('falls back during realtime capture without losing pre-roll or opening a second recognition', async () => {
+    const original = AdaptiveVad.prototype.push;
+    let count = 0;
+    vi.spyOn(AdaptiveVad.prototype, 'push').mockImplementation(function (
+      this: AdaptiveVad,
+      frame,
+      at,
+    ) {
+      if (++count === 4) throw new Error('VAD runtime failure');
+      return original.call(this, frame, at);
+    });
+    vi.stubGlobal('WebSocket', STTSocket);
+    vi.mocked(api).mockResolvedValue({ session_id: crypto.randomUUID(), ticket: 't'.repeat(43) });
+    const { instance, callbacks } = session({ adaptiveVad: true, sttMode: 'realtime' });
+    await instance.start();
+    const capture = Capture.instances[0];
+    capture.frame();
+    capture.frame(2000);
+    capture.frame(3000);
+    await flush();
+    const socket = STTSocket.instances[0];
+    socket.onopen?.();
+    socket.event({ type: 'ready' });
+    capture.frame(4000);
+    for (let i = 0; i < 9; i++) capture.frame();
+    const pcm = socket.send.mock.calls
+      .map(([value]) => value)
+      .filter((value) => value instanceof ArrayBuffer) as ArrayBuffer[];
+    expect(pcm).toHaveLength(13);
+    expect(pcm.slice(0, 4).map((value) => new Int16Array(value)[0])).toEqual([0, 2000, 3000, 4000]);
+    socket.event({ type: 'final', text: 'Sales' });
+    await flush();
+    expect(STTSocket.instances).toHaveLength(1);
+    expect(streamTurn).toHaveBeenCalledOnce();
+    expect(callbacks.error).not.toHaveBeenCalled();
+  });
+
+  it('uses the adaptive flag and allows an explicit per-session rollback', async () => {
+    vi.stubEnv('VITE_VOICE_ADAPTIVE_VAD', 'true');
+    const enabled = session();
+    await enabled.instance.start();
+    for (let i = 0; i < 10; i++) Capture.instances[0].frame(1000);
+    expect(enabled.callbacks.notice).toHaveBeenCalledOnce();
+    await enabled.instance.stop();
+    const disabled = session({ adaptiveVad: false });
+    await disabled.instance.start();
+    for (let i = 0; i < 10; i++) Capture.instances[1].frame(1000);
+    expect(disabled.callbacks.notice).not.toHaveBeenCalled();
+    expect(disabled.instance.currentState).toBe('user_speaking');
+  });
+
+  it('softly rejects a realtime final and disposes its socket without a batch retry', async () => {
+    vi.stubGlobal('WebSocket', STTSocket);
+    vi.mocked(api).mockResolvedValue({ session_id: crypto.randomUUID(), ticket: 't'.repeat(43) });
+    const { instance, callbacks } = session({ sttMode: 'realtime', softTranscriptGate: true });
+    await instance.start();
+    Capture.instances[0].frame(2000);
+    Capture.instances[0].frame(2000);
+    await flush();
+    const socket = STTSocket.instances[0];
+    socket.onopen?.();
+    socket.event({ type: 'ready' });
+    socket.event({ type: 'partial', text: '...' });
+    for (let i = 0; i < 9; i++) Capture.instances[0].frame();
+    socket.event({ type: 'final', text: '...' });
+    await flush();
+    expect(callbacks.notice).toHaveBeenCalledOnce();
+    expect(callbacks.error).not.toHaveBeenCalled();
+    expect(callbacks.sync).not.toHaveBeenCalled();
+    expect(streamTurn).not.toHaveBeenCalled();
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalledOnce();
+    expect(socket.onmessage).toBeNull();
+    await instance.stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each(['', '   ', '...', 'yes yes yes'])(
+    'softly discards %j without creating a Gemini turn or message',
+    async (text) => {
+      const { instance, callbacks } = session({ softTranscriptGate: true });
+      vi.mocked(apiFetch).mockResolvedValueOnce(json({ text }));
+      await instance.start();
+      const capture = Capture.instances[0];
+      capture.frame(2000);
+      capture.frame(2000);
+      for (let index = 0; index < 9; index++) capture.frame();
+      await flush();
+      expect(instance.currentState).toBe('listening');
+      expect(callbacks.notice).toHaveBeenCalledWith('Mình chưa nghe rõ, bạn nói lại nhé');
+      expect(callbacks.error).not.toHaveBeenCalled();
+      expect(callbacks.transcript).not.toHaveBeenCalled();
+      expect(callbacks.sync).not.toHaveBeenCalled();
+      expect(streamTurn).not.toHaveBeenCalled();
+      expect(api).not.toHaveBeenCalled();
+      expect(track.stop).not.toHaveBeenCalled();
+    },
+  );
+  it.each(['Yes.', 'Vâng', 'Sales'])('soft gate preserves %s with short audio', async (text) => {
+    const { instance, callbacks } = session({ softTranscriptGate: true });
+    vi.mocked(apiFetch).mockResolvedValueOnce(json({ text }));
+    await instance.start();
+    Capture.instances[0].frame(2000);
+    Capture.instances[0].frame(2000);
+    for (let index = 0; index < 9; index++) Capture.instances[0].frame();
+    await flush();
+    expect(vi.mocked(streamTurn).mock.calls[0][1].message).toBe(text);
+    expect(callbacks.notice).not.toHaveBeenCalled();
+  });
+  it.each([json({ text: 'x'.repeat(2001) }), json({}, 503), json({ text: 3 })])(
+    'keeps genuine recognition/length failures on the error channel with the gate enabled',
+    async (response) => {
+      const { instance, callbacks } = session({ softTranscriptGate: true });
+      vi.mocked(apiFetch).mockResolvedValueOnce(response);
+      await instance.start();
+      Capture.instances[0].utterance();
+      await flush();
+      expect(callbacks.error).toHaveBeenCalledOnce();
+      expect(callbacks.notice).not.toHaveBeenCalled();
+      expect(streamTurn).not.toHaveBeenCalled();
+    },
+  );
+  it('honors the build flag and an explicit false override', async () => {
+    vi.stubEnv('VITE_VOICE_SOFT_GATE', 'true');
+    for (const options of [{}, { softTranscriptGate: false }]) {
+      vi.mocked(apiFetch).mockResolvedValueOnce(json({ text: '' }));
+      const { instance, callbacks } = session(options);
+      await instance.start();
+      Capture.instances.at(-1)!.utterance();
+      await flush();
+      if ('softTranscriptGate' in options) expect(callbacks.error).toHaveBeenCalledOnce();
+      else expect(callbacks.notice).toHaveBeenCalledOnce();
+      await instance.stop();
+    }
+  });
+
+  it.each(['Yes.', 'Vâng', 'Sales'])(
+    'preserves a short answer "%s" from two voiced frames in batch mode',
+    async (text) => {
+      vi.mocked(apiFetch).mockResolvedValueOnce(json({ text }));
+      const { instance, callbacks } = session();
+      await instance.start();
+      const capture = Capture.instances[0];
+      capture.frame(100);
+      capture.frame(2000);
+      capture.frame(2000);
+      for (let index = 0; index < 8; index++) capture.frame();
+      expect(apiFetch).not.toHaveBeenCalled();
+      capture.frame();
+      await flush();
+      expect(vi.mocked(streamTurn).mock.calls[0][1].message).toBe(text);
+      expect(callbacks.error).not.toHaveBeenCalled();
+    },
+  );
+
+  it('preserves realtime pre-roll order and cancels an active capture on Stop', async () => {
+    vi.stubGlobal('WebSocket', STTSocket);
+    vi.mocked(api).mockResolvedValue({ session_id: crypto.randomUUID(), ticket: 't'.repeat(43) });
+    const { instance } = session({ sttMode: 'realtime' });
+    await instance.start();
+    const capture = Capture.instances[0];
+    for (const value of [10, 20, 30, 2000, 3000]) capture.frame(value);
+    await flush();
+    const socket = STTSocket.instances[0];
+    socket.onopen?.();
+    socket.event({ type: 'ready' });
+    const sent = socket.send.mock.calls
+      .map(([value]) => value)
+      .filter((value): value is ArrayBuffer => value instanceof ArrayBuffer);
+    expect(sent.map((value) => new DataView(value).getInt16(0, true))).toEqual([30, 2000, 3000]);
+    const late = socket.onmessage!;
+    await instance.stop();
+    late({ data: JSON.stringify({ type: 'final', text: 'Stale answer' }) });
+    await flush();
+    expect(socket.close).toHaveBeenCalledOnce();
+    expect(socket.onmessage).toBeNull();
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(streamTurn).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(Context.instances[0].close).toHaveBeenCalledOnce();
+  });
+
   it('keeps a nine-minute realtime conversation bounded across 24 complete turns', async () => {
     vi.stubGlobal('WebSocket', STTSocket);
     vi.mocked(api).mockImplementation(async (path) =>

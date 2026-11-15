@@ -1,0 +1,14 @@
+{
+  "source_results_sha256": "58a61066ebfa2a55b1cc69855513c4bc654998e9d49da110bc90e9dc3a5aee9d",
+  "screening_source_sha256": "693f9de62989134058d7a7e09bedd61e06b3ee6bd6dbcc5b8f2a465de1c8546f",
+  "automatic_checks_source_sha256": "b2e67a2526ee268e41cb655a92e0bb6fd5edde6ba85e192cc864bee204bc8374",
+  "updated_date": "2026-11-13",
+  "voice_length_policy": {
+    "maximum_words": 45,
+    "minimum_enforced": false,
+    "counting": "whitespace"
+  },
+  "flag_judgments": "agent_review_no_llm_judge_api",
+  "teacher_semantic_grading": "pending",
+  "sample_size_warning": "20 cases, 3 repeated replies/version"
+}

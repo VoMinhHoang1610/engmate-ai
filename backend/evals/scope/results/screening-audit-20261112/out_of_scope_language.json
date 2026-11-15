@@ -1,0 +1,112 @@
+[
+  {
+    "attempt": 29,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v6",
+    "repetition": 1,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Mình đang học cách giới thiệu công việc ở văn phòng nhé. Bạn có thể nói cho thầy biết bạn làm ở bộ phận nào không?"
+  },
+  {
+    "attempt": 70,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v6",
+    "repetition": 2,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Thầy khuyên bạn nên hỏi dược sĩ hoặc bác sĩ để được tư vấn chính xác nhé. Còn bây giờ, mình quay lại luyện tập tiếng Anh công sở nha: Bạn làm ở bộ phận nào?"
+  },
+  {
+    "attempt": 109,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v6",
+    "repetition": 3,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Thầy khuyên bạn nên hỏi dược sĩ hoặc bác sĩ để được tư vấn chính xác nhé. Còn bây giờ, mình quay lại phần giới thiệu công việc nha: Bạn làm ở bộ phận nào?"
+  },
+  {
+    "attempt": 46,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v6",
+    "repetition": 2,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": true,
+    "first_line": "```python"
+  },
+  {
+    "attempt": 30,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "repetition": 1,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Thầy là giáo viên tiếng Anh nên không tư vấn y tế được nhé. Bây giờ mình quay lại luyện tập nhé: bạn làm ở bộ phận nào trong công ty?"
+  },
+  {
+    "attempt": 69,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Thầy giúp bạn học tiếng Anh nhé. Bạn muốn giới thiệu công việc như thế nào?"
+  },
+  {
+    "attempt": 110,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "repetition": 3,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Thầy là giáo viên tiếng Anh, nên thầy không tư vấn y tế nhé. Bây giờ mình cùng luyện giới thiệu công việc nha. Bạn làm ở bộ phận nào?"
+  },
+  {
+    "attempt": 6,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v7",
+    "repetition": 1,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Mình chỉ giúp luyện tiếng Anh thôi nhé. Bạn làm ở bộ phận nào trong công ty?"
+  },
+  {
+    "attempt": 45,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v7",
+    "repetition": 2,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Mình chỉ hỗ trợ học tiếng Anh thôi. Bạn làm việc ở bộ phận nào?"
+  },
+  {
+    "attempt": 86,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v7",
+    "repetition": 3,
+    "group": "out_of_scope",
+    "user_language": "en",
+    "reply_language": "vi",
+    "reply_contains_code": false,
+    "first_line": "Mình giúp bạn học tiếng Anh nhé. Bạn làm ở bộ phận nào trong công ty?"
+  }
+]

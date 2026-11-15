@@ -7,6 +7,8 @@ import { BieuTuong } from '../components/BieuTuong';
 import { AudioSettingsMenu } from '../components/AudioSettingsMenu';
 import { getSpeechPreferences, setSpeechVoice, useSpeechPreferences } from '../speech/preferences';
 
+const ERROR_NOTICE_DURATION_MS = 5000;
+
 const labels: Record<VoiceState, string> = {
   idle: 'Nói cùng Mate',
   connecting: 'Đang kết nối…',
@@ -63,7 +65,18 @@ export function VoiceChat({
   useEffect(() => {
     onState?.(state);
   }, [state, onState]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ message: string } | null>(null);
+  const [notice, setNotice] = useState<{ message: string } | null>(null);
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = window.setTimeout(() => setNotice(null), ERROR_NOTICE_DURATION_MS);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+  useEffect(() => {
+    if (!error) return;
+    const timeout = window.setTimeout(() => setError(null), ERROR_NOTICE_DURATION_MS);
+    return () => window.clearTimeout(timeout);
+  }, [error]);
   const [muted, setMuted] = useState(false);
   useEffect(() => {
     onMuted?.(muted);
@@ -148,6 +161,7 @@ export function VoiceChat({
   }, [provider, speechProvider]);
 
   function moving(value: typeof transition) {
+    if (value) setNotice(null);
     transitionRef.current = value;
     setTransition(value);
   }
@@ -157,6 +171,7 @@ export function VoiceChat({
       state: (value) => {
         if (live()) {
           setState(value);
+          if (value !== 'listening') setNotice(null);
           callbacks.current.onLevel?.(undefined);
           callbacks.current.onActive(value !== 'idle' && value !== 'error');
         }
@@ -173,8 +188,14 @@ export function VoiceChat({
       transcript: (role, text) => {
         if (live()) setCaption(`${role === 'user' ? 'Bạn' : 'Mate'}: ${text}`);
       },
+      notice: (message) => {
+        if (live()) {
+          setCaption('');
+          setNotice({ message });
+        }
+      },
       error: (message) => {
-        if (live()) setError(message);
+        if (live()) setError({ message });
       },
       sync: () => {
         if (live()) callbacks.current.onSync();
@@ -219,7 +240,7 @@ export function VoiceChat({
     const startingVoice = selectedVoice;
     setVoiceId(startingVoice);
     moving('starting');
-    setError('');
+    setError(null);
     setCaption('');
     setState('connecting');
     mutedRef.current = false;
@@ -237,7 +258,7 @@ export function VoiceChat({
       if (mounted.current && token === epoch.current) {
         setState('error');
         callbacks.current.onActive(false);
-        setError(e instanceof Error ? e.message : 'Chưa bắt đầu được thoại.');
+        setError({ message: e instanceof Error ? e.message : 'Chưa bắt đầu được thoại.' });
       }
     } finally {
       if (mounted.current && token === epoch.current) moving(null);
@@ -271,7 +292,7 @@ export function VoiceChat({
     } catch {
       if (mounted.current && token === epoch.current) {
         setState('error');
-        setError('Đã dừng micro nhưng chưa xác nhận đóng phiên trên server.');
+        setError({ message: 'Đã dừng micro nhưng chưa xác nhận đóng phiên trên server.' });
       }
     } finally {
       if (mounted.current && token === epoch.current) {
@@ -296,7 +317,7 @@ export function VoiceChat({
     if (!identity) return;
     const token = ++epoch.current;
     moving('switching');
-    setError('');
+    setError(null);
     setCaption('');
     setState('reconnecting');
     callbacks.current.onActive(true);
@@ -314,7 +335,7 @@ export function VoiceChat({
       if (mounted.current && token === epoch.current) {
         setState('error');
         callbacks.current.onActive(false);
-        setError('Chưa đổi được giọng. Hãy thử bắt đầu thoại lại.');
+        setError({ message: 'Chưa đổi được giọng. Hãy thử bắt đầu thoại lại.' });
       }
     } finally {
       if (mounted.current && token === epoch.current) moving(null);
@@ -380,9 +401,9 @@ export function VoiceChat({
           </button>
         )}
       </div>
-      {(active || transition || state === 'error' || catalogError || error || unavailableVoice) && (
+      {(active || transition || catalogError || error || notice || unavailableVoice) && (
         <div className="voice-feedback">
-          {(state !== 'idle' || transition) && (
+          {(active || transition || (state === 'error' && error)) && (
             <span className="live-state" role="status">
               {transition === 'switching'
                 ? 'Đang đổi giọng…'
@@ -422,7 +443,12 @@ export function VoiceChat({
           )}
           {error && (
             <p className="error-text" role="alert">
-              {error}
+              {error.message}
+            </p>
+          )}
+          {notice && (
+            <p className="chat-disclaimer" role="status" aria-atomic="true">
+              {notice.message}
             </p>
           )}
         </div>

@@ -1,0 +1,38 @@
+{
+  "started_at": "2026-11-11T05:41:35.666640+07:00",
+  "model": "gemini-3.5-flash-lite",
+  "max_output_tokens": 2048,
+  "temperature": "provider_default",
+  "corpus_sha256": "7bc67a0ce5eb178e5991699fb68c5af9743e348f594dd32b8c583153435a93d8",
+  "prompt_sha256": {
+    "persona.v6": "9182194098261c8b2a1c7fea098cf31b1285c3e19692ca27268d4217d6f4f399",
+    "persona.v7": "af6b9bc0bd46a70a4aded820a73350b4fb9339b60590aa69093c60c73617bbe9"
+  },
+  "pilot_ids": [
+    "in_scope-005",
+    "in_scope-044",
+    "in_scope-055",
+    "in_scope-056",
+    "in_scope-057",
+    "in_scope-058",
+    "in_scope-059",
+    "in_scope-079",
+    "out_of_scope-001",
+    "out_of_scope-016",
+    "out_of_scope-024",
+    "out_of_scope-040",
+    "out_of_scope-052",
+    "adversarial-005",
+    "adversarial-021",
+    "adversarial-027",
+    "gray-011",
+    "gray-012",
+    "safety-006",
+    "drift-014"
+  ],
+  "repetitions": 3,
+  "attempt_budget": 120,
+  "judge": "human_pending",
+  "audio": false,
+  "retries": 0
+}

@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-13",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_sha256": "e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680",
+  "corpus_sha256": "506b2c9b1a9807e5218b594d53002f9f7d3f182a34e8ae9002fc8ab99fe6bd4c",
+  "full_slots": 1050,
+  "full_request_budget": 2100,
+  "pilot_calls": 0,
+  "judge_calls": 0,
+  "authorization": "user_final_policy_direct_full_generation"
+}

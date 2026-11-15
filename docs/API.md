@@ -1,5 +1,14 @@
 # REST API EngMate-AI — hội thoại
 
+## Từ vựng — hợp đồng nháp, chưa triển khai (15/11/2026)
+
+Nhóm `/api/vocabulary/*` **chưa tồn tại trong runtime**. [Thiết kế §4–6](LEARNING_VOCABULARY_DESIGN_2026-11-15.md)
+đề xuất catalog/chi tiết đầy đủ, trạng thái từ theo phiên server, import whitelist,
+chủ đề riêng/create/append/delete và GET job tiến trình. UUID cùng payload replay
+kể cả lỗi, khác payload 409; không tự gọi lại provider khi GET/retry mạng.
+Response whitelist, owner từ phiên, không đưa đáp án TOEIC vào model.
+Đợi duyệt trước khi cập nhật OpenAPI hoặc thêm route.
+
 ## OAuth Google/Facebook — 2026-10-29
 
 Cập nhật 2026-10-30: Google trùng email trả popup payload có `link_ticket`

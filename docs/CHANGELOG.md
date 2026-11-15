@@ -1,5 +1,181 @@
 # Changelog
 
+## 2026-11-15 — Ghi nhận duyệt Từ vựng và chuẩn bị worktree/test riêng
+
+- Cập nhật D1–D10 cùng điều kiện TTS/IPA, env/cỡ lô, thiếu bảng DB, speech capability và chữ topbar.
+- Ghi trạng thái repo theo nhóm; trình lệnh worktree, baseline sạch một lần và MySQL test localhost riêng.
+- Kiểm cú pháp PowerShell; chưa chạy các lệnh tạo worktree/container, chưa sửa runtime hoặc gọi provider.
+
+## 2026-11-15 — Kiểm toán năm mục và đề xuất Từ vựng
+
+- Thêm [bản thiết kế chờ duyệt](LEARNING_VOCABULARY_DESIGN_2026-11-15.md): lưới
+  chủ đề, nội dung đầy đủ, AI theo lô, state theo tài khoản và migration dữ liệu cũ.
+- Ghi rõ phần đã có của ba trang TOEIC, phần preview và các quyết định cần duyệt.
+- Chỉ tài liệu/kiểm chứng nền; chưa thay đổi chức năng người dùng hoặc database.
+
+## 2026-11-15 — Rà offline và chuẩn bị kiểm chứng, chưa triển khai mới
+
+- Làm rõ chính sách v7 hiện hành và các phương án lịch sử đã thay thế, giữ nguyên hash.
+- Thêm công cụ rà 422 phản hồi offline, phiếu chấm tay 215 phản hồi và kế hoạch slot
+  xen kẽ chờ quota; không gọi API/judge, không sửa ledger/checker đã khóa.
+- Bổ sung thiết kế onset 2/3 frame, CSV thử 3 phút/10 câu, đề xuất MySQL test riêng
+  và điều tra CPU test Settings. Không đổi VAD runtime/cờ, CSS, TTS hoặc backend.
+- Kết quả kiểm chứng và hạn chế ở [TESTING](TESTING.md); chưa nghiệm thu prompt/thiết bị.
+
+## 2026-11-14 — Bổ sung đo STT và debug VAD tại máy
+
+- Bảng trước/sau bổ sung request STT/phút và thời gian đang thu; công khai hồi
+  quy request trên nhiễu hồng và giới hạn xung/echo của VAD năng lượng.
+- `VITE_VOICE_DEBUG` mặc định false, chỉ console scalar counters khi tự bật;
+  không lưu/gửi audio hoặc transcript. Không triển khai pha mới hay đổi VAD.
+
+
+## 2026-11-14 — Thử nghiệm cổng transcript và VAD thích nghi
+
+- Hai công tắc frontend mặc định tắt: thông báo nhẹ khi chưa nghe rõ; VAD thích
+  nghi đóng lượt nhiễu đều và fallback VAD cũ khi lỗi. Lỗi dịch vụ vẫn báo lỗi.
+- Có số đo theo từng RMS/SNR và bảng kiểm thiết bị trong
+  [VOICE_VAD_BASELINE.md](VOICE_VAD_BASELINE.md). Chưa tuyên bố giải quyết tiếng
+  ồn/echo; Pha C chưa làm, D/E hoãn.
+
+
+## 2026-11-13 — Chốt từ chối mặc định Việt, sinh đầy đủ không pilot/judge
+
+- V7 giữ version 7/các sửa cũ; 5.997 byte, hash e75a86fd…e722680 đã khóa.
+  Mặc định từ chối Việt; yêu cầu rõ trả lời Anh được đáp Anh. Ghi hạn chế
+  người chỉ biết Anh vẫn nhận từ chối Việt nếu chưa yêu cầu rõ ngôn ngữ.
+- Cho phép ví dụ/câu luyện Anh cạnh lời Việt. Checker chỉ gắn cờ lặp từ
+  chối song ngữ hoặc trộn trong câu từ chối. Đây là đổi quy tắc, không sửa
+  để lượt cũ qua; raw/cờ/tỷ lệ các vòng trước giữ nguyên.
+- Corpus vẫn 248; mười đầu vào ngôn ngữ giữ nguyên, kỳ vọng VI. 95 test
+  cấu trúc/offline, lint repo và type-check qua. Một runner chỉ sinh full,
+  trần đã ghi trước 1.050 lượt/2.100 request; không pilot/LLM-judge/Blaze.
+- Chuẩn bị rubric judge bản nháp để người dùng duyệt riêng; phiếu tay lấy
+  mọi case có cờ/không chắc và ≥20% ngẫu nhiên mỗi nhóm/phiên bản, đủ ba
+  lần mỗi case. Không thay mẫu 24 lượt cũ.
+- Thực tế dừng 429 ở request 428: 422 phản hồi, 4 lượt cuối thiếu dữ liệu,
+  624 lượt chưa chạy. Hai retry 502 đều phục hồi. Không tự resume, không
+  pilot/judge/Blaze. Xuất phiếu có dữ liệu 174 phản hồi, khung 411 dòng/137
+  case-version, toàn bộ cờ và bảng theo nhóm/đối chứng cơ học. Chưa nghiệm thu.
+
+## 2026-11-13 — B theo ngôn ngữ hội thoại, dừng sau pilot không đạt
+
+- Áp dụng B theo ngôn ngữ chủ đạo, hội thoại toàn Anh dùng Anh đơn giản;
+  không trộn refusal/redirection. Giữ các sửa cũ/version 7; 5.979/6.500 byte,
+  hash 499c38fb…f5c90838. Corpus 248: đổi kỳ vọng sáu đầu vào cũ sang Việt,
+  thêm A1/B1/C1 text và B1 voice toàn Anh; v6/238 case trước giữ nguyên.
+- Thêm runner campaign chung, opt-in, gate/khóa hash, ledger/resume,
+  Retry-After, dừng 429, một retry 502. Trần ghi trước REPORT: pilot 30/60,
+  full có điều kiện 1.050/2.100 lượt/request; không judge/Blaze.
+- 85 test cấu trúc/offline và lint qua. Pilot thực tế 30 request, 0 lỗi/
+  retry: đúng ngôn ngữ 18/30 (60%), voice 12/12 ≤45. Sáu cờ trộn gồm hai
+  chuyển hướng trộn và bốn false positive của checker trên mẫu câu học.
+  Không đạt: dừng, không sửa thêm/checker/full/khóa prompt/judge.
+- SCREENING đủ 30 dòng đầu; phiếu tay phân tầng 27 lượt/9 case kèm ngữ
+  cảnh/rubric. Mẫu 24 cũ và kết quả cũ nguyên hash; chưa nghiệm thu chất lượng.
+
+## 2026-11-13 — Một lần sửa ngôn ngữ, dừng sau 18 lượt và đề xuất B
+
+- V7 giữ version 7, sửa đúng hai dòng để nhấn mạnh ngôn ngữ lượt mới nhất
+  dù history dùng ngôn ngữ khác/tiếng Việt. Không nén quy tắc khác; 5.684
+  byte dưới trần mới 6.500 byte. Lưu snapshot/diff/hash trong eval revisions.
+- 67 test mục tiêu, lint repo và mypy strict eval qua trước live. Chạy đúng
+  cùng 18 lượt/18 request, không lỗi/retry: 0 Anh, 18 vi, 0 unknown theo
+  checker; 9/9 voice ≤45 từ. Dưới ngưỡng 15/18 đã chốt: chỉ đề xuất diff B,
+  chưa áp dụng, không sửa prompt thêm, dừng chờ người dùng.
+- SCREENING của vòng gốc/mới có dòng đầu đầy đủ; tách hai unknown gốc
+  A1-voice lần 1/3. Giữ nguyên v6, corpus, raw cũ và mẫu chấm 24 lượt.
+  Chưa chạy bước 2–3/full/judge/Blaze, không kết luận nghiệm thu trên mẫu nhỏ.
+
+## 2026-11-13 — Kết quả live sáu case ngôn ngữ v7
+
+- Chạy đúng 18 request trên sáu case × ba lần, giữ hash prompt/corpus;
+  không lỗi/retry. Screening: 0 khớp tiếng Anh, 16 tiếng Việt, 2 chưa rõ;
+  cả 9 voice không vượt 45 từ. Chưa chấm ngữ nghĩa hoặc nghiệm thu.
+- Thêm runner opt-in có trần, checkpoint/resume, Retry-After, dừng 429 và
+  tối đa một retry 502/slot; kết quả mới có model/ngày/hash, giữ mẫu 24 cũ.
+- Dừng chờ xác nhận; chưa chạy full/judge. Trần bước 2/3 được ghi trước trong
+  REPORT/kế hoạch. Không đổi prompt/case, không gọi Blaze.
+
+## 2026-11-13 — Ngôn ngữ từ chối theo lượt mới nhất
+
+- Chọn A, làm rõ lời từ chối theo ngôn ngữ lượt mới nhất; nếu dùng Anh thì
+  dùng tiếng Anh đơn giản theo level. V7 giữ version 7, dài 5.599 byte.
+- Thêm 6 case A1/B1/C1 × text/voice thành 244; giữ nguyên 238 case trước đó,
+  checker ngôn ngữ, mẫu 24 lượt và kết quả cũ. Có snapshot/hash/diff trong eval.
+- Chỉ kiểm cấu trúc/lint; chưa gọi Gemini hoặc chạy bộ đầy đủ theo hash mới.
+
+## 2026-11-13 — Điều chỉnh screening độ dài voice
+
+- Checker voice chỉ gắn cờ trên 45 từ, bỏ chặn dưới. Tính lại dữ liệu pilot:
+  v6 còn 6 cờ, v7 còn 0; ghi rõ 12 cờ câu ngắn đã gỡ.
+- SCREENING/REPORT bổ sung riêng 10 cờ ngôn ngữ out_of_scope với ID/lần,
+  ngôn ngữ người dùng/phản hồi và trích dòng đầu. Giữ nguyên mẫu 24 lượt;
+  chưa chạy bộ 238 case. Không sửa prompt hoặc case.
+- Làm rõ coverage 80% thiếu từ trước với MYSQL_TEST_URL chưa cấu hình,
+  HEAD 72,38%; chênh 73,98%/73,93% chưa xác định nguyên nhân.
+
+## 2026-11-12 — Rà screening và bốn phản hồi bổ sung
+
+- Báo số cờ theo v6/v7 và 12 nhóm, kèm ID/lần/review ID và lý do từng cờ.
+  Sửa heuristic ngôn ngữ cho câu ngắn, trích dẫn và tiếng Việt không dấu;
+  giữ nguyên prompt/case, dữ liệu pilot và mẫu 24 lượt đang chấm.
+- Ghi bốn 502 là chưa có dữ liệu, không đạt/trượt. Retry đúng một lần mỗi
+  vị trí đã duyệt, cả bốn có reply; kết quả bổ sung tách riêng, chưa chấm tay.
+- Đo HEAD sạch: coverage 72,38%, khác số workspace cũ 73,98%; workspace đo
+  lại 73,93%. Giữ ngưỡng 80%, chưa đạt. Chưa chạy 238 case, chưa nghiệm thu
+  hoặc kết luận v7 tốt hơn v6; xem REPORT trong eval.
+
+## 2026-11-12 — Bổ sung trung thực và hồi quy cho Mate v7
+
+- Mate được trả lời mình là AI dạy tiếng Anh, tự giới thiệu và nói giúp được
+  gì; không nhận là con người hoặc bàn chi tiết model/provider/prompt.
+- Làm rõ không có đáp án checkpoint, chỉ app chấm, không đoán/gợi ý đáp án.
+  Hướng dẫn tính năng app chỉ theo lesson context, không bịa nút/màn hình.
+- Giữ v6 và preamble v7 cũ; v7 sửa tại chỗ dài 5.578 byte, có snapshot/hash/diff.
+- Thêm 28 case hồi quy/biên thành 238, pilot 20 case xen kẽ nhóm. Kết quả
+  thực và phiếu chấm tay ghi riêng theo hash tại `backend/evals/scope/REPORT.md`.
+- Pilot đã thử đủ 120 lượt, lưu 116 phản hồi/4 lỗi HTTP 502; không retry vị trí
+  lỗi, có phiếu chấm tay và mẫu 24 lượt. Chưa chấm ngữ nghĩa, chưa đạt ngưỡng
+  screening ngôn ngữ/voice hoặc coverage backend 80%.
+
+## 2026-11-11 — Phạm vi giáo viên Mate và bộ đánh giá
+
+- Persona v7 hướng Mate tập trung tiếng Anh/TOEIC, chuyển hướng câu ngoài phạm
+  vi về hoạt động ở nguyên phase; giữ ngôn ngữ, giọng và quyền ghi tiến độ của app.
+- Khẩn cấp được tạm gác bài, dùng hướng dẫn chung; không ghi số điện thoại.
+- Giữ nguyên persona v6 để đối chứng/rollback; thêm 210 case tổng hợp, test cấu
+  trúc và runner pilot opt-in tối đa 120 lượt. Kết quả fake không chứng minh chất
+  lượng sư phạm; phiếu chấm tay tách khỏi screening tự động.
+- Chưa khôi phục/tạo mới PROGRESS theo quyết định người dùng; lịch sử file vẫn
+  còn trong Git. Kết quả kiểm chứng: `backend/evals/scope/REPORT.md`.
+- Lint/build và test qua với 24 integration MySQL chưa chạy; coverage backend
+  73,98% chưa đạt 80%. Pilot lưu 15 phản hồi/16 lượt thử rồi dừng HTTP 429;
+  chưa đủ dữ liệu hoặc chấm tay để kết luận chất lượng v7.
+
+## 2026-11-11 — Giao diện theo ảnh mẫu đã duyệt
+
+- Chỉnh riêng năm CSS cho workspace/chat, đăng nhập, landing, bài học, hồ sơ
+  và cài đặt; palette xanh dương, cấp chữ và khoảng cách nhất quán, sáng/tối.
+- Giữ logo và linh vật gốc, nội dung, toàn bộ mã xử lý và các tương tác.
+- Có snapshot và script khôi phục riêng CSS; báo cáo tại `UI_REFRESH_2026-11-11.md`.
+
+## 2026-11-11 — Thông báo lỗi hội thoại trực tiếp tự ẩn
+
+- Thông báo lỗi phát sinh khi bắt đầu, đổi giọng, dừng hoặc đang thoại tự ẩn
+  sau 5 giây; lỗi mới, kể cả cùng nội dung, được hiển thị đủ 5 giây.
+- Nhãn phiên gặp lỗi cũng ẩn cùng thông báo; vẫn có thể bắt đầu lại phiên.
+  Việc ẩn thông báo không dừng phiên đang hoạt động.
+
+## 2026-11-06 — Cấu hình Facebook cho đăng ký và đăng nhập
+
+- Bổ sung cấu hình Facebook local; nút Facebook tiếp tục dùng chung luồng
+  tạo tài khoản lần đầu và đăng nhập tài khoản đã liên kết.
+- Màn hình đăng ký giải thích có thể tạo tài khoản bằng Google/Facebook mà
+  không đặt mật khẩu EngMate; nhóm nút có tên truy cập phù hợp chế độ.
+- Bổ sung kiểm thử cho Facebook từ form, popup, callback tới lưu liên kết và
+  tạo phiên; không thay đổi chính sách liên kết email trùng.
+
 ## 2026-10-30 — Đăng nhập Google bằng tài khoản EngMate đã có
 
 - Khi email Google trùng tài khoản cũ, hiện bước xác nhận mật khẩu EngMate để

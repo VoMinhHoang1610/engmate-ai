@@ -174,8 +174,10 @@ async def test_rejects_unverified_or_wrong_app(
 
 
 @pytest.mark.anyio
+@pytest.mark.parametrize("provider", ["google", "facebook"])
 async def test_routes_cookie_csrf_cancel_and_callback(
     monkeypatch: pytest.MonkeyPatch,
+    provider: Provider,
 ) -> None:
     """Bind popup results to the exact origin/state, without tokens in URLs."""
     app = create_app(config())
@@ -192,19 +194,20 @@ async def test_routes_cookie_csrf_cancel_and_callback(
     ) as client:
         assert (
             await client.post(
-                "/api/auth/oauth/google/start",
+                f"/api/auth/oauth/{provider}/start",
                 headers={"Origin": "https://evil.example"},
             )
         ).status_code == 403
         start = await client.post(
-            "/api/auth/oauth/google/start", headers={"Origin": "http://127.0.0.1:5174"}
+            f"/api/auth/oauth/{provider}/start",
+            headers={"Origin": "http://127.0.0.1:5174"},
         )
         assert start.status_code == 200
         assert "HttpOnly" in start.headers["set-cookie"]
         assert "SameSite=lax" in start.headers["set-cookie"]
         state = start.json()["state"]
         callback = await client.get(
-            "/api/auth/oauth/google/callback",
+            f"/api/auth/oauth/{provider}/callback",
             params={"state": state, "code": "test-code"},
         )
         assert callback.status_code == 200
@@ -213,17 +216,17 @@ async def test_routes_cookie_csrf_cancel_and_callback(
         assert "frame-ancestors 'none'" in callback.headers["content-security-policy"]
         assert callback.headers["referrer-policy"] == "no-referrer"
         replay = await client.get(
-            "/api/auth/oauth/google/callback",
+            f"/api/auth/oauth/{provider}/callback",
             params={"state": state, "code": "test-code"},
         )
         assert "app-access" not in replay.text
         exchange.assert_awaited_once()
         start = await client.post(
-            "/api/auth/oauth/facebook/start",
+            f"/api/auth/oauth/{provider}/start",
             headers={"Origin": "http://127.0.0.1:5174"},
         )
         cancelled = await client.get(
-            "/api/auth/oauth/facebook/callback",
+            f"/api/auth/oauth/{provider}/callback",
             params={"state": start.json()["state"], "error": "access_denied"},
         )
         assert "tokens" not in cancelled.text
@@ -234,23 +237,24 @@ async def test_routes_cookie_csrf_cancel_and_callback(
 
         monkeypatch.setattr("app.api.oauth_routes.sign_in", unavailable)
         start = await client.post(
-            "/api/auth/oauth/google/start",
+            f"/api/auth/oauth/{provider}/start",
             headers={"Origin": "http://127.0.0.1:5174"},
         )
         failed = await client.get(
-            "/api/auth/oauth/google/callback",
+            f"/api/auth/oauth/{provider}/callback",
             params={"state": start.json()["state"], "code": "new-code"},
         )
         assert "private database error" not in failed.text
         assert "tokens" not in failed.text
 
 
-def test_missing_credentials() -> None:
+@pytest.mark.parametrize("provider", ["google", "facebook"])
+def test_missing_credentials(provider: Provider) -> None:
     """Missing credentials fail explicitly rather than imitating a successful login."""
     from app.core.config import Settings
 
     with pytest.raises(HTTPException) as error:
-        OAuthService(Settings()).start("google")
+        OAuthService(Settings()).start(provider)
     assert error.value.status_code == 503
 
 
@@ -329,7 +333,10 @@ async def test_google_confirmation_route_requires_cookie_origin_and_single_use(
         confirm.assert_called_once()
 
 
-def test_identity_account_transaction_and_no_email_autolinking() -> None:
+@pytest.mark.parametrize("provider", ["google", "facebook"])
+def test_identity_account_transaction_and_no_email_autolinking(
+    provider: Provider,
+) -> None:
     """Use an in-memory SQL database to verify account/session/binding writes."""
     schema = MetaData()
     users = Table(
@@ -368,30 +375,38 @@ def test_identity_account_transaction_and_no_email_autolinking() -> None:
     database.models.table.side_effect = lambda name, _connection: schema.tables[name]
     database.transaction.side_effect = engine.begin
     service = AuthService(database, config())
-    identity = Identity("google-subject", "learner@example.test", "Learner", True)
+    identity = Identity(
+        f"{provider}-subject", "learner@example.test", "Learner", provider == "google"
+    )
     try:
-        first = sign_in(service, "google", identity)
-        second = sign_in(service, "google", replace(identity, name="Different"))
+        first = sign_in(service, provider, identity)
+        second = sign_in(service, provider, replace(identity, name="Different"))
         assert first["user"]["public_id"] == second["user"]["public_id"]
         assert first["refresh_token"] != second["refresh_token"]
         with engine.begin() as connection:
             account = connection.execute(select(users)).mappings().one()
             assert account["PasswordHash"] is None
+            binding = connection.execute(select(identities)).mappings().one()
+            assert binding["UserId"] == account["UserId"]
+            assert binding["Provider"] == provider
+            assert bool(account["EmailVerifiedAt"]) == identity.verified
             assert (
-                connection.execute(select(identities)).mappings().one()["UserId"]
-                == account["UserId"]
+                len(connection.execute(select(schema.tables["LearnerProfiles"])).all())
+                == 1
             )
             assert len(connection.execute(select(sessions)).all()) == 2
-        for provider in ("google", "facebook"):
+        for collision_provider in ("google", "facebook"):
             with pytest.raises(HTTPException) as collision:
                 sign_in(
-                    service, provider, replace(identity, subject="different-subject")
+                    service,
+                    collision_provider,
+                    replace(identity, subject="different-subject"),
                 )
             assert collision.value.status_code == 409
         with engine.begin() as connection:
             connection.execute(users.update().values(Status="disabled"))
         with pytest.raises(HTTPException) as disabled:
-            sign_in(service, "google", identity)
+            sign_in(service, provider, identity)
         assert disabled.value.status_code == 401
 
         password = "existing-local-password"

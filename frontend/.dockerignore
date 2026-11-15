@@ -4,3 +4,5 @@ coverage
 .env
 .env.*
 npm-debug.log*
+# Local visual fixture imports backend content outside this build context.
+tests/ui-audit.*

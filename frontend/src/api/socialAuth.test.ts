@@ -1,5 +1,10 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { authenticateSocial, completeGoogleLink, GoogleLinkRequired } from './socialAuth';
+import {
+  authenticateSocial,
+  completeGoogleLink,
+  GoogleLinkRequired,
+  type SocialProvider,
+} from './socialAuth';
 import { apiFetch, saveSession } from './database';
 
 vi.mock('./database', () => ({ apiFetch: vi.fn(), saveSession: vi.fn() }));
@@ -9,12 +14,18 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function setup() {
+function setup(provider: SocialProvider = 'google') {
   const popup = { closed: false, close: vi.fn(), location: { href: '' } };
   vi.spyOn(window, 'open').mockReturnValue(popup as unknown as Window);
   vi.mocked(apiFetch).mockResolvedValue(
     new Response(
-      JSON.stringify({ url: 'https://accounts.google.com/o/oauth2/v2/auth', state: 'flow-state' }),
+      JSON.stringify({
+        url:
+          provider === 'google'
+            ? 'https://accounts.google.com/o/oauth2/v2/auth'
+            : 'https://www.facebook.com/v24.0/dialog/oauth',
+        state: 'flow-state',
+      }),
       { status: 200 },
     ),
   );
@@ -34,27 +45,36 @@ it('reports missing provider setup and closes its popup', async () => {
   expect(popup.close).toHaveBeenCalledOnce();
 });
 
-it('accepts only the exact popup, origin, provider and state before creating a session', async () => {
-  const popup = setup();
-  const pending = authenticateSocial('google');
-  await vi.waitFor(() => expect(popup.location.href).toContain('accounts.google.com'));
-  const data = {
-    type: 'engmate-oauth',
-    provider: 'google',
-    state: 'flow-state',
-    tokens: { access_token: 'access', refresh_token: 'refresh' },
-  };
-  const deliver = (origin: string, source: Window | null, value: unknown) =>
-    window.dispatchEvent(new MessageEvent('message', { origin, source, data: value }));
-  deliver('https://evil.example', popup as unknown as Window, data);
-  deliver(window.location.origin, null, data);
-  deliver(window.location.origin, popup as unknown as Window, { ...data, state: 'other' });
-  expect(saveSession).not.toHaveBeenCalled();
-  deliver(window.location.origin, popup as unknown as Window, data);
-  await pending;
-  expect(saveSession).toHaveBeenCalledWith({ access_token: 'access', refresh_token: 'refresh' });
-  expect(popup.close).toHaveBeenCalledOnce();
-});
+it.each(['google', 'facebook'] as const)(
+  'accepts only the exact %s popup, origin, provider and state before creating a session',
+  async (provider) => {
+    const popup = setup(provider);
+    const pending = authenticateSocial(provider);
+    const host = provider === 'google' ? 'accounts.google.com' : 'www.facebook.com';
+    await vi.waitFor(() => expect(popup.location.href).toContain(host));
+    expect(apiFetch).toHaveBeenCalledWith(`/api/auth/oauth/${provider}/start`, expect.any(Object));
+    const data = {
+      type: 'engmate-oauth',
+      provider,
+      state: 'flow-state',
+      tokens: { access_token: 'access', refresh_token: 'refresh' },
+    };
+    const deliver = (origin: string, source: Window | null, value: unknown) =>
+      window.dispatchEvent(new MessageEvent('message', { origin, source, data: value }));
+    deliver('https://evil.example', popup as unknown as Window, data);
+    deliver(window.location.origin, null, data);
+    deliver(window.location.origin, popup as unknown as Window, { ...data, state: 'other' });
+    deliver(window.location.origin, popup as unknown as Window, {
+      ...data,
+      provider: provider === 'google' ? 'facebook' : 'google',
+    });
+    expect(saveSession).not.toHaveBeenCalled();
+    deliver(window.location.origin, popup as unknown as Window, data);
+    await pending;
+    expect(saveSession).toHaveBeenCalledWith({ access_token: 'access', refresh_token: 'refresh' });
+    expect(popup.close).toHaveBeenCalledOnce();
+  },
+);
 
 it('does not accept an unexpected authorization destination', async () => {
   const popup = setup();

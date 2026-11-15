@@ -1,5 +1,357 @@
 # Kiểm thử bản hội thoại
 
+## Cổng tiền triển khai Từ vựng sau duyệt — 15/11/2026
+
+D1–D10 đã duyệt có điều kiện. [Lệnh baseline sạch và MySQL test riêng](VOCABULARY_PREFLIGHT_2026-11-15.md)
+đã trình, chưa chạy; chờ duyệt lệnh worktree và xác nhận không có tác vụ khác.
+Đã kiểm cú pháp 9 khối PowerShell bằng parser, không thực thi các khối đó.
+Baseline sạch sẽ chạy một lần và lưu tên đầy đủ từng test lỗi; App lỗi thì
+điều tra gốc, giữ nguyên timeout/assertion. Kết quả dirty workspace bên dưới
+là lịch sử và không thay cho baseline sạch.
+
+## Kiểm toán năm mục học tập — 15/11/2026
+
+[Thiết kế và ma trận kiểm thử](LEARNING_VOCABULARY_DESIGN_2026-11-15.md)
+đã được duyệt có điều kiện sau lượt kiểm toán. Chưa có test/tính năng vocabulary mới trong runtime.
+Baseline lượt này dùng bộ test hiện có, fake provider; không cấp quyền chạy eval
+live hay MySQL ứng dụng. Kết quả đầy đủ ở §9 của thiết kế.
+Lint/build qua; test baseline: backend 230 qua/24 skip, frontend 465 qua/7 timeout
+5.000 ms. Coverage toàn repo dừng ở backend 73,93% (<80%) do chưa có
+`MYSQL_TEST_URL`. Coverage frontend một worker thất bại: bảy timeout và lỗi
+ENOENT mất thư mục coverage tạm. Lượt dùng thư mục báo cáo artifact riêng không
+tái hiện ENOENT: 466 qua/6 lỗi ở App (5 timeout, 1 không tìm thấy thông báo tải
+giọng), 38/39 file qua; exit 1, không xuất tổng coverage. Frontend chưa chứng minh
+đạt 80% từng chỉ số. Giữ nguyên timeout/assertion và toàn bộ kết quả thất bại;
+dừng đo nền, chưa sửa lỗi ngoài phạm vi thiết kế.
+Kiểm tra browser dùng fixture `frontend/tests/ui-audit.html`, chặn mọi fetch API
+thật, Edge có sẵn và Node built-ins; artifact riêng trong
+`.artifacts/learning-vocabulary-audit-20261115/`, không thêm dependency.
+
+## Rà offline 14–15/11/2026 và các điểm chờ duyệt
+
+Từ `backend`: `..\.venv\Scripts\python.exe -m pytest evals/scope -q`;
+`..\.venv\Scripts\python.exe -m evals.scope.review_available` chỉ đọc dữ liệu
+synthetic đã lưu, kiểm hash và xuất bản rà riêng; không đọc key hoặc gọi provider.
+Không chạy `campaign --execute --resume` hiện tại: lịch xen kẽ mới mới là đề xuất.
+Từ `frontend`: `npm.cmd run benchmark:vad` đã qua 23/23 test, 28 kịch bản × 2 mode.
+[Screening và phiếu tay](../backend/evals/scope/results/available-review-20261114/REVIEW.md).
+
+[Test Settings không ổn định và CPU profile](SETTINGS_TEST_INVESTIGATION.md):
+không tăng timeout hoặc sửa assertion. [MySQL test tạm](MYSQL_TEST_PROPOSAL.md)
+chỉ là lệnh đề xuất; chưa chạy Docker/MySQL, fixture không tự kiểm host/port.
+Smoke đã thử bằng `python scripts/manage.py smoke`, thất bại WinError 10061 ở
+kết nối local; không tự bật app/DB. Smoke này chỉ health/capabilities/routes,
+không thay kiểm đăng nhập/chat thật.
+
+[Thiết kế onset chưa triển khai](VOICE_ONSET_DESIGN.md) và
+[CSV 3 phút im lặng + 10 câu](VOICE_DEVICE_CHECKLIST.csv) dùng cho thiết bị thật.
+Cần thử tay đăng nhập/đăng xuất, chat SSE/hủy/lưu, thoại mọi cờ tắt và các tổ hợp
+A/B riêng, tai nghe/loa/echo/barge-in, lộ trình TOEIC bắt đầu/luyện/check/hoàn thành.
+Không đánh dấu các luồng này đã qua vì unit test hoặc smoke OpenAPI qua.
+
+## Bổ sung số đo STT và debug cục bộ — 14/11/2026
+
+`measure.ts` thêm `sttRequestsPerMinute` (trên toàn phút audio),
+`captureStateMs` (onset → endpoint/discard), số discard trước/sau STT và kết quả
+từng capture không chứa PCM. Batch tính request ở endpoint; realtime tính một
+phiên nhận dạng tại onset, không đếm từng frame WebSocket. Không mô phỏng retry
+hoặc provider billing. `harness.test.ts` kiểm mẫu đóng, bị loại và còn mở.
+
+`voiceDebug.test.ts` và test tích hợp trong `blaze.test.ts` kiểm allowlist console,
+nhịp log, thời gian capture, reset phiên, threshold/fallback, số request thực tại
+điểm gọi client, discard sau STT, và flag tắt không đọc diagnostics/không in log.
+Không thay assertions cũ hoặc thuật toán quyết định VAD. Kiểm tay: bật
+`VITE_VOICE_DEBUG`, Console Debug/Verbose, đo một phiên 60 s, Stop lấy snapshot
+cuối; đếm request network tương ứng, không xuất audio hoặc nội dung transcript.
+
+
+## Pha A/B VAD opt-in — 14/11/2026
+
+- `transcriptGate.test.ts`, `VoiceChat.test.tsx`, `blaze.test.ts`: chữ rỗng/ký tự
+  không phải lời nói không tạo lượt Gemini/tin nhắn; câu ngắn được giữ; lỗi dịch
+  vụ/schema vẫn đi kênh lỗi; notice tự hết, Stop bỏ callback cũ; realtime bị loại
+  không retry batch và đóng socket.
+- `adaptiveVad.test.ts`, `blaze.test.ts`: ngưỡng thích nghi/hysteresis, câu 200 ms,
+  pre-roll, đóng nhiễu đều, cap cho tiếng biến thiên; fallback init/runtime/reset
+  giữ frame, không mở recognition trùng; mute/Stop xóa nền đã học, chen lời vẫn hủy.
+- `npm.cmd run benchmark:vad`: oracle cũ vẫn được so chính xác, thêm report
+  `.artifacts/voice-vad-adaptive.json` so EnergyVad với AdaptiveVad trên cùng
+  28 kịch bản × 2 mode. Discard vẫn tính onset nhầm; speech bị discard vẫn tính
+  bỏ sót. Không đổi nhãn hoặc bỏ mẫu thất bại để cải thiện số liệu.
+- Chạy coverage frontend riêng với `npm.cmd run test:coverage -- --maxWorkers=1`
+  khi máy chịu tải; không tăng timeout. Toàn bộ lint/test/coverage/build qua
+  `python scripts/manage.py ...`; backend coverage vẫn là gate độc lập.
+- Công tắc, kết quả từng mức SNR/RMS, hạn chế và bảng kiểm thiết bị:
+  [VOICE_VAD_BASELINE.md](VOICE_VAD_BASELINE.md). Echo thật/AEC/AGC và âm phát vật lý
+  chưa được kiểm chứng. C chỉ có [đề xuất đo](VOICE_OUTPUT_LEVEL_PROPOSAL.md).
+
+
+## VAD: baseline ngoại tuyến, không đổi hành vi — 13/11/2026
+
+Chạy từ frontend: `npm.cmd run benchmark:vad`. Cấu hình riêng và hướng dẫn WAV
+có nhãn tại [VOICE_VAD_BASELINE.md](VOICE_VAD_BASELINE.md). Bộ đo không chạy trong
+coverage mặc định, không dùng API trả phí, không ghi audio; chỉ ghi report gộp
+trong `.artifacts/voice-vad-baseline.json`. Corpus giọng thật chưa được cung cấp.
+
+Kết quả cập nhật 14/11: lint/build qua; frontend 427/427, benchmark 19/19;
+coverage frontend chạy riêng `npm.cmd run test:coverage -- --maxWorkers=1` qua:
+statements 89,58%, branches 81,85%, functions 85,77%, lines 92,79%.
+Lượt coverage chạy đồng thời với build/benchmark có 3 timeout App, không tái hiện
+khi chạy riêng; giữ nguyên timeout/assertion. Backend 230 qua, 24 skip do thiếu
+database test; coverage 73,93% nên **lệnh coverage toàn repo chưa qua ngưỡng 80%**.
+
+| Yêu cầu | Test/bằng chứng |
+| --- | --- |
+| Giữ nguyên VAD, kể cả pre-roll/cap/silence và reset | `voice/vad.test.ts`; đối chiếu frame với oracle cũ trong `benchmarks/vad/baseline.test.ts` |
+| Câu trả lời ngắn không bị lọc theo số từ | `voice/blaze.test.ts`: Yes., Vâng, Sales từ 200 ms PCM tổng hợp, transcript double |
+| Realtime giữ đầu câu và hủy sạch khi Stop | `voice/blaze.test.ts`: thứ tự pre-roll, socket/timer/AudioContext, bỏ final muộn |
+| False onset, miss, echo, latency và WAV có nhãn | `benchmarks/vad/harness.test.ts`, `signals.ts`, `measure.ts`, `wav.ts` |
+| Vòng đời hiện có, mute/unmount/barge-in/fallback | Toàn bộ test Blaze/RealtimeSTT/VoiceChat/capture/latency hiện có |
+| Echo thật không tự ngắt, noise gate/notice/neural fallback | **Chưa chứng minh**; chờ duyệt pha mới và kiểm tay theo bảng trong thiết kế |
+
+## Chính sách cuối và sinh trực tiếp — 13/11/2026
+
+**95 test cấu trúc/offline qua** trước live; lint toàn repo qua và mypy
+strict eval 15 source qua. Test xác nhận chỉ dòng chuyển hướng đổi so với
+snapshot B, giữ version/các quy tắc trước/v6; mặc định VI không phụ thuộc
+history, ngoại lệ yêu cầu rõ trả lời Anh (có/không dấu); cho phép ví dụ/câu
+luyện Anh nhưng gắn cờ từ chối lặp song ngữ hoặc câu từ chối bị trộn.
+Đây là thay đổi tiêu chí được người dùng duyệt, không ghi đè kết quả cũ.
+
+Runner chỉ còn full: test CLI không có pilot/judge, plan đúng 744 v7 +306
+v6, trần 2.100 request, khóa prompt trước sinh; HTTP fake kiểm ledger,
+Retry-After, dừng 429, tối đa một retry 502, resume không replay orphan,
+chặn đổi model/hash. Test engine dùng plan ngắn được inject chỉ trong
+test, không có tùy chọn giảm/thay plan trong CLI paid. Mẫu 24 cũ giữ nguyên.
+Corpus 248 giữ đầu vào; 10 case ngôn ngữ (kể cả B1 voice) kỳ vọng VI.
+
+Không có live pilot mới. Full dừng theo 429 tại request 428, sau 426 slot:
+422 phản hồi đã check tự động, 4 lượt cuối chưa có dữ liệu, 624 chưa chạy;
+hai retry 502 thành công. Không tự resume. Phiếu 174 phản hồi sẵn có gồm
+mọi 70 phản hồi có cờ và một chưa rõ; khung 411 dòng/137 case-version, đã
+kiểm độc lập lấy mẫu ≥20% mỗi nhóm/phiên bản và ba dòng mỗi case.
+54 file bảo vệ/mẫu 24 cũ còn nguyên hash; nguồn ghép prompt/checker/runner
+không đổi trong lúc chạy. Không gọi judge; rubric là bản nháp duyệt riêng.
+Coverage lịch sử chưa đạt 80% (HEAD 72,38%, thiếu MYSQL_TEST_URL), không
+hạ ngưỡng; không chạy lại coverage/build/toàn bộ test app trong vòng này.
+
+## B theo hội thoại — trước live 13/11/2026
+
+**85 test cấu trúc/offline qua**: toàn bộ `evals/scope`, prompt scope và
+voice identity. Test mới bao phủ chọn ngôn ngữ theo history, hòa/fallback,
+trộn ngôn ngữ so với ví dụ trích dẫn, cổng 27/30, plan 30/1.050, fake HTTP,
+ledger trước request, Retry-After, 429 dừng, 502 chỉ một retry (60 request),
+resume không lặp orphan, metadata đổi bị chặn, khóa prompt trước full,
+gate trượt không gọi full, và lấy mẫu tay. V6/238 case đầu nguyên vẹn;
+sáu case cũ giữ đầu vào, chỉ rubric/kỳ vọng thay theo quyết định B.
+
+Lint toàn repo qua (Ruff/Black/mypy/ESLint/TypeScript/Prettier); mypy strict
+eval qua 13 source. Hai lỗi offline đầu đã sửa trước live: detector bỏ sót
+"Let's practice" và exporter cũ so hint với fixture thay vì kỳ vọng đã
+tính theo history, khiến đếm ngôn ngữ bị trùng. Không hạ assertion/ngưỡng.
+Audit lịch sử tắt ngoại lệ B để không đổi ngược kết quả cũ.
+
+Live nhỏ B đủ 30 phản hồi/30 request, 0 retry/lỗi; đúng ngôn ngữ 18/30
+(60%), voice 12/12 ≤45 từ (24–33). Sáu cờ trộn thô; đọc nội dung thấy hai
+câu chuyển hướng Anh xen Việt và bốn false positive trên mẫu câu học tập.
+Không chỉnh checker sau vòng không đạt; cờ thô và nhận định rà tách riêng
+trong artifacts. Gate dừng, full/judge/Blaze bằng 0, không tạo PROMPT_LOCK.
+Phiếu tay 27 lượt/9 case; mẫu 24 cũ và 43 file bảo vệ còn nguyên hash.
+
+Runner `campaign` opt-in ngoài default test/coverage, không có judge.
+Kết quả paid/gate và bộ trần được ghi trong REPORT, metadata từng stage.
+Không chạy lại coverage trong vòng này; HEAD sạch 72,38%, workspace 73,93%,
+thiếu MYSQL_TEST_URL có trước, vẫn chưa đạt 80%; không hạ ngưỡng.
+
+## Vòng sửa ngôn ngữ duy nhất — 2026-11-13
+
+Trước live, bộ test cấu trúc/offline mục tiêu có **67 test qua**:
+`evals/scope/test_language_live.py`, `test_runner.py`,
+`test_screening_recovery.py`, `tests/unit/test_prompt_scope.py` và
+`test_voice_identity.py`. Thêm kiểm tra biên 14/18 → chỉ đề xuất B,
+15/18 → giữ A, unknown không được điểm, chạy thiếu phải dừng; SCREENING
+giữ nguyên dòng vật lý đầu tiên của đủ 18 phản hồi và tách các lượt trộn.
+Test prompt khóa đúng hai dòng được duyệt, phần còn lại không đổi, giới
+hạn 6.500 byte và v6 nguyên hash.
+
+`python scripts/manage.py lint` qua (Ruff, Black 102 file, mypy 90 source,
+ESLint/TypeScript/Prettier); mypy strict riêng eval qua 11 source. Lần lint
+đầu bắt một đường dẫn test dài 90 ký tự, đã ngắt dòng và chạy lại qua.
+Runner vẫn opt-in ngoài make test/coverage; không sửa checker hoặc case.
+Không chạy lại coverage trong vòng sửa này; mức nền/điều kiện MySQL đã
+ghi ở REPORT, không thay ngưỡng 80%.
+
+Live vòng sửa đủ 18 phản hồi/18 request, không retry/lỗi/chưa có dữ liệu;
+0 Anh, 18 vi, 0 unknown theo checker, 9/9 voice ≤45 từ (14–33 từ). Theo
+quy tắc chốt trước, chỉ đề xuất diff B và dừng, chưa áp dụng. Không thêm
+lượt gọi sau vòng này. SCREENING gốc vẫn tách hai unknown A1-voice lần 1/3;
+mẫu 24 lượt nguyên byte, không dùng các kết quả này thay chấm tay ngữ nghĩa.
+
+## Runner live bước 1 — 2026-11-13
+
+- `evals/scope/test_language_live.py`: 13 test offline với MockTransport,
+  gồm 18 request thành công, một retry 502, hard cap 36 khi lỗi cả 18 vị trí,
+  dừng 429, Retry-After số/HTTP-date, delay dài phải pause, resume không lặp
+  request chưa rõ kết quả, chặn metadata/model mới và che key/body upstream.
+- Tổng mục tiêu 64 qua; runner mới được chạy lại riêng 13 qua sau phần xuất
+  SCREENING Markdown. Ruff/Black và mypy strict eval 11 source qua.
+- Live thật đúng 18 reply/18 request, 0 retry/provider error. Ngôn ngữ 0 en,
+  16 vi, 2 unknown; voice 9/9 ≤45 từ. Chỉ là hình thức, không chấm ngữ nghĩa.
+  Model/ngày/hash cùng artifacts ở REPORT. Chưa chạy full/judge/Blaze, mẫu
+  24 lượt/prompt/case cũ giữ nguyên.
+- Lint/build dự án qua. Backend 230 qua/24 MySQL skip; coverage 73,93%, vẫn
+  fail ngưỡng 80%. Frontend mặc định 416 qua/1 timeout 5 giây ở test App
+  khôi phục voice/speed; chạy lại đủ với `--maxWorkers=1` được 417 qua/35 file.
+  Không sửa source/timeout/assertion; nguyên nhân timeout chưa xác định.
+
+## Chính sách A cho lời từ chối — 2026-11-13
+
+- Test prompt xác nhận chỉ một dòng đổi, có `reply in the language of the
+  latest message`, tiếng Anh đơn giản theo level, không còn `learner's language`.
+  Giữ v6/hash và giới hạn 5.600 byte.
+- Corpus 244 case; test đối chiếu prefix 238 case với snapshot trước A.
+  Sáu case mới phủ A1/B1/C1 × text/voice, history Việt và yêu cầu Anh; checker
+  vẫn gắn cờ lời đáp Việt và không gắn cờ lời đáp Anh.
+- Test vòng retry dùng fake plan để kiểm trần/độ trễ; test guard thực riêng
+  từ chối prompt/corpus mới cho chiến dịch cũ trước khi tạo client/provider.
+  Mẫu 24 lượt và artifacts trước A giữ nguyên; không gọi Gemini hoặc chạy
+  bộ đầy đủ trong bước này.
+- **51 test mục tiêu qua**; lint toàn dự án và mypy strict riêng eval 9 source
+  qua. CLI default xác thực corpus 244 case ngoại tuyến, không đọc key/gọi mạng.
+
+## Checker voice chỉ chặn trên — 2026-11-13
+
+- Test biên 0/1/19/20/45 từ không bị cờ độ dài, 46 từ bị cờ khi mode voice;
+  mode text không bị cờ voice. Metadata min 20 vẫn giữ trong case, không áp.
+- Test audit kiểm còn đúng 6 cờ v6 (safety 3, drift 1, hồi quy 1, mixed 1),
+  0 cờ v7; 12 lượt dưới 20 từ được gỡ đúng ID. Kiểm 10 cờ out_of_scope,
+  ngôn ngữ en → vi và nguyên dòng đầu code ở lượt 46; mẫu/data gốc bất biến.
+- Chỉ tính lại ngoại tuyến, không chạy bộ 238 case. Coverage HEAD 72,38%
+  trong điều kiện MYSQL_TEST_URL thiếu từ trước; không hạ ngưỡng 80%.
+- **48 test mục tiêu qua**, Ruff/Black và mypy strict eval 9 source qua.
+  Lint/test/build dự án qua: 229 backend/24 MySQL skip, 417 frontend/35 file.
+  Coverage vẫn **73,93%, fail 80%**; đối chiếu snapshot 12/11 và 13/11 khớp
+  từng dòng/nhánh, chưa giải thích số 73,98% cũ. REPORT có bằng chứng JSON.
+
+## Audit screening, retry giới hạn và HEAD sạch — 2026-11-12
+
+- `backend/evals/scope/test_screening_recovery.py` kiểm câu ngắn/unknown,
+  Việt không dấu, từ Anh trong lời giải thích Việt, trích dẫn Việt trong câu
+  Anh; giữ khoảng voice 20–45 từ. Audit không sửa corpus/prompt/phiếu/mẫu.
+- Test fake xác nhận đúng bốn retry, delay 10 giây trước mỗi request, dừng
+  ở lỗi đầu/giữa, không chạy lại output cũ; đổi model bị chặn trước request,
+  CLI mặc định không đọc key. Test audit kiểm dữ liệu/mẫu gốc bất biến.
+- Tổng nhóm mục tiêu 43 qua; Ruff/Black và mypy strict eval 9 source qua.
+  Lint/test/build dự án qua: 229 backend/24 MySQL skip, 417 frontend qua.
+  Coverage workspace lần đo này **73,93%**, vẫn fail ngưỡng 80%.
+- HEAD `e509722` worktree sạch, import app từ worktree, cùng virtualenv và
+  thiếu MYSQL_TEST_URL: **210 qua/24 MySQL skip, coverage 72,38%**. Lần đầu
+  sandbox lỗi quyền tmp không được dùng; lần ngoài sandbox không lỗi test.
+  73,98% ghi trước đó là workspace, không phải mức nền HEAD. Không hạ ngưỡng.
+- Pilot giữ 116 reply + 4 HTTP 502 chưa có dữ liệu; bốn retry riêng đều có
+  reply, chưa chấm ngữ nghĩa. Bảng và ID từng cờ ở REPORT. Mẫu 24 lượt giữ
+  nguyên; chưa chạy 238 case, không LLM-judge, không kết luận v7 tốt hơn v6.
+
+## V7 sửa tại chỗ trước pilot phân tầng — 2026-11-12
+
+- 28 test mục tiêu cuối qua: 16 test cấu trúc prompt, 4 voice identity
+  và 8 test runner ngoại tuyến. Có kiểm preamble v7 giữ nguyên, hash v6 bất
+  biến, phiên bản 7, bốn bổ sung mới và kích thước ≤5.600 byte theo yêu cầu.
+- Corpus 238 case: 210 cũ so sánh nguyên vẹn với snapshot, thêm 28 case theo
+  nhóm. Pilot 20 ID xen kẽ, phủ 12 nhóm/phase 0–4; fake xác nhận trần 120 lượt,
+  không retry và CSV chấm tay. Kiểm mypy strict riêng 6 source eval qua.
+- Không dùng phản hồi fake để chứng minh danh tính/phạm vi; chấm ngữ nghĩa
+  vẫn do người dùng/giáo viên. Kết quả thực ở `backend/evals/scope/REPORT.md`.
+- Sau khi thêm kiểm thử tiếp tục ledger: **28 test mục tiêu qua**, gồm 8 test
+  runner. Lint/build toàn repo qua; test đầy đủ 229 backend qua/24 MySQL skip,
+  417 frontend qua. Coverage backend 73,98% chưa đạt 80%, không hạ ngưỡng.
+- Pilot đã thử đủ 120 vị trí, có 116 phản hồi và 4 lỗi HTTP 502; mỗi phiên bản
+  58/60. Không retry vị trí lỗi, không vượt trần, có phiếu chấm 120 dòng và mẫu
+  24 lượt. Ngữ nghĩa chưa chấm; screening ngôn ngữ/voice chưa đạt ngưỡng.
+
+## Prompt scope v7 — 2026-11-11
+
+- `tests/unit/test_prompt_scope.py` kiểm phiên bản, hash v6, kích thước v7, ghép
+  persona/lesson/JSON/voice đúng thứ tự ở phase 0–4, không checks trong prompt,
+  history riêng, evaluation version và native voice context. Dùng repo doubles
+  và LLM ở `tests/fakes.py`, không gọi API thật.
+- Integration Gemini transport kiểm v7/SCOPE ở text/native; test MySQL chỉ
+  chạy khi có `MYSQL_TEST_URL` trỏ schema `_test` riêng.
+- Eval 210 case không được mặc định thu thập; coverage chỉ source `app/`.
+  Test runner ngoại tuyến chạy riêng bằng `python -m pytest
+  evals/scope/test_runner.py` từ backend. Runner không chạy trả phí khi thiếu
+  `--execute`, dừng khi lỗi và không ghi đè kết quả.
+- Truy vết SCOPE-01–05 → corpus/rubric/test cấu trúc/phiếu chấm tay tại
+  [eval scope](../backend/evals/scope/README.md). Kết quả thực, tỷ lệ và giới hạn
+  xem [báo cáo](../backend/evals/scope/REPORT.md), không suy từ output fake.
+
+## Đổi lớp trình bày theo ảnh duyệt — 2026-11-11
+
+- Chỉ năm CSS thay đổi; manifest SHA-256 xác nhận TS/TSX/JS, backend và tài
+  nguyên logo/linh vật giữ nguyên so với snapshot đầu tác vụ.
+- Kiểm tra theo nhóm: 76 test workspace/chat/sidebar/voice qua; 23 test
+  đăng nhập/OAuth/landing qua; lint/type-check/build qua.
+- Lượt cuối chạy riêng: **35 file, 417/417 test frontend qua**; coverage
+  statements **89,56%**, branches **81,73%**, functions **85,74%**, lines
+  **92,78%**; đạt cả bốn ngưỡng 80%.
+- Lượt chạy đồng thời trước đó có ba test lỗi thời gian chờ; giữ nguyên test,
+  timeout và assertions, chạy lại toàn bộ riêng đã qua.
+- 120 ảnh responsive đa màn hình và 8 ảnh lớp học/welcome bổ sung, cả sáng/tối;
+  không có Runtime exception hay cảnh báo/error qua console API trong các lượt
+  thành công. Browser dùng fixture cô lập, không gọi API AI tính phí hoặc ghi
+  dữ liệu ứng dụng thật.
+- Frontend Docker build lại, healthy; smoke HTTP/proxy/OpenAPI qua. Mã CSS mới
+  được phục vụ; hash Mate SVG qua HTTP trùng file gốc.
+- Hợp đồng 22 nhóm chức năng, file sửa, giới hạn và rollback:
+  [UI_REFRESH_2026-11-11](UI_REFRESH_2026-11-11.md).
+
+## Tự ẩn thông báo lỗi thoại — 2026-11-11
+
+- `frontend/src/voice/VoiceChat.test.tsx`: bổ sung 6 ca kiểm thử bằng fake timers
+  cho VOICE-ERROR-01/02. Xác nhận thông báo còn ở 4.999 ms và mất ở 5.000 ms;
+  lỗi mới hoặc lỗi lặp cùng nội dung được tính lại đủ thời gian.
+- Kiểm tra lỗi bắt đầu phiên, nhãn trạng thái lỗi cùng biến mất, nút bắt đầu
+  lại vẫn khả dụng, phiên đang nghe không bị dừng và timer được hủy khi unmount.
+- Trước sửa: 6 test mới trượt, 16 test cũ qua. Sau sửa: 22/22 qua.
+- Toàn frontend: 35 file, 417 test qua với `npm run test:coverage -- --maxWorkers=1`.
+  Coverage statements 89,56%, branches 81,73%, functions 85,74%, lines 92,78%;
+  đạt cả bốn ngưỡng 80%.
+- Lint/type-check/format toàn repo, production build frontend và HTTP smoke qua.
+  Frontend Docker đang chạy phục vụ source mới với thời gian 5.000 ms.
+- Test dùng session doubles, không cấp quyền microphone hoặc gọi AI tính phí.
+
+```powershell
+cd frontend
+npm run test -- src/voice/VoiceChat.test.tsx
+```
+
+## Facebook đăng ký/đăng nhập trên Docker — 2026-11-06
+
+- `backend/tests/unit/test_oauth.py`: 13 test qua. Mở rộng callback và kiểm tra
+  thiếu cấu hình cho cả Google/Facebook; SQL trong bộ nhớ xác nhận đăng ký lần
+  đầu tạo một tài khoản/hồ sơ/liên kết, lần sau giữ PublicId, tạo phiên mới và
+  từ chối email trùng hoặc tài khoản disabled.
+- Backend toàn bộ: **213 passed, 24 skipped**; coverage tổng hợp **72,43%**,
+  chưa đạt 80% do chưa chạy integration trên schema MySQL test riêng.
+- `AuthForm.test.tsx` bổ sung luồng Facebook ở cả đăng nhập/đăng ký khi các ô
+  tài khoản local còn trống. `socialAuth.test.ts` kiểm tra đúng endpoint Facebook,
+  đích popup và loại bỏ message sai origin/source/provider/state trước khi lưu phiên.
+- Frontend toàn bộ với coverage: **405 passed, 6 timeout** ở `App.test.tsx`
+  trong lượt chạy đồng thời với build/lint, chưa có kết quả coverage toàn bộ
+  thành công cho lượt này. Sau khi build/lint hoàn tất, chạy riêng
+  `App.test.tsx`, `AuthForm.test.tsx`, `api/socialAuth.test.ts`: **65/65 qua**,
+  gồm cả sáu test từng timeout. Giữ nguyên timeout 5000 ms và assertions.
+- Build TypeScript/Vite trong Docker, lint/type-check/format và HTTP smoke qua.
+- Sau khi người dùng điền App ID/App Secret vào `.env`, recreate hai dịch vụ:
+  backend/frontend healthy; POST `/api/auth/oauth/facebook/start` qua frontend
+  trả **200**, authorize host `www.facebook.com`, callback đúng
+  `http://127.0.0.1:5174/api/auth/oauth/facebook/callback`, có cookie HttpOnly
+  và scope `email,public_profile`. Không in credential, state hoặc cookie.
+- Kiểm tra schema chỉ đọc xác nhận có bảng `engmate_oauth_identities` và
+  `NguoiDung.PasswordHash` cho phép NULL. Không chạy migration/ghi tài khoản
+  trên database đang dùng; provider exchange và cấp quyền Meta thật do người
+  dùng tự hoàn tất. HTTP 200 ở `/start` chưa chứng minh App Secret hợp lệ với Meta.
+
 ## Liên kết Google sau xác nhận mật khẩu — 2026-10-30
 
 - 29 tests OAuth/mật khẩu/JWT backend qua; 76 tests frontend App/AuthForm/socialAuth/database qua. Không dùng credential thật trong kiểm thử tự động.

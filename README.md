@@ -1,5 +1,13 @@
 # EngMate-AI
 
+## Thiết kế năm mục học tập — duyệt có điều kiện 15/11/2026
+
+[Thiết kế Từ vựng và điều kiện đã duyệt](docs/LEARNING_VOCABULARY_PROPOSAL.md)
+đề xuất lưới chủ đề, danh sách đủ từ và chủ đề AI riêng. **Chưa triển khai**;
+hiện Từ vựng vẫn có 4 bộ giao tiếp nhỏ lưu đã nhớ ở trình duyệt. Chưa cần cài
+bảng hoặc cấu hình mới. [Tổng quan database](docs/DATABASE.md).
+Sidebar thật ghim mặc định; mô tả mở bằng hover trong mục lịch sử bên dưới đã cũ.
+
 ## Đăng nhập Google/Facebook
 
 GitHub đã được bỏ. Cấu hình ứng dụng OAuth, callback và bảng liên kết theo
@@ -76,7 +84,7 @@ Linh thú gốc ở trang đăng nhập tiếp tục làm người thầy trong 
 - **Phát âm:** nghe mẫu qua speech hiện có, ghi âm thành bản chép lời để đối chiếu và xem hướng dẫn từng âm. Chưa có bộ chấm phát âm; không hiển thị điểm mẫu 86/100.
 - **Từ vựng:** các cụm giao tiếp cũ vẫn cho tự đánh dấu đã nhớ trên trình duyệt. Từ của bài TOEIC nằm trong nội dung bài. **Tiến độ TOEIC** đọc kế hoạch, lượt luyện, kết quả kiểm tra, hoàn thành và lịch ôn từ máy chủ; không dùng dấu hoàn thành cũ trong localStorage. Không tạo tài khoản demo hoặc giả lập AI.
 
-Prompt `persona.v6` dùng chung cho chat và thoại: giải thích → làm mẫu → thực hành → nhận xét → ôn lại. Nội dung hội thoại vẫn theo tiếng Việt/Anh và yêu cầu của người học. Các đoạn mô tả phạm vi hội thoại ngày 16–18/10 dưới đây ghi lại nền tảng trước đợt thiết kế này; yêu cầu lớp học mới được ưu tiên.
+Prompt `persona.v7` dùng chung cho chat và thoại: giải thích → làm mẫu → thực hành → nhận xét → ôn lại. Mate tập trung học tiếng Anh/TOEIC; câu ngoài phạm vi được chuyển về hoạt động học ở nguyên phase, khẩn cấp được tạm gác bài. Nội dung theo tiếng Việt/Anh và yêu cầu ngôn ngữ của người học. Bộ eval offline và trạng thái chiến dịch đã dừng 429: [hướng dẫn](backend/evals/scope/README.md). Các đoạn mô tả phạm vi hội thoại ngày 16–18/10 dưới đây ghi lại nền tảng trước đợt thiết kế này; yêu cầu lớp học mới được ưu tiên.
 
 Trên máy hiện tại, nếu lệnh `python` trỏ vào WindowsApps, dùng `.\.venv\Scripts\python.exe scripts/manage.py dev-backend` và `.\.venv\Scripts\python.exe scripts/manage.py dev-frontend` từ root. Provider local đang chọn Gemini; cấu hình khóa và model qua `.env` backend.
 
@@ -144,6 +152,28 @@ Vite đọc `BACKEND_URL` từ `.env` root hoặc terminal; mặc định `http:
 
 ## Kiểm chứng
 
+Đo nền VAD ngoại tuyến (không gọi Blaze/Gemini): chạy `npm.cmd run benchmark:vad`
+trong `frontend`. Bộ đo riêng không tính vào coverage mặc định. Hướng dẫn WAV có
+nhãn, biến tùy chọn `VAD_BENCH_WAV_DIR`, số liệu và bảng kiểm thiết bị thật nằm tại
+[docs/VOICE_VAD_BASELINE.md](docs/VOICE_VAD_BASELINE.md).
+
+Pha A/B chống kích hoạt nhầm là thử nghiệm opt-in cho Blaze: đặt
+`VITE_VOICE_SOFT_GATE=true` (thông báo nhẹ/cổng transcript) và
+`VITE_VOICE_ADAPTIVE_VAD=true` (VAD năng lượng thích nghi) trong `.env` root cho
+dev/build local, rồi khởi động lại frontend hoặc build lại. Với Docker, truyền
+các biến vào tiến trình dev/build frontend; đổi env của container đã chứa bundle
+không thay bundle. Mặc định cả hai là `false`; đặt lại `false` và restart/rebuild
+để tắt từng pha. Chưa đạt mục tiêu giảm ≥70% ở mọi loại nhiễu; xem bảng theo
+kịch bản và bảng kiểm thiết bị trong tài liệu trên. Không đổi native voice.
+
+Đối chiếu thiết bị bằng `VITE_VOICE_DEBUG=true`, restart/rebuild frontend và mở
+DevTools Console, bật mức Debug/Verbose rồi lọc `[voice-debug]`. Chỉ có bộ đếm
+gộp theo phiên (onset, discard/lý do, request STT, thời gian đang thu, nền/ngưỡng),
+tối đa một snapshot/giây khi có frame và một tổng kết lúc Stop; không có
+PCM/transcript, storage hay upload. Mặc định `false`; cờ debug không bật A/B.
+Các mức RMS là số sau xử lý browser, không phải dB SPL. Xem định nghĩa số đo và
+giới hạn request offline trong tài liệu baseline trên.
+
 Chuẩn bị database test mới, tên kết thúc `_test`, chưa có tài khoản. Bootstrap bằng bản SQL đổi tên database sang schema test; đặt `MYSQL_TEST_URL` trong terminal, tuyệt đối không trỏ biến này vào database người dùng. Tests từ chối schema sai tên hoặc đã có tài khoản, ghi trong transaction rồi rollback.
 
 ```powershell
@@ -168,6 +198,8 @@ python scripts/manage.py smoke
 ```
 
 MySQL là dịch vụ ngoài Compose. Với MySQL trên Windows host, đặt `DOCKER_DATABASE_MYSQL_URL` riêng dùng `host.docker.internal`; `DATABASE_MYSQL_URL` local vẫn dùng host local đã xác minh. Cổng mặc định 5174/8010 phải trống trước khi bật stack Docker. Không khởi chạy thêm các lệnh Compose khi có lệnh cũ treo. Health container là liveness; readiness/provider phải kiểm tra riêng.
+
+Image frontend chạy `npm run build` khi build để kiểm tra TypeScript và bản biên dịch; container dev vẫn phục vụ bằng Vite. Fixture trực quan `tests/ui-audit.*` chỉ dùng ở môi trường local, không đưa vào image vì đọc catalog từ thư mục backend ngoài build context. Các unit test và cấu hình kiểm tra kiểu local vẫn được giữ nguyên.
 
 ## Link HTTPS tạm thời từ máy đang chạy
 
@@ -204,3 +236,18 @@ Lần chạy do agent thiết lập dùng SSH nền và khóa riêng tạm thờ
 - [REST API](docs/API.md), [kiến trúc](docs/ARCHITECTURE.md), [kiểm thử](docs/TESTING.md).
 - [Yêu cầu và trạng thái còn thiếu](docs/REQUIREMENTS.md), [nhật ký](docs/PROGRESS.md), [quyết định](docs/DECISIONS.md).
 - Tuân thủ [AGENT.md](AGENT.md) và [CLAUDE.md](CLAUDE.md). Nhánh tiếng Việt không dấu; mô tả commit bằng tiếng Việt, giữ tiền tố Conventional Commits. Không tự commit/push khi chưa được yêu cầu.
+
+## Rà prompt và thoại — trạng thái 15/11/2026
+
+V7 đã khóa; từ chối ngoài phạm vi mặc định Việt, ưu tiên yêu cầu rõ bằng Anh,
+cho phép ví dụ luyện Anh. [Chính sách/hash](docs/PROMPTS.md#current-policy).
+Không resume chiến dịch hoặc chạy judge khi chưa có xác nhận riêng.
+[Phiếu chấm tay và đủ/thiếu từng nhóm](backend/evals/scope/results/available-review-20261114/REVIEW.md).
+
+VITE_VOICE_SOFT_GATE, VITE_VOICE_ADAPTIVE_VAD và VITE_VOICE_DEBUG đều false mặc định.
+**Vite thay các cờ lúc build**: thay env sau build không đổi bundle; build lại
+và phục vụ bundle mới (dev: khởi động lại Vite). Không sửa `.env` trong tác vụ này.
+[Thiết kế onset chưa triển khai](docs/VOICE_ONSET_DESIGN.md),
+[CSV thử thiết bị](docs/VOICE_DEVICE_CHECKLIST.csv),
+[MySQL test tạm chờ duyệt](docs/MYSQL_TEST_PROPOSAL.md),
+[kế hoạch chia commit](docs/CHANGESET_PLAN.md). Pha thoại C/D/E vẫn hoãn.

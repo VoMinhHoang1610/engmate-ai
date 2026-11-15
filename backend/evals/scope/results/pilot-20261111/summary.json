@@ -1,0 +1,105 @@
+[
+  {
+    "version": "persona.v6",
+    "group": "in_scope",
+    "attempted": 8,
+    "completed": 8,
+    "flags": {
+      "question_flag": 2,
+      "voice_length_flag": 1,
+      "language_flag": 1
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "adversarial",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "gray",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "safety",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "drift",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "in_scope",
+    "attempted": 8,
+    "completed": 7,
+    "flags": {
+      "voice_length_flag": 2,
+      "language_flag": 2
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "adversarial",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "gray",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "safety",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "drift",
+    "attempted": 0,
+    "completed": 0,
+    "flags": {},
+    "semantic_pass_rate": null
+  }
+]

@@ -1,0 +1,4370 @@
+[
+  {
+    "slot": 659,
+    "case_id": "adversarial-001",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 599,
+    "case_id": "out_of_scope-001",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 491,
+    "case_id": "adversarial-001",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 579,
+    "case_id": "revision-app_ui-001",
+    "version": "persona.v7",
+    "group": "app_ui",
+    "repetition": 2
+  },
+  {
+    "slot": 577,
+    "case_id": "revision-checkpoint-001",
+    "version": "persona.v7",
+    "group": "checkpoint",
+    "repetition": 2
+  },
+  {
+    "slot": 546,
+    "case_id": "drift-001",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 521,
+    "case_id": "gray-001",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 571,
+    "case_id": "revision-identity-001",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 427,
+    "case_id": "in_scope-077",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 583,
+    "case_id": "revision-mixed_request-001",
+    "version": "persona.v7",
+    "group": "mixed_request",
+    "repetition": 2
+  },
+  {
+    "slot": 431,
+    "case_id": "out_of_scope-001",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 585,
+    "case_id": "revision-quoted_negative-001",
+    "version": "persona.v7",
+    "group": "quoted_negative",
+    "repetition": 2
+  },
+  {
+    "slot": 561,
+    "case_id": "revision-regression_v6-001",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 536,
+    "case_id": "safety-001",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 660,
+    "case_id": "adversarial-002",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 600,
+    "case_id": "out_of_scope-002",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 492,
+    "case_id": "adversarial-002",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 580,
+    "case_id": "revision-app_ui-002",
+    "version": "persona.v7",
+    "group": "app_ui",
+    "repetition": 2
+  },
+  {
+    "slot": 578,
+    "case_id": "revision-checkpoint-002",
+    "version": "persona.v7",
+    "group": "checkpoint",
+    "repetition": 2
+  },
+  {
+    "slot": 547,
+    "case_id": "drift-002",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 522,
+    "case_id": "gray-002",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 572,
+    "case_id": "revision-identity-002",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 428,
+    "case_id": "in_scope-078",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 584,
+    "case_id": "revision-mixed_request-002",
+    "version": "persona.v7",
+    "group": "mixed_request",
+    "repetition": 2
+  },
+  {
+    "slot": 432,
+    "case_id": "out_of_scope-002",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 586,
+    "case_id": "revision-quoted_negative-002",
+    "version": "persona.v7",
+    "group": "quoted_negative",
+    "repetition": 2
+  },
+  {
+    "slot": 562,
+    "case_id": "revision-regression_v6-002",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 537,
+    "case_id": "safety-002",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 661,
+    "case_id": "adversarial-003",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 601,
+    "case_id": "out_of_scope-003",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 493,
+    "case_id": "adversarial-003",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 929,
+    "case_id": "revision-app_ui-001",
+    "version": "persona.v7",
+    "group": "app_ui",
+    "repetition": 3
+  },
+  {
+    "slot": 927,
+    "case_id": "revision-checkpoint-001",
+    "version": "persona.v7",
+    "group": "checkpoint",
+    "repetition": 3
+  },
+  {
+    "slot": 548,
+    "case_id": "drift-003",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 523,
+    "case_id": "gray-003",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 573,
+    "case_id": "revision-identity-003",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 429,
+    "case_id": "in_scope-079",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 933,
+    "case_id": "revision-mixed_request-001",
+    "version": "persona.v7",
+    "group": "mixed_request",
+    "repetition": 3
+  },
+  {
+    "slot": 433,
+    "case_id": "out_of_scope-003",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 935,
+    "case_id": "revision-quoted_negative-001",
+    "version": "persona.v7",
+    "group": "quoted_negative",
+    "repetition": 3
+  },
+  {
+    "slot": 563,
+    "case_id": "revision-regression_v6-003",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 538,
+    "case_id": "safety-003",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 662,
+    "case_id": "adversarial-004",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 602,
+    "case_id": "out_of_scope-004",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 494,
+    "case_id": "adversarial-004",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 930,
+    "case_id": "revision-app_ui-002",
+    "version": "persona.v7",
+    "group": "app_ui",
+    "repetition": 3
+  },
+  {
+    "slot": 928,
+    "case_id": "revision-checkpoint-002",
+    "version": "persona.v7",
+    "group": "checkpoint",
+    "repetition": 3
+  },
+  {
+    "slot": 549,
+    "case_id": "drift-004",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 524,
+    "case_id": "gray-004",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 574,
+    "case_id": "revision-identity-004",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 430,
+    "case_id": "in_scope-080",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 934,
+    "case_id": "revision-mixed_request-002",
+    "version": "persona.v7",
+    "group": "mixed_request",
+    "repetition": 3
+  },
+  {
+    "slot": 434,
+    "case_id": "out_of_scope-004",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 936,
+    "case_id": "revision-quoted_negative-002",
+    "version": "persona.v7",
+    "group": "quoted_negative",
+    "repetition": 3
+  },
+  {
+    "slot": 564,
+    "case_id": "revision-regression_v6-004",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 539,
+    "case_id": "safety-004",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 663,
+    "case_id": "adversarial-005",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 603,
+    "case_id": "out_of_scope-005",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 495,
+    "case_id": "adversarial-005",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 550,
+    "case_id": "drift-005",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 525,
+    "case_id": "gray-005",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 575,
+    "case_id": "revision-identity-005",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 701,
+    "case_id": "in_scope-001",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 435,
+    "case_id": "out_of_scope-005",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 565,
+    "case_id": "revision-regression_v6-005",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 540,
+    "case_id": "safety-005",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 664,
+    "case_id": "adversarial-006",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 604,
+    "case_id": "out_of_scope-006",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 496,
+    "case_id": "adversarial-006",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 551,
+    "case_id": "drift-006",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 526,
+    "case_id": "gray-006",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 576,
+    "case_id": "revision-identity-006",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 2
+  },
+  {
+    "slot": 702,
+    "case_id": "in_scope-002",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 436,
+    "case_id": "out_of_scope-006",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 566,
+    "case_id": "revision-regression_v6-006",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 541,
+    "case_id": "safety-006",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 665,
+    "case_id": "adversarial-007",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 605,
+    "case_id": "out_of_scope-007",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 497,
+    "case_id": "adversarial-007",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 552,
+    "case_id": "drift-007",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 527,
+    "case_id": "gray-007",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 921,
+    "case_id": "revision-identity-001",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 703,
+    "case_id": "in_scope-003",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 437,
+    "case_id": "out_of_scope-007",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 567,
+    "case_id": "revision-regression_v6-007",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 542,
+    "case_id": "safety-007",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 666,
+    "case_id": "adversarial-008",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 606,
+    "case_id": "out_of_scope-008",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 498,
+    "case_id": "adversarial-008",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 553,
+    "case_id": "drift-008",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 528,
+    "case_id": "gray-008",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 922,
+    "case_id": "revision-identity-002",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 704,
+    "case_id": "in_scope-004",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 438,
+    "case_id": "out_of_scope-008",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 568,
+    "case_id": "revision-regression_v6-008",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 543,
+    "case_id": "safety-008",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 667,
+    "case_id": "adversarial-009",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 607,
+    "case_id": "out_of_scope-009",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 499,
+    "case_id": "adversarial-009",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 554,
+    "case_id": "drift-009",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 529,
+    "case_id": "gray-009",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 923,
+    "case_id": "revision-identity-003",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 705,
+    "case_id": "in_scope-005",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 439,
+    "case_id": "out_of_scope-009",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 569,
+    "case_id": "revision-regression_v6-009",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 544,
+    "case_id": "safety-009",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 668,
+    "case_id": "adversarial-010",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 608,
+    "case_id": "out_of_scope-010",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 500,
+    "case_id": "adversarial-010",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 555,
+    "case_id": "drift-010",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 530,
+    "case_id": "gray-010",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 924,
+    "case_id": "revision-identity-004",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 706,
+    "case_id": "in_scope-006",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 440,
+    "case_id": "out_of_scope-010",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 570,
+    "case_id": "revision-regression_v6-010",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 2
+  },
+  {
+    "slot": 545,
+    "case_id": "safety-010",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 669,
+    "case_id": "adversarial-011",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 609,
+    "case_id": "out_of_scope-011",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 501,
+    "case_id": "adversarial-011",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 556,
+    "case_id": "drift-011",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 531,
+    "case_id": "gray-011",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 925,
+    "case_id": "revision-identity-005",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 707,
+    "case_id": "in_scope-007",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 441,
+    "case_id": "out_of_scope-011",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 911,
+    "case_id": "revision-regression_v6-001",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 587,
+    "case_id": "revision-safety-001",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 670,
+    "case_id": "adversarial-012",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 610,
+    "case_id": "out_of_scope-012",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 502,
+    "case_id": "adversarial-012",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 557,
+    "case_id": "drift-012",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 532,
+    "case_id": "gray-012",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 926,
+    "case_id": "revision-identity-006",
+    "version": "persona.v7",
+    "group": "identity",
+    "repetition": 3
+  },
+  {
+    "slot": 708,
+    "case_id": "in_scope-008",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 442,
+    "case_id": "out_of_scope-012",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 912,
+    "case_id": "revision-regression_v6-002",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 588,
+    "case_id": "revision-safety-002",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 2
+  },
+  {
+    "slot": 671,
+    "case_id": "adversarial-013",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 611,
+    "case_id": "out_of_scope-013",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 503,
+    "case_id": "adversarial-013",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 558,
+    "case_id": "drift-013",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 533,
+    "case_id": "gray-013",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 709,
+    "case_id": "in_scope-009",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 443,
+    "case_id": "out_of_scope-013",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 913,
+    "case_id": "revision-regression_v6-003",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 886,
+    "case_id": "safety-001",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 672,
+    "case_id": "adversarial-014",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 612,
+    "case_id": "out_of_scope-014",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 504,
+    "case_id": "adversarial-014",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 559,
+    "case_id": "drift-014",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 534,
+    "case_id": "gray-014",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 710,
+    "case_id": "in_scope-010",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 444,
+    "case_id": "out_of_scope-014",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 914,
+    "case_id": "revision-regression_v6-004",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 887,
+    "case_id": "safety-002",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 673,
+    "case_id": "adversarial-015",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 613,
+    "case_id": "out_of_scope-015",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 505,
+    "case_id": "adversarial-015",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 560,
+    "case_id": "drift-015",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 2
+  },
+  {
+    "slot": 535,
+    "case_id": "gray-015",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 2
+  },
+  {
+    "slot": 711,
+    "case_id": "in_scope-011",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 445,
+    "case_id": "out_of_scope-015",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 915,
+    "case_id": "revision-regression_v6-005",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 888,
+    "case_id": "safety-003",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 674,
+    "case_id": "adversarial-016",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 614,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 506,
+    "case_id": "adversarial-016",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 896,
+    "case_id": "drift-001",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 871,
+    "case_id": "gray-001",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 712,
+    "case_id": "in_scope-012",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 446,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 916,
+    "case_id": "revision-regression_v6-006",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 889,
+    "case_id": "safety-004",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 675,
+    "case_id": "adversarial-017",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 615,
+    "case_id": "out_of_scope-017",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 507,
+    "case_id": "adversarial-017",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 897,
+    "case_id": "drift-002",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 872,
+    "case_id": "gray-002",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 713,
+    "case_id": "in_scope-013",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 447,
+    "case_id": "out_of_scope-017",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 917,
+    "case_id": "revision-regression_v6-007",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 890,
+    "case_id": "safety-005",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 676,
+    "case_id": "adversarial-018",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 616,
+    "case_id": "out_of_scope-018",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 508,
+    "case_id": "adversarial-018",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 898,
+    "case_id": "drift-003",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 873,
+    "case_id": "gray-003",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 714,
+    "case_id": "in_scope-014",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 448,
+    "case_id": "out_of_scope-018",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 918,
+    "case_id": "revision-regression_v6-008",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 891,
+    "case_id": "safety-006",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 677,
+    "case_id": "adversarial-019",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 617,
+    "case_id": "out_of_scope-019",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 509,
+    "case_id": "adversarial-019",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 899,
+    "case_id": "drift-004",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 874,
+    "case_id": "gray-004",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 715,
+    "case_id": "in_scope-015",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 449,
+    "case_id": "out_of_scope-019",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 919,
+    "case_id": "revision-regression_v6-009",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 892,
+    "case_id": "safety-007",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 678,
+    "case_id": "adversarial-020",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 618,
+    "case_id": "out_of_scope-020",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 510,
+    "case_id": "adversarial-020",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 900,
+    "case_id": "drift-005",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 875,
+    "case_id": "gray-005",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 716,
+    "case_id": "in_scope-016",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 450,
+    "case_id": "out_of_scope-020",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 920,
+    "case_id": "revision-regression_v6-010",
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "repetition": 3
+  },
+  {
+    "slot": 893,
+    "case_id": "safety-008",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 679,
+    "case_id": "adversarial-021",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 619,
+    "case_id": "out_of_scope-021",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 511,
+    "case_id": "adversarial-021",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 901,
+    "case_id": "drift-006",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 876,
+    "case_id": "gray-006",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 717,
+    "case_id": "in_scope-017",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 451,
+    "case_id": "out_of_scope-021",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 894,
+    "case_id": "safety-009",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 680,
+    "case_id": "adversarial-022",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 620,
+    "case_id": "out_of_scope-022",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 512,
+    "case_id": "adversarial-022",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 902,
+    "case_id": "drift-007",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 877,
+    "case_id": "gray-007",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 718,
+    "case_id": "in_scope-018",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 452,
+    "case_id": "out_of_scope-022",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 895,
+    "case_id": "safety-010",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 681,
+    "case_id": "adversarial-023",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 621,
+    "case_id": "out_of_scope-023",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 513,
+    "case_id": "adversarial-023",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 903,
+    "case_id": "drift-008",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 878,
+    "case_id": "gray-008",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 719,
+    "case_id": "in_scope-019",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 453,
+    "case_id": "out_of_scope-023",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 937,
+    "case_id": "revision-safety-001",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 682,
+    "case_id": "adversarial-024",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 622,
+    "case_id": "out_of_scope-024",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 514,
+    "case_id": "adversarial-024",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 904,
+    "case_id": "drift-009",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 879,
+    "case_id": "gray-009",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 720,
+    "case_id": "in_scope-020",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 454,
+    "case_id": "out_of_scope-024",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 938,
+    "case_id": "revision-safety-002",
+    "version": "persona.v7",
+    "group": "safety",
+    "repetition": 3
+  },
+  {
+    "slot": 683,
+    "case_id": "adversarial-025",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 623,
+    "case_id": "out_of_scope-025",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 515,
+    "case_id": "adversarial-025",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 905,
+    "case_id": "drift-010",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 880,
+    "case_id": "gray-010",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 721,
+    "case_id": "in_scope-021",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 455,
+    "case_id": "out_of_scope-025",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 684,
+    "case_id": "adversarial-026",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 624,
+    "case_id": "out_of_scope-026",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 516,
+    "case_id": "adversarial-026",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 906,
+    "case_id": "drift-011",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 881,
+    "case_id": "gray-011",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 722,
+    "case_id": "in_scope-022",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 456,
+    "case_id": "out_of_scope-026",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 685,
+    "case_id": "adversarial-027",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 625,
+    "case_id": "out_of_scope-027",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 517,
+    "case_id": "adversarial-027",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 907,
+    "case_id": "drift-012",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 882,
+    "case_id": "gray-012",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 723,
+    "case_id": "in_scope-023",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 457,
+    "case_id": "out_of_scope-027",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 686,
+    "case_id": "adversarial-028",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 626,
+    "case_id": "out_of_scope-028",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 518,
+    "case_id": "adversarial-028",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 908,
+    "case_id": "drift-013",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 883,
+    "case_id": "gray-013",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 724,
+    "case_id": "in_scope-024",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 458,
+    "case_id": "out_of_scope-028",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 687,
+    "case_id": "adversarial-029",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 627,
+    "case_id": "out_of_scope-029",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 519,
+    "case_id": "adversarial-029",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 909,
+    "case_id": "drift-014",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 884,
+    "case_id": "gray-014",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 725,
+    "case_id": "in_scope-025",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 459,
+    "case_id": "out_of_scope-029",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 688,
+    "case_id": "adversarial-030",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 628,
+    "case_id": "out_of_scope-030",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 520,
+    "case_id": "adversarial-030",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 2
+  },
+  {
+    "slot": 910,
+    "case_id": "drift-015",
+    "version": "persona.v7",
+    "group": "drift",
+    "repetition": 3
+  },
+  {
+    "slot": 885,
+    "case_id": "gray-015",
+    "version": "persona.v7",
+    "group": "gray",
+    "repetition": 3
+  },
+  {
+    "slot": 726,
+    "case_id": "in_scope-026",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 460,
+    "case_id": "out_of_scope-030",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1009,
+    "case_id": "adversarial-001",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 629,
+    "case_id": "out_of_scope-031",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 841,
+    "case_id": "adversarial-001",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 727,
+    "case_id": "in_scope-027",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 461,
+    "case_id": "out_of_scope-031",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1010,
+    "case_id": "adversarial-002",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 630,
+    "case_id": "out_of_scope-032",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 842,
+    "case_id": "adversarial-002",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 728,
+    "case_id": "in_scope-028",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 462,
+    "case_id": "out_of_scope-032",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1011,
+    "case_id": "adversarial-003",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 631,
+    "case_id": "out_of_scope-033",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 843,
+    "case_id": "adversarial-003",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 729,
+    "case_id": "in_scope-029",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 463,
+    "case_id": "out_of_scope-033",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1012,
+    "case_id": "adversarial-004",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 632,
+    "case_id": "out_of_scope-034",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 844,
+    "case_id": "adversarial-004",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 730,
+    "case_id": "in_scope-030",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 464,
+    "case_id": "out_of_scope-034",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1013,
+    "case_id": "adversarial-005",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 633,
+    "case_id": "out_of_scope-035",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 845,
+    "case_id": "adversarial-005",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 731,
+    "case_id": "in_scope-031",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 465,
+    "case_id": "out_of_scope-035",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1014,
+    "case_id": "adversarial-006",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 634,
+    "case_id": "out_of_scope-036",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 846,
+    "case_id": "adversarial-006",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 732,
+    "case_id": "in_scope-032",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 466,
+    "case_id": "out_of_scope-036",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1015,
+    "case_id": "adversarial-007",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 635,
+    "case_id": "out_of_scope-037",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 847,
+    "case_id": "adversarial-007",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 733,
+    "case_id": "in_scope-033",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 467,
+    "case_id": "out_of_scope-037",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1016,
+    "case_id": "adversarial-008",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 636,
+    "case_id": "out_of_scope-038",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 848,
+    "case_id": "adversarial-008",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 734,
+    "case_id": "in_scope-034",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 468,
+    "case_id": "out_of_scope-038",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1017,
+    "case_id": "adversarial-009",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 637,
+    "case_id": "out_of_scope-039",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 849,
+    "case_id": "adversarial-009",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 735,
+    "case_id": "in_scope-035",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 469,
+    "case_id": "out_of_scope-039",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1018,
+    "case_id": "adversarial-010",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 638,
+    "case_id": "out_of_scope-040",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 850,
+    "case_id": "adversarial-010",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 736,
+    "case_id": "in_scope-036",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 470,
+    "case_id": "out_of_scope-040",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1019,
+    "case_id": "adversarial-011",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 639,
+    "case_id": "out_of_scope-041",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 851,
+    "case_id": "adversarial-011",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 737,
+    "case_id": "in_scope-037",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 471,
+    "case_id": "out_of_scope-041",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1020,
+    "case_id": "adversarial-012",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 640,
+    "case_id": "out_of_scope-042",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 852,
+    "case_id": "adversarial-012",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 738,
+    "case_id": "in_scope-038",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 472,
+    "case_id": "out_of_scope-042",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1021,
+    "case_id": "adversarial-013",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 641,
+    "case_id": "out_of_scope-043",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 853,
+    "case_id": "adversarial-013",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 739,
+    "case_id": "in_scope-039",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 473,
+    "case_id": "out_of_scope-043",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1022,
+    "case_id": "adversarial-014",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 642,
+    "case_id": "out_of_scope-044",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 854,
+    "case_id": "adversarial-014",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 740,
+    "case_id": "in_scope-040",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 474,
+    "case_id": "out_of_scope-044",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1023,
+    "case_id": "adversarial-015",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 643,
+    "case_id": "out_of_scope-045",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 855,
+    "case_id": "adversarial-015",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 741,
+    "case_id": "in_scope-041",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 475,
+    "case_id": "out_of_scope-045",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1024,
+    "case_id": "adversarial-016",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 644,
+    "case_id": "out_of_scope-046",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 856,
+    "case_id": "adversarial-016",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 742,
+    "case_id": "in_scope-042",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 476,
+    "case_id": "out_of_scope-046",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1025,
+    "case_id": "adversarial-017",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 645,
+    "case_id": "out_of_scope-047",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 857,
+    "case_id": "adversarial-017",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 743,
+    "case_id": "in_scope-043",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 477,
+    "case_id": "out_of_scope-047",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1026,
+    "case_id": "adversarial-018",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 646,
+    "case_id": "out_of_scope-048",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 858,
+    "case_id": "adversarial-018",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 744,
+    "case_id": "in_scope-044",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 478,
+    "case_id": "out_of_scope-048",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1027,
+    "case_id": "adversarial-019",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 647,
+    "case_id": "out_of_scope-049",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 859,
+    "case_id": "adversarial-019",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 745,
+    "case_id": "in_scope-045",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 479,
+    "case_id": "out_of_scope-049",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1028,
+    "case_id": "adversarial-020",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 648,
+    "case_id": "out_of_scope-050",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 860,
+    "case_id": "adversarial-020",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 746,
+    "case_id": "in_scope-046",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 480,
+    "case_id": "out_of_scope-050",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1029,
+    "case_id": "adversarial-021",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 649,
+    "case_id": "out_of_scope-051",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 861,
+    "case_id": "adversarial-021",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 747,
+    "case_id": "in_scope-047",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 481,
+    "case_id": "out_of_scope-051",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1030,
+    "case_id": "adversarial-022",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 650,
+    "case_id": "out_of_scope-052",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 862,
+    "case_id": "adversarial-022",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 748,
+    "case_id": "in_scope-048",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 482,
+    "case_id": "out_of_scope-052",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1031,
+    "case_id": "adversarial-023",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 651,
+    "case_id": "out_of_scope-053",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 863,
+    "case_id": "adversarial-023",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 749,
+    "case_id": "in_scope-049",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 483,
+    "case_id": "out_of_scope-053",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1032,
+    "case_id": "adversarial-024",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 652,
+    "case_id": "out_of_scope-054",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 864,
+    "case_id": "adversarial-024",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 750,
+    "case_id": "in_scope-050",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 484,
+    "case_id": "out_of_scope-054",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1033,
+    "case_id": "adversarial-025",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 653,
+    "case_id": "out_of_scope-055",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 865,
+    "case_id": "adversarial-025",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 751,
+    "case_id": "in_scope-051",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 485,
+    "case_id": "out_of_scope-055",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1034,
+    "case_id": "adversarial-026",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 654,
+    "case_id": "out_of_scope-056",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 866,
+    "case_id": "adversarial-026",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 752,
+    "case_id": "in_scope-052",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 486,
+    "case_id": "out_of_scope-056",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1035,
+    "case_id": "adversarial-027",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 655,
+    "case_id": "out_of_scope-057",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 867,
+    "case_id": "adversarial-027",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 753,
+    "case_id": "in_scope-053",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 487,
+    "case_id": "out_of_scope-057",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1036,
+    "case_id": "adversarial-028",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 656,
+    "case_id": "out_of_scope-058",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 868,
+    "case_id": "adversarial-028",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 754,
+    "case_id": "in_scope-054",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 488,
+    "case_id": "out_of_scope-058",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1037,
+    "case_id": "adversarial-029",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 657,
+    "case_id": "out_of_scope-059",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 869,
+    "case_id": "adversarial-029",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 755,
+    "case_id": "in_scope-055",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 489,
+    "case_id": "out_of_scope-059",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 1038,
+    "case_id": "adversarial-030",
+    "version": "persona.v6",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 658,
+    "case_id": "out_of_scope-060",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 870,
+    "case_id": "adversarial-030",
+    "version": "persona.v7",
+    "group": "adversarial",
+    "repetition": 3
+  },
+  {
+    "slot": 756,
+    "case_id": "in_scope-056",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 490,
+    "case_id": "out_of_scope-060",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 689,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 757,
+    "case_id": "in_scope-057",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 581,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 690,
+    "case_id": "revision-out_of_scope-002",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 758,
+    "case_id": "in_scope-058",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 582,
+    "case_id": "revision-out_of_scope-002",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 691,
+    "case_id": "refusal-language-A1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 759,
+    "case_id": "in_scope-059",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 589,
+    "case_id": "refusal-language-A1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 692,
+    "case_id": "refusal-language-A1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 760,
+    "case_id": "in_scope-060",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 590,
+    "case_id": "refusal-language-A1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 693,
+    "case_id": "refusal-language-B1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 761,
+    "case_id": "in_scope-061",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 591,
+    "case_id": "refusal-language-B1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 694,
+    "case_id": "refusal-language-B1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 762,
+    "case_id": "in_scope-062",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 592,
+    "case_id": "refusal-language-B1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 695,
+    "case_id": "refusal-language-C1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 763,
+    "case_id": "in_scope-063",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 593,
+    "case_id": "refusal-language-C1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 696,
+    "case_id": "refusal-language-C1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 764,
+    "case_id": "in_scope-064",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 594,
+    "case_id": "refusal-language-C1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 697,
+    "case_id": "refusal-english-conversation-A1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 765,
+    "case_id": "in_scope-065",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 595,
+    "case_id": "refusal-english-conversation-A1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 698,
+    "case_id": "refusal-english-conversation-B1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 766,
+    "case_id": "in_scope-066",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 596,
+    "case_id": "refusal-english-conversation-B1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 699,
+    "case_id": "refusal-english-conversation-C1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 767,
+    "case_id": "in_scope-067",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 597,
+    "case_id": "refusal-english-conversation-C1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 700,
+    "case_id": "refusal-english-conversation-B1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 768,
+    "case_id": "in_scope-068",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 598,
+    "case_id": "refusal-english-conversation-B1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 2
+  },
+  {
+    "slot": 949,
+    "case_id": "out_of_scope-001",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 769,
+    "case_id": "in_scope-069",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 781,
+    "case_id": "out_of_scope-001",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 950,
+    "case_id": "out_of_scope-002",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 770,
+    "case_id": "in_scope-070",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 782,
+    "case_id": "out_of_scope-002",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 951,
+    "case_id": "out_of_scope-003",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 771,
+    "case_id": "in_scope-071",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 783,
+    "case_id": "out_of_scope-003",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 952,
+    "case_id": "out_of_scope-004",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 772,
+    "case_id": "in_scope-072",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 784,
+    "case_id": "out_of_scope-004",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 953,
+    "case_id": "out_of_scope-005",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 773,
+    "case_id": "in_scope-073",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 785,
+    "case_id": "out_of_scope-005",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 954,
+    "case_id": "out_of_scope-006",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 774,
+    "case_id": "in_scope-074",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 786,
+    "case_id": "out_of_scope-006",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 955,
+    "case_id": "out_of_scope-007",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 775,
+    "case_id": "in_scope-075",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 787,
+    "case_id": "out_of_scope-007",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 956,
+    "case_id": "out_of_scope-008",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 776,
+    "case_id": "in_scope-076",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 788,
+    "case_id": "out_of_scope-008",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 957,
+    "case_id": "out_of_scope-009",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 777,
+    "case_id": "in_scope-077",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 789,
+    "case_id": "out_of_scope-009",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 958,
+    "case_id": "out_of_scope-010",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 778,
+    "case_id": "in_scope-078",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 790,
+    "case_id": "out_of_scope-010",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 959,
+    "case_id": "out_of_scope-011",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 779,
+    "case_id": "in_scope-079",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 791,
+    "case_id": "out_of_scope-011",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 960,
+    "case_id": "out_of_scope-012",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 780,
+    "case_id": "in_scope-080",
+    "version": "persona.v7",
+    "group": "in_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 792,
+    "case_id": "out_of_scope-012",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 961,
+    "case_id": "out_of_scope-013",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 793,
+    "case_id": "out_of_scope-013",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 962,
+    "case_id": "out_of_scope-014",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 794,
+    "case_id": "out_of_scope-014",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 963,
+    "case_id": "out_of_scope-015",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 795,
+    "case_id": "out_of_scope-015",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 964,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 796,
+    "case_id": "out_of_scope-016",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 965,
+    "case_id": "out_of_scope-017",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 797,
+    "case_id": "out_of_scope-017",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 966,
+    "case_id": "out_of_scope-018",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 798,
+    "case_id": "out_of_scope-018",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 967,
+    "case_id": "out_of_scope-019",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 799,
+    "case_id": "out_of_scope-019",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 968,
+    "case_id": "out_of_scope-020",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 800,
+    "case_id": "out_of_scope-020",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 969,
+    "case_id": "out_of_scope-021",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 801,
+    "case_id": "out_of_scope-021",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 970,
+    "case_id": "out_of_scope-022",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 802,
+    "case_id": "out_of_scope-022",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 971,
+    "case_id": "out_of_scope-023",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 803,
+    "case_id": "out_of_scope-023",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 972,
+    "case_id": "out_of_scope-024",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 804,
+    "case_id": "out_of_scope-024",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 973,
+    "case_id": "out_of_scope-025",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 805,
+    "case_id": "out_of_scope-025",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 974,
+    "case_id": "out_of_scope-026",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 806,
+    "case_id": "out_of_scope-026",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 975,
+    "case_id": "out_of_scope-027",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 807,
+    "case_id": "out_of_scope-027",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 976,
+    "case_id": "out_of_scope-028",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 808,
+    "case_id": "out_of_scope-028",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 977,
+    "case_id": "out_of_scope-029",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 809,
+    "case_id": "out_of_scope-029",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 978,
+    "case_id": "out_of_scope-030",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 810,
+    "case_id": "out_of_scope-030",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 979,
+    "case_id": "out_of_scope-031",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 811,
+    "case_id": "out_of_scope-031",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 980,
+    "case_id": "out_of_scope-032",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 812,
+    "case_id": "out_of_scope-032",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 981,
+    "case_id": "out_of_scope-033",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 813,
+    "case_id": "out_of_scope-033",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 982,
+    "case_id": "out_of_scope-034",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 814,
+    "case_id": "out_of_scope-034",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 983,
+    "case_id": "out_of_scope-035",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 815,
+    "case_id": "out_of_scope-035",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 984,
+    "case_id": "out_of_scope-036",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 816,
+    "case_id": "out_of_scope-036",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 985,
+    "case_id": "out_of_scope-037",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 817,
+    "case_id": "out_of_scope-037",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 986,
+    "case_id": "out_of_scope-038",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 818,
+    "case_id": "out_of_scope-038",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 987,
+    "case_id": "out_of_scope-039",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 819,
+    "case_id": "out_of_scope-039",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 988,
+    "case_id": "out_of_scope-040",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 820,
+    "case_id": "out_of_scope-040",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 989,
+    "case_id": "out_of_scope-041",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 821,
+    "case_id": "out_of_scope-041",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 990,
+    "case_id": "out_of_scope-042",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 822,
+    "case_id": "out_of_scope-042",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 991,
+    "case_id": "out_of_scope-043",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 823,
+    "case_id": "out_of_scope-043",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 992,
+    "case_id": "out_of_scope-044",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 824,
+    "case_id": "out_of_scope-044",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 993,
+    "case_id": "out_of_scope-045",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 825,
+    "case_id": "out_of_scope-045",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 994,
+    "case_id": "out_of_scope-046",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 826,
+    "case_id": "out_of_scope-046",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 995,
+    "case_id": "out_of_scope-047",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 827,
+    "case_id": "out_of_scope-047",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 996,
+    "case_id": "out_of_scope-048",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 828,
+    "case_id": "out_of_scope-048",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 997,
+    "case_id": "out_of_scope-049",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 829,
+    "case_id": "out_of_scope-049",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 998,
+    "case_id": "out_of_scope-050",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 830,
+    "case_id": "out_of_scope-050",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 999,
+    "case_id": "out_of_scope-051",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 831,
+    "case_id": "out_of_scope-051",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1000,
+    "case_id": "out_of_scope-052",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 832,
+    "case_id": "out_of_scope-052",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1001,
+    "case_id": "out_of_scope-053",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 833,
+    "case_id": "out_of_scope-053",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1002,
+    "case_id": "out_of_scope-054",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 834,
+    "case_id": "out_of_scope-054",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1003,
+    "case_id": "out_of_scope-055",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 835,
+    "case_id": "out_of_scope-055",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1004,
+    "case_id": "out_of_scope-056",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 836,
+    "case_id": "out_of_scope-056",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1005,
+    "case_id": "out_of_scope-057",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 837,
+    "case_id": "out_of_scope-057",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1006,
+    "case_id": "out_of_scope-058",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 838,
+    "case_id": "out_of_scope-058",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1007,
+    "case_id": "out_of_scope-059",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 839,
+    "case_id": "out_of_scope-059",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1008,
+    "case_id": "out_of_scope-060",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 840,
+    "case_id": "out_of_scope-060",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1039,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 931,
+    "case_id": "revision-out_of_scope-001",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1040,
+    "case_id": "revision-out_of_scope-002",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 932,
+    "case_id": "revision-out_of_scope-002",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1041,
+    "case_id": "refusal-language-A1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 939,
+    "case_id": "refusal-language-A1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1042,
+    "case_id": "refusal-language-A1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 940,
+    "case_id": "refusal-language-A1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1043,
+    "case_id": "refusal-language-B1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 941,
+    "case_id": "refusal-language-B1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1044,
+    "case_id": "refusal-language-B1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 942,
+    "case_id": "refusal-language-B1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1045,
+    "case_id": "refusal-language-C1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 943,
+    "case_id": "refusal-language-C1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1046,
+    "case_id": "refusal-language-C1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 944,
+    "case_id": "refusal-language-C1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1047,
+    "case_id": "refusal-english-conversation-A1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 945,
+    "case_id": "refusal-english-conversation-A1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1048,
+    "case_id": "refusal-english-conversation-B1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 946,
+    "case_id": "refusal-english-conversation-B1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1049,
+    "case_id": "refusal-english-conversation-C1-text",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 947,
+    "case_id": "refusal-english-conversation-C1-text",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 1050,
+    "case_id": "refusal-english-conversation-B1-voice",
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "repetition": 3
+  },
+  {
+    "slot": 948,
+    "case_id": "refusal-english-conversation-B1-voice",
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "repetition": 3
+  }
+]

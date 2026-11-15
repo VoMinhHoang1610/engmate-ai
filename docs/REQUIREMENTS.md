@@ -1,5 +1,205 @@
 # Yêu cầu EngMate-AI — lớp học đối thoại TOEIC, 2026-10-18
 
+## Năm mục học tập, ưu tiên Từ vựng — 15/11/2026 (duyệt có điều kiện)
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| VOCAB-01 | Lưới chủ đề thường gặp, trang chủ đề đủ từ, schema và nội dung server | Duyệt 18×50; chỉ triển khai 2×50 sau cổng tiền triển khai |
+| VOCAB-02 | Đã nhớ theo owner, tìm/lọc, thẻ/quiz, TTS theo click, migration local cũ | Thiết kế; chưa triển khai |
+| VOCAB-03 | Chủ đề AI riêng, UUID bền vững, lô nhỏ/validation/quota/expiry | Thiết kế; chưa gọi provider |
+| LEARN-UX-01 | Bổ sung Phát âm, Bài học, Lộ trình, Tiến độ theo từng cổng | Đã duyệt thứ tự; từng mục vẫn có cổng riêng |
+
+Chi tiết kiểm toán, màn hình, API, quyết định mở và cổng dừng:
+[LEARNING_VOCABULARY_DESIGN_2026-11-15](LEARNING_VOCABULARY_DESIGN_2026-11-15.md).
+Nội dung TOEIC/logic hoàn thành, persona, chat/voice/auth giữ nguyên.
+Điều kiện mới: IPA Anh–Anh đối chiếu TTS UK mặc định; quota/cỡ lô qua env;
+thiếu bảng vocabulary vẫn đọc JSON và báo “chưa cài đặt” ở phần DB; ẩn nghe khi
+speech tắt; cho sửa riêng chữ topbar kèm test. Baseline sạch/MySQL/worktree theo
+[kế hoạch tiền triển khai](VOCABULARY_PREFLIGHT_2026-11-15.md), chưa chạy.
+
+## Trạng thái rà soát 14–15/11/2026
+
+- Prompt v7 giữ nguyên hash `e75a86fd…722680`; chính sách cuối tại [PROMPTS](PROMPTS.md#current-policy).
+- 422 phản hồi đã screening lại offline; không thay checks, chưa nhóm nào đủ ba lượt.
+  Phiếu mới 215 phản hồi và [rubric](../backend/evals/scope/JUDGE_RUBRIC_DRAFT.md) chờ duyệt/chấm.
+- Không resume sau 429; chưa rõ rate/day quota. Lịch 624 slot xen kẽ và trần 1.248 request
+  bổ sung chỉ được chuẩn bị; runner live chưa nối lịch mới, bốn lỗi terminal tách riêng.
+- Thoại A/B/debug vẫn mặc định tắt. Mục tiêu ≥70% theo từng nhiễu/RMS/SNR chưa đạt;
+  [onset thích nghi](VOICE_ONSET_DESIGN.md) chỉ thiết kế. Pha C/D/E chờ thiết bị thật.
+- Coverage backend chưa đạt 80%; [MySQL tạm](MYSQL_TEST_PROPOSAL.md) chờ duyệt,
+  không coi hậu tố schema là đủ bảo vệ. [Flake Settings](SETTINGS_TEST_INVESTIGATION.md)
+  đã điều tra CPU, chưa sửa. Smoke local chưa qua. Không tái tạo PROGRESS.md.
+
+## Bổ sung đo/giải thích, không mở pha mới — 14/11/2026
+
+- Thêm request STT/phút và thời gian trạng thái đang thu theo từng kịch bản/mode.
+  Giải thích hồi quy hồng và phân biệt lượt đóng bình thường với discard trước/
+  sau STT. Pha A sau STT không tiết kiệm request STT của lượt đã nhận dạng.
+- Debug opt-in `VITE_VOICE_DEBUG=false`: console chỉ có bộ đếm/scalar, không
+  PCM/transcript/lưu trữ/gửi mạng. Không thay ngưỡng hoặc hành vi loại nhiễu.
+- Chặn thêm trước STT chỉ là đề xuất chờ duyệt. ≥70% khó đạt chỉ với A+B;
+  C/D/E tiếp tục hoãn, không commit/push.
+- Đã kiểm: frontend 472/472; benchmark 23/23; lint/build qua. Coverage frontend
+  90,09% /82,54% /86,14% /93,16% (statements/branches/functions/lines).
+
+
+## Cập nhật VAD đã duyệt — 14/11/2026
+
+- Pha A: triển khai opt-in `VITE_VOICE_SOFT_GATE`, thông báo nhẹ dùng style cũ,
+  không thêm VoiceState; chữ rỗng không gọi Gemini/tạo tin nhắn, lỗi thật giữ kênh lỗi.
+- Pha B: triển khai opt-in `VITE_VOICE_ADAPTIVE_VAD`, nền thích nghi, hysteresis,
+  tối thiểu 200 ms tiếng, đóng capture nhiễu đều và fallback EnergyVad khi lỗi.
+- Tiêu chí giữ nguyên: giảm onset nhầm ≥70%, tăng bỏ sót ≤2 điểm %, p50 tăng
+  ≤150 ms theo loại tín hiệu và RMS/SNR; nhiễu liên tục không giữ thu đến cap.
+  Triển khai không đồng nghĩa đạt tiêu chí; xem kết quả và giới hạn trong
+  [VOICE_VAD_BASELINE.md](VOICE_VAD_BASELINE.md).
+- Pha C chưa triển khai, chờ duyệt phép đo đầu ra; D/E hoãn. Sau B dừng cho
+  thử thiết bị thật; không đổi timeout/assertion hiện hữu, không commit/push.
+- Đã test: frontend 466/466, benchmark 21/21, lint/build qua; frontend coverage
+  89,96% statements /82,38% branches /86,00% functions /93,07% lines. Backend
+  230 qua, 24 skip; coverage toàn repo chưa qua vì backend 73,98% <80%.
+
+
+## Độ bền đầu vào thoại trước tiếng ồn — 13/11/2026 (lịch sử Bước 1)
+
+- Bước 0–1: đã tách VAD hiện có và đo nền ngoại tuyến, giữ nguyên hành vi.
+  Có đối chiếu frame, số liệu tổng hợp batch/realtime và hỗ trợ WAV riêng có nhãn.
+  Frontend đã test 427/427, benchmark 19/19; coverage frontend >80% cả bốn chỉ số.
+  Kiểm chứng toàn repo còn thiếu: coverage backend 73,93%, 24 test DB bị skip.
+- Pha A–C: **chưa làm, chờ duyệt** mục tiêu/công tắc và phạm vi notice UI.
+- Neural VAD, giảm âm lượng, hiệu chuẩn đầu phiên, hợp nhất cấu hình native/Blaze
+  và khảo sát speaker verification: **chưa duyệt**.
+- Chưa chứng minh chất lượng giọng/loa/thiết bị thật. Chi tiết số liệu, kiểm chứng
+  và bảng kiểm thủ công: [VOICE_VAD_BASELINE.md](VOICE_VAD_BASELINE.md).
+
+## Chính sách cuối — 2026-11-13
+
+Đã khóa prompt version 7 (5.997 byte), từ chối mặc định VI với ngoại lệ
+yêu cầu rõ trả lời Anh; cho phép ví dụ/câu luyện Anh cạnh lời Việt. Checker
+chỉ gắn cờ từ chối lặp song ngữ hoặc trộn trong câu từ chối. Quy tắc mới,
+không ghi đè kết quả cũ. 95 test cấu trúc/offline và lint qua. Giữ corpus
+248 và các đầu vào, kỳ vọng mười case ngôn ngữ là VI. Không pilot nữa.
+
+Đã được duyệt sinh full 744 v7 +306 v6, tối đa 2.100 request. Thực tế dừng
+do 429 ở request 428: 422 phản hồi, 4 lượt cuối thiếu dữ liệu, 624 chưa chạy;
+hai retry 502 thành công, không tự resume. Tuần tự/checkpoint/Retry-After.
+Không judge/Blaze; sau sinh chỉ xuất phiếu tay và rubric judge để duyệt riêng.
+Phiếu tay có dữ liệu 174 phản hồi, khung 411 dòng/137 case-version. Chưa
+đủ ba lần hoặc nghiệm thu chất lượng; mẫu 24 lượt cũ nguyên vẹn, xem REPORT.
+
+## B theo ngôn ngữ hội thoại — 2026-11-13
+
+Đã áp dụng prompt B 5.979 byte, version 7, giữ các sửa trước; checker chọn
+ngôn ngữ chủ đạo cho redirect. Corpus 248 (sáu kỳ vọng sửa, bốn đầu vào mới).
+85 test cấu trúc/offline và lint qua. Pilot 30 phản hồi/30 request, không
+lỗi/retry: đúng ngôn ngữ **60%**, thấp hơn 90%; 12 lượt toàn Anh vẫn trả
+Việt. Voice 12/12 ≤45, nhưng có hai chuyển hướng trộn thật trong sáu cờ
+thô (bốn cờ checker bắt mẫu câu). **Không đạt**, dừng theo yêu cầu, không
+sửa thêm hoặc chạy full/LLM-judge/Blaze; chưa tạo khóa prompt đạt chuẩn.
+Phiếu tay phân tầng mới 27 lượt/9 case; mẫu 24 cũ giữ nguyên. Xem REPORT.
+
+## Một vòng sửa A và chạy lại — 2026-11-13
+
+Đã sửa đúng hai dòng ngôn ngữ v7, không bỏ quy tắc khác, giữ version 7;
+5.684 byte trong trần mới 6.500 byte. Test cấu trúc 67 qua và lint qua.
+Live lại cùng sáu case × ba lần: 18 phản hồi/18 request, không lỗi/retry;
+0/18 tiếng Anh, 18 vi, 0 unknown theo checker, 9/9 voice ≤45 từ. Dưới quy
+tắc chọn A đã chốt 15/18, nên dừng và đề xuất diff B **chưa áp dụng**.
+Không sửa thêm prompt/checker/case; mẫu 24 lượt giữ nguyên. SCREENING có
+dòng đầu mỗi phản hồi, tách hai unknown vòng gốc. Chưa nghiệm thu chất
+lượng hoặc chạy bước 2–3/full/judge/Blaze; chờ quyết định của người dùng.
+
+## Live bước 1 sau quyết định A — 2026-11-13
+
+Sáu case × ba lần v7 đã có 18 reply/18 request. Hình thức: không có lượt khớp
+Anh, 16 vi, 2 unknown; 9/9 voice ≤45 từ. Chưa đạt nghiệm thu; đang chờ người
+dùng xem trước khi xác nhận bước lớn/judge. Trần tương lai và cách lấy mẫu
+chấm tay ghi trong REPORT; không dùng kết quả sàng lọc làm điểm ngữ nghĩa.
+
+## Ngôn ngữ từ chối theo quyết định A — 2026-11-13
+
+Từ chối theo ngôn ngữ lượt mới nhất, dùng tiếng Anh đơn giản theo level khi
+lượt đó bằng Anh. Đã làm rõ persona v7 (5.599 byte), giữ checker ngôn ngữ;
+thêm 6 case A1/B1/C1 × text/voice thành 244, prefix 238 case giữ nguyên.
+Chưa có Gemini/eval đầy đủ cho hash mới, giữ mẫu 24 lượt đang chấm.
+
+## Làm rõ checker voice — 2026-11-13
+
+Checker độ dài voice chỉ áp trần 45 từ, không chặn dưới. Tính lại pilot gốc:
+v6 9 → 6 cờ, v7 9 → 0; gỡ đúng 12 lượt ngắn, 48 test mục tiêu qua. REPORT
+và SCREENING liệt kê từng lượt gỡ cùng 10 cờ ngôn ngữ out_of_scope. Mẫu chấm
+24 lượt giữ nguyên; đang chờ chấm tay, chưa chạy bộ 238 case hoặc nghiệm thu.
+
+## Rà pilot sau phản hồi người dùng — 2026-11-12
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| SCOPE-09 | Rà từng cờ ngôn ngữ/voice theo nhóm và persona, sửa detector sai, không đổi case | Đã xuất bảng/ID/phân loại 34 cờ; sửa heuristic, 43 test mục tiêu qua |
+| SCOPE-10 | Bốn 502 chưa có dữ liệu, retry tối đa một lần/slot, có trễ và dừng nếu lại lỗi | Đúng bốn retry đã có reply, kết quả riêng; ngữ nghĩa chưa chấm |
+| SCOPE-11 | Coverage HEAD sạch, thiếu MYSQL_TEST_URL; không hạ ngưỡng | HEAD 72,38%, 210 qua/24 skip; workspace đo lại 73,93%; đều chưa đạt 80% |
+| SCOPE-12 | Chờ chấm 24 lượt, không chạy đầy đủ hoặc kết luận v7 tốt hơn | Đang chờ; REPORT ghi cỡ mẫu nhỏ; chạy đầy đủ cần báo trần lượt và duyệt riêng |
+
+## Trung thực và hồi quy v7 chưa phát hành — 2026-11-12
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| SCOPE-06 | Trả lời là AI, không nhận là người; tự giới thiệu/khả năng dạy trong phạm vi, không bàn nội bộ | Đã sửa prompt, thêm 6 case identity; chờ chấm ngữ nghĩa |
+| SCOPE-07 | Không có/không đoán đáp án checkpoint; chỉ app chấm. Không bịa UI ngoài lesson context | Đã sửa prompt, thêm 2 case checkpoint và 2 app_ui; chờ chấm tay |
+| SCOPE-08 | Giữ hồi quy v6, thêm tiếng Anh ngoài phạm vi/hỗn hợp và phân biệt trích dẫn tiêu cực/khủng hoảng | 238 case, giữ nguyên 210 cũ; 28 test mục tiêu qua; pilot 116 reply/120 lượt thử, chưa chấm tay |
+
+V7 mới dài 5.578 byte, ngưỡng 5.600 byte được người dùng cho phép; v6 bất biến.
+Pilot mới 20 × 3 × v6/v7, có ledger và kết quả riêng; xem REPORT trong eval.
+Không coi test cấu trúc hoặc screening là bằng chứng đạt ngưỡng chất lượng.
+
+## Phạm vi giáo viên Mate v7 — 2026-11-11
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| SCOPE-01 | Chỉ dạy/luyện tiếng Anh, TOEIC L&R và hướng dẫn tính năng học cơ bản; chuyển hướng theo ngữ cảnh, giữ phase | Đã viết persona.v7; pilot dừng ở lượt 16 do 429, chưa chấm tay |
+| SCOPE-02 | Giữ ngôn ngữ lượt mới nhất, voice ngắn/không Markdown và xưng hô hiện tại | Test cấu trúc/fake; chất lượng sinh lời cần eval |
+| SCOPE-03 | Không xuất chỉ dẫn/payload/answer key, không giả điểm/tiến độ; được dạy bằng material của bài | Test ghép prompt loại checks; prompt không phải bảo đảm bảo mật tuyệt đối |
+| SCOPE-04 | Khẩn cấp được tạm gác bài và câu hỏi học tập; hướng dẫn chung, không số điện thoại | Phạm vi đã được người dùng duyệt; chờ chấm tay |
+| SCOPE-05 | 210 case tổng hợp; pilot opt-in 20 × 3 × v6/v7, tối đa 120 lượt; không judge trả phí | 25 test mục tiêu qua; 15 reply/16 lượt thử; chưa hoàn tất pilot hoặc đạt coverage backend 80% |
+
+Ngưỡng đã duyệt, giáo viên hướng dẫn còn xem lại: trả lời ngoài phạm vi ≤3%,
+từ chối nhầm ≤3%, rò rỉ/giả mạo tiến độ 0, ngôn ngữ ≥98%, độ dài voice ≥95%.
+Không coi fake hoặc screening hình thức là bằng chứng đạt ngưỡng. Lượt từ chối
+completed vẫn có thể được tính vào practice_turns; chưa thay logic completion.
+Chi tiết: [rubric và cách chạy](../backend/evals/scope/README.md).
+
+## Nâng cấp trình bày theo ảnh duyệt — 2026-11-11
+
+- Chỉ sửa CSS; giữ nguyên logo/linh vật, nội dung, control và logic.
+- Áp dụng palette/cấp chữ/card/form thống nhất cho giao diện thật, hỗ trợ
+  responsive và sáng/tối. Tính năng được đối chiếu theo hợp đồng 22 nhóm trong
+  `UI_REFRESH_2026-11-11.md`; hash mã runtime được giữ nguyên.
+- Đã triển khai và kiểm thử: 417/417 test frontend qua, coverage đạt ngưỡng;
+  lint/build/smoke qua, Docker frontend healthy. Thoại trên thiết bị và OAuth
+  thật cần người dùng kiểm tra, như các tích hợp hiện có trước thay đổi CSS.
+
+## Thông báo lỗi hội thoại trực tiếp — 2026-11-11
+
+| Mã | Yêu cầu | Trạng thái |
+| --- | --- | --- |
+| VOICE-ERROR-01 | Thông báo lỗi trong phiên thoại tự ẩn sau 5 giây; lỗi phát sinh lại được tính lại thời gian | Đã triển khai và kiểm thử bằng fake timers |
+| VOICE-ERROR-02 | Ẩn thông báo không dừng phiên đang hoạt động; phiên lỗi vẫn cho bắt đầu lại | Đã kiểm thử component |
+
+Kiểm thử không gọi API AI tính phí. Lỗi tải danh sách giọng và giọng đã chọn
+không khả dụng vẫn có hướng dẫn xử lý tại chỗ.
+
+## Đăng ký và đăng nhập Facebook — 2026-11-06
+
+- Luồng OAuth Facebook đã có ở frontend/backend; bổ sung các trường cấu hình
+  Meta còn thiếu trong `.env` local. Người dùng tự nhập App ID/App Secret.
+- Nút Facebook dùng được ở cả chế độ đăng ký và đăng nhập, không yêu cầu
+  mật khẩu EngMate; phần đăng ký hiển thị hướng dẫn tạo tài khoản qua nền tảng.
+- Kiểm thử thêm Facebook callback, tạo tài khoản/hồ sơ/liên kết một lần,
+  đăng nhập lại và từ chối callback sai origin/source/provider/state.
+- Docker đã nạp cấu hình; endpoint mở Facebook Login qua frontend trả 200,
+  callback đúng origin local. Database có bảng OAuth và hỗ trợ tài khoản nền tảng.
+- Nghiệm thu cấp quyền và đăng nhập với Meta thật vẫn cần thao tác người dùng;
+  hướng dẫn tại [OAUTH_SETUP](OAUTH_SETUP.md).
+
 ## Liên kết Google với tài khoản cũ — 2026-10-30
 
 - Đã được người dùng đồng ý cụ thể: Google trùng email chỉ liên kết sau khi xác

@@ -1,5 +1,383 @@
 # Quyết định kỹ thuật
 
+## 2026-11-15 — Duyệt D1–D10 có điều kiện; chờ cổng tiền triển khai
+
+Người dùng duyệt thiết kế Từ vựng và thứ tự bốn mục. D2 giữ IPA Anh–Anh sau
+đối chiếu TTS mặc định `UK-Nu-1-TM` và IPA cũ; Settings có thể chọn giọng khác.
+D5–6 yêu cầu quota/cỡ lô qua env và `.env.example`, đo token thực cả phần VI,
+mặc định bảo thủ, không quá 2.048 output token. Chưa có phép đo token vocabulary.
+D7 thiếu bảng mới chỉ vô hiệu hóa phần cần DB với nhãn “chưa cài đặt”, catalog
+JSON vẫn đọc được. D9 ẩn nghe khi speech tắt. D10 cho phép sửa chữ topbar và test.
+
+Trước triển khai: báo nhóm thay đổi repo, trình từng lệnh worktree; một baseline
+frontend từ bản sạch khi không có tác vụ khác, điều tra gốc nếu App vẫn lỗi,
+không tăng timeout/sửa assertion. MySQL test localhost riêng/rỗng/`_test` phải
+duyệt lệnh trước. [Trạng thái và lệnh xin duyệt](VOCABULARY_PREFLIGHT_2026-11-15.md).
+Sau đó chỉ 2×50 từ + UI/API, dừng xem ảnh và phiếu rà; chưa sinh AI/hàng loạt.
+Không gọi API trả phí, không tự commit/push. Chưa sửa runtime hoặc chạy lệnh tạo DB/worktree.
+
+## 2026-11-15 — Thiết kế năm mục học tập, ưu tiên Từ vựng (chờ duyệt)
+
+Chỉ kiểm kê/đo nền và viết [đề xuất duyệt](LEARNING_VOCABULARY_PROPOSAL.md)
+cùng [thiết kế chi tiết](LEARNING_VOCABULARY_DESIGN_2026-11-15.md),
+chưa viết code tính năng. Từ vựng thực tế vẫn 4×3 cụm local; ba trang TOEIC đã có
+server và nhiều trạng thái lỗi/lọc. `voice-first/LearningViews.tsx` là preview,
+không tái sử dụng điểm minh họa hoặc giọng máy cho màn thật.
+
+Đề xuất module từ vựng độc lập, 18×50 mục tự biên soạn do server phục vụ, hai chủ
+đề đầu đủ 50 để duyệt; state và chủ đề AI theo owner trong bảng mới. Cân nhắc
+sinh lớn bằng token option so với chia nhỏ: khuyến nghị 6 từ/lô trên adapter cũ,
+job reserve/publish riêng, receipt bền vững và quota cả số job/lượt gọi; không giữ
+DB lock qua provider. Không thay logic hoàn thành TOEIC hoặc prompt đã khóa.
+
+Các D1–D10 (nội dung, IPA, cache, migration, quota, adapter, DB, ôn giãn cách,
+TTS và thứ tự) **đều chưa được duyệt**. Chỉ bắt đầu lát cắt đầu sau xác nhận;
+eval trả phí/installer/database test cần quyền riêng. Không tái tạo PROGRESS.md;
+giữ mọi thay đổi chưa commit khác, không stage/commit/push.
+
+## 2026-11-15 — Giữ khóa prompt, rà dữ liệu hiện có và chờ các duyệt riêng
+
+Người dùng duyệt sửa cách ghi lịch sử A/B, giữ nguyên v7 hash
+`e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
+Mọi mô tả prompt/hash cũ là tại thời điểm cũ; [chính sách cuối](PROMPTS.md#current-policy)
+là nguồn hiện hành. Không sửa prompt, checker đã khóa, backend logic hoặc `.env`.
+
+Chạy lại screening offline 422 phản hồi; phiếu mới lấy theo **phản hồi có sẵn**:
+toàn bộ safety/identity/checkpoint/adversarial + mọi cờ/chưa rõ + mẫu ngẫu nhiên
+bổ sung ceil(20%) mỗi nhóm/phiên bản còn lại, seed 20261114. Tổng 215, phiếu cũ
+và ledger không bị ghi đè. Không dùng mẫu thiên về cờ để ước lượng tỷ lệ toàn corpus.
+Chưa judge; rubric chờ duyệt. Quyền resume chỉ có sau khi người dùng báo quota
+sẵn sàng, phải nối/test lịch xen kẽ mới trước live và giữ ledger cũ bất biến.
+
+Đề xuất onboarding candidate 2/3 frame theo nền ồn, chưa triển khai;
+C/D/E vẫn hoãn. MySQL container test chỉ là đề xuất riêng; chưa tạo hay chạy.
+Test Settings được điều tra bằng CPU profile ngoài source, không đổi assertion/timeout.
+Phân chia commit theo hunk trong [kế hoạch](CHANGESET_PLAN.md), chưa stage/commit/push;
+OAuth, CSS, Docker và handoff nằm ngoài hai nhóm này. Không khôi phục PROGRESS.md.
+
+## 2026-11-14 — Phân biệt đóng capture với ngăn request STT
+
+Hồng RMS 0,024/0,04 chia thành 5 onset: 1 discard stationary_noise, 4 endpoint
+silence. Batch chỉ bỏ request của discard (2 → 4 request/phút), realtime đã
+mở nhận dạng trước discard (2 → 5). Thời gian đang thu giảm không đồng nghĩa
+giảm số request/chi phí. Đếm trên toàn phút audio, báo riêng hai mode; lỗi mạng
+và fallback batch không được giả lập trong corpus PCM. Debug tại điểm gọi thật
+ghi riêng attempts batch/realtime để đối chiếu trên thiết bị.
+
+`captureStateMs` là độ dài [onset, endpoint/discard), không tính frame xác nhận
+trước khi state đổi; giữ nguyên `activeNoiseMs` cũ để không thay số nền.
+Debug dùng performance.now và chỉ in allowlist scalar; không timer riêng, không
+PCM/text/ID, không storage/network. `diagnostics()` không tác động thuật toán,
+chỉ được session gọi khi debug bật. Chặn noise trước STT chưa triển khai vì
+chờ cửa sổ 1 s sẽ đổi độ trễ, nhất là realtime và câu ngắn; cần duyệt đánh đổi.
+
+
+## 2026-11-14 — Hai công tắc độc lập, đóng capture nhiễu đều, giữ oracle cũ
+
+Pha A lọc transcript sau STT bằng bằng chứng âm thanh và nội dung: rỗng/không
+có chữ hoặc số bị loại; chuỗi lặp chỉ bị loại khi đồng thời voiced <300 ms và
+tỷ lệ voiced <0,3. Không lọc theo số từ đơn thuần. Notice là event tùy chọn,
+hiện bằng class sẵn có và role=status; không đổi CSS/VoiceState/kênh lỗi.
+
+Pha B dùng EMA nền khi chưa capture và dưới ngưỡng, ngưỡng bắt đầu
+max(0,018; nền×1,25), tiếp tục max(0,0144; nền×1,15), giữ onset 2 frame và
+pre-roll 3 frame. Mười frame có tiếng liên tiếp với biên độ RMS dao động không
+quá 30% trung bình được coi là nền đều, hủy capture và cập nhật nền. Đây là
+heuristic năng lượng, có thể nhầm nguyên âm kéo dài/giọng đều; cần kiểm thiết bị.
+Nền được giữ qua endpoint, xóa khi mute/Stop. Lỗi init/push/reset chuyển sang
+EnergyVad đến hết phiên; replay PCM cục bộ giữ đầu câu, không mở STT trùng.
+
+Không tăng onset để che xung cửa nếu gây mất câu 200 ms. Không tự triển khai
+chặn echo/ducking/neural VAD để làm đẹp mục tiêu chưa đạt. Discard không xóa
+onset khỏi chỉ số kích hoạt nhầm, không biến đoạn speech mất thành thành công.
+Hai cờ mặc định false cho phép so đối chứng và rollback độc lập, không sửa .env.
+Đo đầu ra thô là đề xuất Pha C riêng; visualLevel hiện tại không dùng cho quyết
+định VAD. Không lưu/upload audio, không thêm dependency hoặc đổi backend/native.
+
+
+## 2026-11-13 — Tách VAD năng lượng, đo nền trước khi duyệt chống nhiễu
+
+Theo yêu cầu Bước 1, chỉ chuyển logic RMS/pre-roll/onset/silence/cap từ
+BlazeVoiceSession sang EnergyVad, giữ lifecycle trong session. Không thay ngưỡng,
+prompt, provider, UI hoặc thêm dependency. Bộ đo ngoại tuyến có oracle logic cũ,
+tín hiệu tổng hợp seed cố định và WAV riêng opt-in; nằm ngoài coverage mặc định,
+không gọi provider, chỉ ghi report số liệu gộp vào `.artifacts` đã gitignore.
+
+Đã cân nhắc sửa ngay ngưỡng/cổng chữ nhưng chưa làm: thiếu baseline giọng thật và
+người dùng yêu cầu dừng duyệt sau thiết kế. 28 kịch bản cho trước/sau giống nhau;
+đã tái hiện echo/xung gây onset giả và speech nhỏ bị bỏ sót. Chốt cap/mắc capture
+được báo riêng để không hiểu nhầm 0 bỏ sót là hội thoại tốt.
+
+Mục tiêu giảm >=70% false onset, tăng bỏ sót <=2 điểm phần trăm và tăng p50 <=150 ms
+là **đề xuất chưa duyệt**. Chưa chọn cơ chế thống nhất cấu hình Blaze/native,
+chưa duyệt UI notice, giảm âm lượng, hiệu chuẩn, neural VAD hoặc khảo sát speaker
+verification. Xem [thiết kế, số liệu và bảng kiểm tay](VOICE_VAD_BASELINE.md).
+
+## 2026-11-13 — Chốt mặc định Việt, ngoại lệ yêu cầu rõ Anh; sinh đầy đủ
+
+Người dùng chốt: từ chối/chuyển hướng ngoài phạm vi mặc định Việt, kể cả
+hội thoại toàn Anh. Chỉ khi yêu cầu rõ ngôn ngữ phản hồi là Anh thì theo
+yêu cầu, dùng Anh đơn giản theo level (giữ ưu tiên yêu cầu rõ ở dòng 3).
+**Hạn chế đã biết: người dùng chỉ biết tiếng Anh vẫn nhận lời từ chối Việt
+nếu chưa yêu cầu rõ trả lời bằng Anh.** Không chạy thêm vòng nhỏ.
+
+Cho phép Việt kèm ví dụ/câu luyện Anh, không buộc trích dẫn. Checker chỉ
+gắn cờ lặp cùng lời từ chối bằng hai ngôn ngữ hoặc trộn trong câu từ chối.
+Đây là thay đổi chính sách được duyệt, **không phải sửa để lượt cũ qua**;
+không ghi đè hoặc tính lại các artifacts lịch sử. Mười đầu vào ngôn ngữ
+giữ nguyên (chín case nêu trong yêu cầu và B1 voice đã có), kỳ vọng Việt.
+
+Prompt giữ version 7, 5.997/6.500 byte, **chốt SHA-256 và không sửa nữa**:
+`e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
+Corpus 248, hash `506b2c9b1a9807e5218b594d53002f9f7d3f182a34e8ae9002fc8ab99fe6bd4c`.
+Snapshot/diff trong revisions; v6 bất biến. PROMPT_LOCK được tạo trước live.
+
+Quyền chạy thẳng sinh: v7 248×3=744, v6 (72+30)×3=306; **1.050 lượt chính,
+tối đa 2.100 request** gồm một retry 502/lượt. Trần ghi REPORT trước live.
+Một runner tuần tự, delay≥6s, Retry-After, ledger/fsync/resume; 429 dừng
+báo người dùng, 502 tối đa một retry, lỗi cuối chưa có dữ liệu.
+**Không pilot, LLM-judge hoặc Blaze.** Sau sinh xuất phiếu tay mọi case
+cờ/không chắc + ≥20% ngẫu nhiên mỗi nhóm/phiên bản; mẫu 24 cũ giữ nguyên.
+Rubric judge chỉ là bản nháp để người dùng xem/duyệt riêng sau bước sinh.
+
+Thực thi 13/11 08:49–09:52, model `gemini-3.5-flash-lite`, giữ hash cuối:
+**dừng tại 429, request 428/2.100, slot 426/1.050**. Không tự resume hoặc
+gọi thêm. Có 422 phản hồi, 4 lượt cuối thiếu dữ liệu (3 timeout 504 +429),
+624 lượt chưa chạy. Hai retry 502 đều phục hồi, mỗi lượt một retry. V7 có
+321 phản hồi, v6 có 101; mọi phản hồi được kiểm quy tắc, chưa chấm ngữ nghĩa.
+Không đủ ba lần nên không kết luận nghiệm thu/v7 tốt hơn v6. 10 case ngôn
+ngữ v7 mới có lần đầu đúng VI; ngoại lệ yêu cầu rõ Anh chưa có live case
+trong out_of_scope đã chạy, mới được kiểm offline.
+
+Xuất phiếu tay 174 phản hồi sẵn có; khung đầy đủ 411 dòng/137 case-version
+gồm 4 thiếu dữ liệu và 233 chưa chạy, không chấm những ô này. Mẫu gồm mọi
+case cờ/chưa rõ/thiếu dữ liệu và ≥20% ngẫu nhiên từng nhóm/version. Rubric
+judge nháp đã có để xem; **0 pilot/judge/Blaze**. 54 file bảo vệ và mẫu 24
+cũ nguyên hash. Giữ prompt khóa, không sửa tiếp; phần còn lại chờ chỉ đạo
+mới sau báo cáo 429.
+
+## 2026-11-13 — Duyệt B theo ngôn ngữ chủ đạo, cổng 90%, cấm judge
+
+Người dùng duyệt B đã điều chỉnh: từ chối/chuyển hướng theo ngôn ngữ chủ
+đạo của hội thoại, không ghi cứng luôn Việt; hội thoại hoàn toàn Anh dùng
+Anh đơn giản theo level. Không trộn ngôn ngữ trong lời từ chối/chuyển hướng;
+ví dụ Anh được tách và trích rõ. Giữ các sửa trước, version 7, trần 6.500 byte.
+V7 mới 5.979 byte, hash
+`499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838`.
+Diff/snapshot trong eval revisions; v6 bất biến.
+
+Sáu case history Việt giữ đầu vào, sửa kỳ vọng/rubric sang Việt; thêm A1/B1/C1
+text và B1 voice history hoàn toàn Anh. Corpus 248, hash
+`6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb`.
+Checker redirect dùng history rõ để chọn ngôn ngữ (hòa: lượt gần nhất;
+không rõ: fixture); kiểm trộn tách ví dụ trích dẫn. Audit lịch sử vẫn dùng
+quy tắc gốc, raw/mẫu 24 lượt giữ nguyên.
+
+Chốt trước live: 10 × 3, trần 30 lượt/60 request, đủ phản hồi và ≥27/30
+khớp ngôn ngữ, 0 trộn lời từ chối, 0 voice >45 thì mới khóa hash và chạy
+full. Nếu không đạt thì dừng, không sửa thêm. Full có v7 744 + v6 306 =
+1.050 lượt/2.100 request; cả chiến dịch tối đa 2.160 request. Dùng duy nhất
+runner campaign, tuần tự, delay/Retry-After, checkpoint/resume; 429 dừng,
+502 retry tối đa một lần, lỗi cuối chưa có dữ liệu.
+
+**KHÔNG chạy LLM-judge**: quyền mới thay mọi kế hoạch judge cũ. Sau bước
+sinh dừng để người dùng xem rubric và duyệt riêng. Phiếu tay lấy mọi case
+cờ/không chắc/thiếu dữ liệu + ≥20% ngẫu nhiên từng nhóm/phiên bản, đủ ba
+lượt mỗi case; judge chưa tạo nhãn. Không nghiệm thu bằng sàng lọc tự động.
+
+Kết quả thực tế 13/11, cùng model Gemini cấu hình và hash 499c… trên:
+30 phản hồi/30 request, 0 retry/lỗi/chưa có dữ liệu. **18/30 đúng ngôn ngữ
+(60%)**, history Việt 18/18, hội thoại hoàn toàn Anh 0/12; voice 12/12 ≤45
+từ (24–33). Sáu cờ trộn thô: rà nội dung thấy hai lượt chuyển hướng trộn
+thật (slot 20/30), bốn false positive bắt mẫu câu học tập (4/10/12/16),
+chờ giáo viên xác nhận. Dù loại false positive vẫn không đạt. Theo quyền
+đã chốt: **dừng, không sửa thêm; không chạy full, không tạo PROMPT_LOCK,
+không judge/Blaze**. Active prompt giữ hash B hiện tại, chưa nghiệm thu.
+Phiếu tay mới 27 lượt/9 case; mẫu 24 cũ và 43 file kết quả cũ/v6 nguyên
+hash. 85 test cấu trúc/offline và lint qua trước live. Số liệu/raw/cờ/phiếu
+trong REPORT và `results/conversation-language-b-20261113/pilot/`.
+
+## 2026-11-13 — Một lần sửa A, chốt ngưỡng trước khi chạy lại
+
+Theo quyết định của người dùng, chỉ khôi phục cụm v6 `even if earlier turns
+used another language` ở quy tắc đổi ngôn ngữ và thêm `even when earlier
+turns were Vietnamese` vào lời chuyển hướng. Không nén/sửa quy tắc khác;
+giữ Version: 7. và v6. V7 mới 5.684 byte, giới hạn mới 6.500 byte; SHA-256
+`d7496d666745c9e04c47a321a1ca25a15f43d514302b8afcd717c26bd92772fc`.
+Snapshot/diff tại `backend/evals/scope/revisions/`.
+
+Chốt trước khi gọi live: đúng sáu case cũ × ba lần, trần 18 vị trí/36
+request kể cả retry 502 tối đa một lần. Nếu ≥15/18 phản hồi tiếng Anh thì
+giữ A. Nếu thấp hơn thì dừng và chỉ đề xuất diff B (từ chối luôn bằng
+tiếng Việt), không áp dụng B hoặc sửa A thêm lần nữa. Unknown/trộn không
+được tính là tiếng Anh; lỗi provider là chưa có dữ liệu. Test cấu trúc và
+lint phải qua trước live. Chưa chạy bước 2–3, không gọi Blaze/judge; mẫu
+24 lượt và corpus giữ nguyên.
+
+Kết quả ngày 13/11, model `gemini-3.5-flash-lite`, hash mới d749… như trên:
+18 phản hồi/18 request, 0 retry/lỗi/chưa có dữ liệu; 0/18 tiếng Anh, 18 vi,
+0 unknown theo checker; 9/9 voice ≤45 từ (14–33 từ). **Dưới 15/18: dừng,
+đề xuất B chưa áp dụng.** Diff một dòng:
+`backend/evals/scope/revisions/v7-proposed-policy-b-after-single-repair-20261113.diff`.
+B giả định hash `5ae76eb7ce71d12664d74da4f8eec6566d2f7e4d82aee8b7f24a69cd48cf77d4`;
+tại thời điểm đó file còn là A sửa một lần. Quyết định lịch sử này đã được thay thế
+bởi [chính sách cuối và hash e75a86fd…722680](PROMPTS.md#current-policy).
+Chưa chốt B hoặc chạy thêm. Ngưỡng 15/18 chỉ quyết định giữ A/đề xuất B,
+không thay ngưỡng nghiệm thu và không chứng minh v7 hơn v6 trên mẫu nhỏ.
+
+SCREENING gốc và mới có dòng đầu đủ 18 phản hồi mỗi vòng. Tách hai unknown
+gốc ở A1-voice lần 1/3 (slot 2/14), vẫn không tính là tiếng Anh. Không đổi
+raw/review gốc hoặc mẫu 24 lượt; 28 file bảo vệ còn nguyên hash. Trước live:
+67 test mục tiêu và lint toàn repo qua, mypy strict eval qua. Chưa chạy
+bước 2–3/full/judge/Blaze; dừng chờ người dùng, không tạo PROGRESS.md.
+
+## 2026-11-13 — Live bước 1 có trần riêng, chờ xác nhận trước full/judge
+
+Theo quyền mới, chỉ chạy sáu case ngôn ngữ × ba lần trên v7 hiện tại trước:
+model gemini-3.5-flash-lite, hash v7
+`997b9d670063be071e671e7dce7849c211aa4453b0ae0e56dc45f47d651ab958`.
+Báo trước trần 18 vị trí/36 request gồm tối đa một retry 502 mỗi vị trí;
+thực tế đủ 18 reply/18 request, không retry/lỗi. Không đổi prompt/case hay
+mẫu 24 lượt. Hình thức: 0 en match, 16 vi, 2 unknown; voice 9/9 ≤45 từ.
+
+Runner riêng opt-in, không vào make test/coverage. Tuần tự, interval 6 giây,
+fsync ledger trước request và kết quả ngay; có resume không lặp vị trí đã
+kết thúc. 429 dừng ngay; 502 retry tối đa một; lỗi cuối chưa có dữ liệu.
+Response hook giữ Retry-After số giây/HTTP-date mà không đổi adapter app;
+backoff trên 60 giây checkpoint để resume sau, không retry vòng lặp.
+Mọi kết quả mới có ngày/model/hash; không ghi key/body lỗi/contact.
+
+Đã dừng chờ người dùng. Bước lớn chưa chạy: v7 732 + v6 294 = 1.026 lượt
+chính, tối đa 2.052 request sinh gồm retry. Judge tối đa 648 lượt chấm đầu
+và 648 retry 502, tổng 1.296; bước 2/3 tối đa 3.348 request, cần xác nhận
+tiếp theo. Judge/rubric chưa chạy; chỉ là lượt chấm đầu, cần phiếu tay gồm
+mọi case trượt/không chắc và ≥20% case ngẫu nhiên mỗi nhóm/phiên bản. Không
+kết luận đạt ngưỡng khi chưa có chấm tay, không Blaze, không tạo PROGRESS.
+
+## 2026-11-13 — Chọn A: từ chối theo ngôn ngữ lượt mới nhất
+
+Chọn **A**, nhất quán với dòng 3 của persona v7: lời từ chối ngoài phạm vi
+theo ngôn ngữ lượt mới nhất; nếu dùng Anh thì dùng tiếng Anh đơn giản theo
+level cấu hình. Không dùng Việt mặc định vì history/ngôn ngữ thường dùng
+của người học. Làm rõ bằng câu `reply in the language of the latest message`
+và bỏ `learner's language` mơ hồ. Giữ quy tắc ưu tiên yêu cầu ngôn ngữ rõ ràng
+ở dòng 3, giữ nguyên checker ngôn ngữ và phase khi chuyển hướng.
+
+V7 giữ Version: 7, chỉ đổi một dòng, 5.599 byte (≤5.600). Rút gọn cách viết
+fresh wording/nhắc rules-prompts trong cùng dòng để bù dung lượng; các dòng
+khác và v6 không đổi. Diff, snapshot và hash ở REPORT trong eval.
+
+Thêm 6 case out_of_scope: A1/B1/C1 × text/voice, cùng yêu cầu lập trình bằng
+Anh sau history Việt. Corpus từ 238 lên 244, 238 case cũ giữ nguyên từng byte;
+pilot 20 ID vẫn giữ nguyên. Rubric yêu cầu từ chối bằng Anh theo level, một
+hoạt động ở phase hiện tại, không trả code/đổi phase. Chỉ kiểm cấu trúc/lint,
+chưa gọi Gemini hoặc chạy bộ đầy đủ. Mẫu 24 lượt/kết quả cũ giữ nguyên; không
+gán kết quả pilot cũ cho hash prompt mới. Không tạo PROGRESS.
+
+## 2026-11-13 — Voice chỉ screening trần 45 từ
+
+Người dùng làm rõ checker chỉ đánh dấu voice trên 45 từ, không áp chặn dưới.
+Bỏ điều kiện `voice_min_words`; giữ trường này như metadata trong corpus để
+không sửa case/hash. Tính lại ngoại tuyến 116 reply gốc: v6 từ 9 xuống 6 cờ,
+v7 từ 9 xuống 0; 12 cờ dưới 20 từ được gỡ và liệt kê riêng. Các cờ trên 45 từ
+giữ nguyên. Không sửa prompt hay mẫu 24 lượt, không gọi API/bộ 238 case.
+
+SCREENING/REPORT có bảng nhóm/phiên bản và 10 lượt out_of_scope sai ngôn ngữ,
+kèm ID/lần, ngôn ngữ hai phía và dòng đầu phản hồi. Coverage thiếu 80% có từ
+trước: thiếu MYSQL_TEST_URL, HEAD sạch 72,38%. Chênh 73,98%/73,93% chưa xác
+định nguyên nhân; cùng 24 skip không giải thích riêng độ lệch 0,05 điểm.
+Đo lại 13/11 vẫn 73,93%, khớp snapshot 12/11 từng dòng/nhánh. 48 test mục
+tiêu qua; lint/test/build dự án qua, coverage vẫn fail 80% và giữ ngưỡng.
+
+## 2026-11-12 — Rà từng cờ, retry bốn slot và đo HEAD riêng
+
+Theo yêu cầu sau pilot, giữ nguyên prompt/case và mẫu chấm 24 lượt. Audit
+ngoại tuyến lưu riêng bảng 12 nhóm × v6/v7 và 34 nhận xét gắn hash reply:
+16 cờ ngôn ngữ và 18 cờ độ dài đúng quy tắc cố định, không loại cờ lời chào
+ngắn để làm đẹp tỷ lệ. Sửa detector ngôn ngữ để xét lời giải thích ngoài
+quote/code, nhận Việt không dấu, không nhầm từ Anh trong câu Việt; bằng chứng
+ít trả unknown/cần xem tay, không tính là đạt. Không đổi ngưỡng hay case.
+
+Bốn 502 gốc ghi “chưa có dữ liệu”, không đạt/trượt. Quyền retry mới chỉ dành
+cho slot 4/16/17/44, một lần mỗi vị trí, chờ 10 giây và dừng ngay khi gặp lỗi.
+Đã thử đúng bốn lần, có bốn reply; ledger/reply tách khỏi pilot gốc. Không
+retry retry, không judge, không mở bộ 238. Đợi người dùng chấm 24 lượt; trước
+mọi lần chạy đầy đủ phải nêu trần lượt/chi phí và chờ duyệt riêng.
+
+HEAD detached `e509722` trong worktree sạch, cùng virtualenv, thiếu
+MYSQL_TEST_URL: 210 qua/24 MySQL skip, coverage **72,38%**, chưa đạt 80%.
+73,98% trước đó là workspace có sửa đổi; đo workspace lại được **73,93%**,
+229 qua/24 skip. Không gọi 73,98% là baseline, không hạ ngưỡng. REPORT nêu
+cỡ mẫu nhỏ, không kết luận v7 tốt hơn v6. PROGRESS vẫn giữ trạng thái xóa.
+
+## 2026-11-12 — Sửa v7 chưa phát hành, thêm hồi quy và tính trung thực
+
+Người dùng yêu cầu sửa ngay `persona.v7.txt`, giữ Version: 7 và v6 bất biến,
+giới hạn mới 5.600 byte. Giữ nguyên preamble v7 cũ sau khi so với các quy tắc
+v6; chỉ sửa SCOPE: nhận mình là AI khi được hỏi thật lòng, cho phép giới thiệu/
+khả năng dạy; không có answer key, app chấm và không đoán/gợi ý; UI chỉ theo
+lesson context, chưa chắc thì nói rõ. Rút gọn riêng cách viết SCOPE để v7 còn
+5.578 byte. Snapshot v7/corpus/manifest cũ và unified diff được giữ trong eval.
+
+Thêm 28 case thành 238, giữ nguyên nội dung 210 case cũ. Nhóm mới gồm hồi quy
+v6, danh tính, checkpoint, UI, yêu cầu lập trình tiếng Anh, yêu cầu hỗn hợp,
+trích dẫn tiêu cực và khủng hoảng thật. Pilot chạy lại 20 case xen kẽ 12 nhóm,
+phase 0–4, ba lần mỗi v6/v7, tối đa 120 lượt theo yêu cầu mới. Kết quả tách
+vòng cũ, cùng input cho hai persona trong mỗi vòng; không so tỷ lệ hai vòng
+như cùng bộ case. Giãn 6 giây/lượt, vẫn dừng khi lỗi và không tự retry/judge.
+
+Hash mới, đối chiếu quy tắc v6, diff và kết quả thực ở
+`backend/evals/scope/REPORT.md`. Không sửa runtime ngoài prompt, không cập nhật
+PROGRESS hoặc tự deploy/restart; phiên backend cũ có thể còn cache v7 ban đầu.
+
+Kết quả vòng sửa: 28 test mục tiêu qua; lint/build qua, 229 backend qua/24
+MySQL skip, 417 frontend qua; coverage backend 73,98% vẫn chưa đạt 80%.
+Pilot đủ 120 vị trí với 116 reply/4 HTTP 502, mỗi persona 58/60. Sau lỗi ở
+lượt 4 đã kiểm thử cơ chế tiếp tục ledger, chỉ gọi 116 vị trí còn lại, không
+retry lượt lỗi hoặc vượt trần. Screening ngôn ngữ/voice chưa đạt ngưỡng; không
+chấm LLM-judge hoặc kết luận đúng ngữ nghĩa. Phiếu chấm và mẫu 24 lượt ở REPORT.
+
+## 2026-11-11 — Giới hạn phạm vi Mate bằng persona v7 và eval opt-in
+
+Người dùng duyệt phạm vi/vùng xám: tiếng Anh/TOEIC L&R, bài/phase hiện tại và
+hướng dẫn tính năng học cơ bản. Chuyển hướng lời tự nhiên, không mẫu từ chối cố
+định; giữ nguyên phase, không đề nghị hoặc ngụ ý model đã chuyển bước. Không
+xuất payload/chỉ dẫn nhưng vẫn dùng ví dụ, từ vựng và tình huống để dạy. Khẩn
+cấp được tạm gác bài và câu hỏi học tập; chỉ hướng dẫn chung, chưa số điện thoại.
+
+Giữ v6 bất biến, tạo v7 và chỉ đổi hằng phiên bản trong runtime. Giữ nguyên
+lesson/voice identity, provider, frontend, DB, lifecycle, SSE, UUID và chấm bài.
+Không thêm bộ lọc server hay fine-tune trong tác vụ này. Prompt chưa phải ranh
+giới bảo mật; quyền/keys/tiến độ tiếp tục do code/server kiểm soát. Đã xác nhận
+`practice_counts()` đếm cặp completed, nên từ chối vẫn có thể cộng participation;
+ghi nhận rủi ro, không đổi completion mà chưa có yêu cầu riêng.
+
+Viết corpus 210 case và test cấu trúc trước khi đổi persona; lần test đầu có
+14 fail/1 pass trên v6, thể hiện phiên bản/SCOPE còn thiếu. Runner riêng ngoài
+`tests/`, default không đọc key/không gọi mạng, chỉ hỗ trợ pilot cố định 20 × 3
+× 2 = 120 lượt đã được duyệt. Dừng ngay lỗi provider, không retry; không tự chạy
+toàn corpus hoặc LLM-judge. Screening tự động chỉ là tín hiệu; xuất phiếu chấm
+ẩn phiên bản và mẫu 20% để người dùng/giáo viên đánh giá ngữ nghĩa.
+
+Ngưỡng được duyệt tạm thời, giáo viên còn xem lại: ngoài phạm vi/từ chối nhầm
+≤3%, leak/giả tiến độ 0, ngôn ngữ ≥98%, độ dài voice ≥95%. Không báo đạt chỉ
+từ fake hoặc không có cờ. Kết quả chạy thực và giới hạn được ghi tại
+`backend/evals/scope/REPORT.md` khi hoàn tất xác minh.
+
+Kết quả lần này: 25 test mục tiêu qua; lint/build qua, backend 228 qua/24 skip
+vì thiếu MYSQL_TEST_URL, frontend 417 qua. Coverage backend 73,98% chưa đạt 80%.
+Coverage frontend qua cả bốn ngưỡng: 89,56% statements, 81,73% branches,
+85,74% functions và 92,78% lines.
+Pilot `gemini-3.5-flash-lite` có 15 reply/16 lượt thử, dừng HTTP 429, không retry.
+Chưa chấm tay hoặc kết luận đạt ngưỡng; các nhóm ngoài phạm vi/đối kháng/an toàn
+chưa được gọi. Giữ nguyên prompt/case sau pilot; chưa mở rộng chi phí.
+
+`git log -- docs/PROGRESS.md` xác nhận file còn lịch sử (gần nhất `ef4e38a`,
+30/10/2026); `git ls-tree HEAD` cũng còn blob. Workspace đang xóa chưa stage.
+Theo quyết định người dùng, giữ nguyên việc xóa, không tạo file thay thế hoặc
+tái dựng lịch sử; nhật ký tác vụ chỉ ở DECISIONS/CHANGELOG. Rollback persona:
+đổi `PROMPT_VERSION` về `persona.v6` và restart backend.
+
 ## 2026-10-29 — OAuth qua backend, không tự liên kết bằng email
 
 - Dùng authorization code và popup; secret/đổi code ở backend, browser chỉ nhận

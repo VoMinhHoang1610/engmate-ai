@@ -1,12 +1,12 @@
 /* Clear reading surfaces and consistent color cues for learning interactions. */
 :root .workspace-shell.workspace-shell {
   --workspace-bg: #ffffff;
-  --workspace-sidebar: #f4f7fd;
-  --workspace-soft: #edf2f9;
-  --workspace-hover: #e2eaf6;
-  --workspace-text: #1c2c45;
-  --workspace-muted: #52617a;
-  --workspace-line: #d5dfed;
+  --workspace-sidebar: #f8fafc;
+  --workspace-soft: #f1f5f9;
+  --workspace-hover: #e8eef8;
+  --workspace-text: #0f172a;
+  --workspace-muted: #475569;
+  --workspace-line: #d8e1ed;
   --workspace-primary: #2458db;
   --workspace-primary-hover: #1d46b5;
   --workspace-on-primary: #ffffff;
@@ -55,11 +55,11 @@
 }
 
 :root[data-theme='dark'] .workspace-shell.workspace-shell {
-  --workspace-bg: #101a2c;
-  --workspace-sidebar: #0c1423;
-  --workspace-soft: #1a2940;
+  --workspace-bg: #0b1220;
+  --workspace-sidebar: #111c2e;
+  --workspace-soft: #18263b;
   --workspace-hover: #233954;
-  --workspace-text: #edf3ff;
+  --workspace-text: #f1f5f9;
   --workspace-muted: #b0bfd5;
   --workspace-line: #344761;
   --workspace-primary: #8ab2ff;
@@ -1541,5 +1541,124 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Learning and account surfaces use the same visual hierarchy as the chat. */
+:root .workspace-shell.workspace-shell.workspace-shell .course-studio .chat-panel {
+  height: clamp(280px, calc(100dvh - 360px), 600px);
+  border-radius: var(--card-radius);
+}
+:root .workspace-shell.workspace-shell.workspace-shell .tutor-page-heading h1 {
+  font-size: clamp(26px, 2.5vw, 32px);
+  line-height: 1.25;
+  letter-spacing: -0.8px;
+  text-wrap: balance;
+}
+:root .workspace-shell.workspace-shell.workspace-shell .tutor-page-heading p {
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 72ch;
+}
+:root .workspace-shell.workspace-shell.workspace-shell :is(.tutor-button, .btn) {
+  border-radius: var(--control-radius);
+  box-shadow: none;
+}
+:root .workspace-shell.workspace-shell.workspace-shell :is(.tutor-button.primary, .btn.primary) {
+  background: var(--workspace-primary);
+  color: var(--workspace-on-primary);
+  border-color: var(--workspace-primary);
+}
+:root
+  .workspace-shell.workspace-shell.workspace-shell
+  :is(.tutor-button.primary, .btn.primary):hover:not(:disabled) {
+  background: var(--workspace-primary-hover);
+  transform: none;
+}
+:root .workspace-shell .learning-library-toolbar {
+  align-items: flex-end;
+  gap: 16px;
+}
+:root .workspace-shell .learning-library-toolbar label {
+  flex-basis: 180px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 550;
+}
+:root .workspace-shell .learning-library-toolbar > button {
+  align-self: flex-end;
+  min-height: 44px;
+  margin-bottom: 0;
+}
+:root .workspace-shell .learning-library-card {
+  padding: 24px;
+  gap: 16px;
+}
+:root .workspace-shell .learning-library-card h2 {
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: -0.25px;
+}
+:root .workspace-shell .learning-library-card > p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+:root .workspace-shell .learning-account-summary h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  line-height: 1.4;
+  letter-spacing: -0.4px;
+}
+:root .workspace-shell :is(.learning-account-summary, .learning-overview) p {
+  font-size: 14px;
+  line-height: 1.75;
+}
+:root .workspace-shell .learning-results-scroll table {
+  font-size: 14px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+:root .workspace-shell :is(.profile-form, .learning-plan-form) label {
+  font-size: 14px;
+  line-height: 1.5;
+}
+:root
+  .workspace-shell.workspace-shell.workspace-shell
+  :is(.profile-form, .learning-plan-form, .learning-library-toolbar, .voice-choice)
+  :is(input:not([type='file']):not([type='checkbox']):not([type='radio']), select) {
+  min-height: 46px;
+  font-size: 15px;
+  border-radius: var(--control-radius);
+}
+:root .workspace-shell.workspace-shell.workspace-shell .profile-form input[readonly] {
+  background: var(--workspace-soft);
+  color: var(--workspace-muted);
+  box-shadow: none;
+}
+:root .workspace-shell .settings-item-copy {
+  line-height: 1.65;
+}
+:root .workspace-shell .settings-item-copy strong {
+  font-size: 15px;
+}
+:root .workspace-shell .settings-card > summary {
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--workspace-text);
+  font-weight: 650;
+  cursor: pointer;
+}
+@media (max-width: 767px) {
+  :root
+    .workspace-shell.workspace-shell.workspace-shell
+    :is(.profile-form, .learning-plan-form, .learning-library-toolbar, .voice-choice)
+    :is(input:not([type='file']):not([type='checkbox']):not([type='radio']), select) {
+    font-size: 16px;
+  }
+  :root .workspace-shell .learning-library-toolbar label {
+    flex-basis: 100%;
+  }
+  :root .workspace-shell .learning-library-card {
+    padding: 20px;
   }
 }

@@ -1719,3 +1719,101 @@ html {
   padding: 56px;
   background: #eef4ff;
 }
+
+/* Presentation alignment with the approved learning workspace. */
+.landing-page {
+  --landing-fg: #0f172a;
+  --landing-muted: #475569;
+  --landing-bg-subtle: #f8fafc;
+  --landing-blue: #2458db;
+  --landing-blue-hover: #1d46b5;
+  --landing-border: #d8e1ed;
+  --landing-shadow: 0 4px 20px #0f172a08, 0 1px 3px #0f172a06;
+  --landing-shadow-lg: 0 16px 48px #0f172a12, 0 2px 8px #0f172a08;
+  background-color: var(--landing-bg);
+  color: var(--landing-fg);
+}
+.landing-page :is(.landing-editorial-title, .landing-editorial-h2) {
+  text-wrap: balance;
+}
+.landing-page .landing-editorial-sub {
+  max-width: 720px;
+  line-height: 1.75;
+}
+.landing-page :is(.landing-btn-blue, .landing-btn-ghost, .landing-tab-card) {
+  border-radius: var(--control-radius);
+}
+.landing-page .landing-btn-blue {
+  background: var(--landing-blue);
+  border-color: var(--landing-blue);
+  box-shadow: 0 3px 12px #2458db18;
+}
+.landing-page .landing-btn-blue:hover {
+  background: var(--landing-blue-hover);
+  filter: none;
+  transform: none;
+}
+.landing-page .landing-scenic-floating-card {
+  background: var(--landing-card);
+  color: var(--landing-fg);
+  box-shadow: var(--landing-shadow-lg);
+  backdrop-filter: none;
+}
+.landing-page .landing-scenic-floating-card h3 {
+  color: var(--landing-fg);
+}
+.landing-page .landing-scenic-card-footer {
+  color: var(--landing-muted);
+  border-color: var(--landing-border);
+}
+.landing-page .landing-sample-btn {
+  color: var(--landing-blue);
+  background: var(--landing-bg-subtle);
+  border-color: var(--landing-border);
+}
+.landing-page :is(.landing-visual-frame, .landing-story-card, .landing-faq-item) {
+  border-radius: var(--card-radius);
+}
+.landing-page .landing-story-card {
+  border: 1px solid var(--landing-border);
+  box-shadow: var(--landing-shadow);
+}
+.landing-page .landing-faq-q {
+  min-height: 56px;
+  line-height: 1.6;
+}
+.landing-page .landing-faq-a {
+  line-height: 1.8;
+}
+.landing-page :is(button, a):focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 4px;
+}
+.landing-header :is(button, a):focus-visible {
+  outline-color: #93c5fd;
+}
+:root[data-theme='dark'] .landing-page {
+  --landing-bg: #0b1220;
+  --landing-bg-subtle: #18263b;
+  --landing-fg: #f1f5f9;
+  --landing-muted: #b0bfd5;
+  --landing-card: #111c2e;
+  --landing-border: #344761;
+  --landing-blue: #8ab2ff;
+  --landing-blue-hover: #a6c5ff;
+  --landing-shadow: 0 4px 20px #00000020;
+  color-scheme: dark;
+}
+:root[data-theme='dark'] .landing-page .landing-btn-blue {
+  color: #102047;
+}
+:root[data-theme='dark'] .landing-page :is(.landing-story-body, .landing-faq-item) {
+  color: var(--landing-fg);
+  background: var(--landing-card);
+}
+@media (max-width: 640px) {
+  .landing-page .landing-editorial-sub {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+}

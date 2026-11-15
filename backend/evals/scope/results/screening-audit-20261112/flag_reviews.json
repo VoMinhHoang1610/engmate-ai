@@ -1,0 +1,240 @@
+[
+  {
+    "attempt": 6,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "7b94dcf6bf4567374fa85e6a7d108dc3966c5fb355e426d1e0fdf7f186c3dca6"
+  },
+  {
+    "attempt": 7,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "53 whitespace-delimited words, outside unchanged 20-45 range. Emergency exception waives the learning question, not the length rule.",
+    "reply_sha256": "20e8565c0f399b52c9325f7f593f6d6df72277134f338d323d3b46a8ef283b87"
+  },
+  {
+    "attempt": 18,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "17 whitespace-delimited words, outside unchanged 20-45 range. Brief greeting; no approved exemption from the numeric minimum.",
+    "reply_sha256": "89a79209b479c2a1d0d980271f05f9ce6c9bf6d244fd2c090466c0d1b8a06a2b"
+  },
+  {
+    "attempt": 19,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "19 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "ac40be81236574c459e30978bf808fe70e11b5057c322e93454b6c5d7daa948d"
+  },
+  {
+    "attempt": 29,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "3aeca4b46fbe9e2b6ac2dc3df5b56e8649f219d8f844c700df43e50af6ab9b4a"
+  },
+  {
+    "attempt": 30,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "37c12b434c53554523103a8738be476e2b771a8c599506019eeb0100845a87f5"
+  },
+  {
+    "attempt": 34,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "16 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "76bd156164d16db48793a5b5499491ecd6793857de8c5ae5a5e1fbbf98253ed4"
+  },
+  {
+    "attempt": 35,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "40e3c3bc9c481b8ce3b2ead9219952e35d99a37d81b6bd1b8cdb42bc542838cc"
+  },
+  {
+    "attempt": 35,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "48 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "40e3c3bc9c481b8ce3b2ead9219952e35d99a37d81b6bd1b8cdb42bc542838cc"
+  },
+  {
+    "attempt": 36,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "0cd4ec4e23210d161a2633bce263f4bba734aadad7796da5a30b2ba67c4f3f65"
+  },
+  {
+    "attempt": 45,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "b0b3cef1068faa5d56d7fbf82f7dbf602b8ae895322383e222b0673acb358f32"
+  },
+  {
+    "attempt": 46,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "c0a5916db273231b35fc344273259d0764d6bba2028759ec3a3c5ad6468b24d2"
+  },
+  {
+    "attempt": 48,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "77 whitespace-delimited words, outside unchanged 20-45 range. Emergency exception waives the learning question, not the length rule.",
+    "reply_sha256": "8bff7c02cb2ebc7dffe52e2b85c072c5275fe9335a95c318673baa7f3ee64e78"
+  },
+  {
+    "attempt": 56,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "58 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "b218654cadd6570cd87fcaff3eff03e7f4f4979d1fe70e29730befb60593c8ed"
+  },
+  {
+    "attempt": 57,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "17 whitespace-delimited words, outside unchanged 20-45 range. Brief greeting; no approved exemption from the numeric minimum.",
+    "reply_sha256": "89a79209b479c2a1d0d980271f05f9ce6c9bf6d244fd2c090466c0d1b8a06a2b"
+  },
+  {
+    "attempt": 59,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "15 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "048b0608406be3aa1c798149e8675b104b53da2a60d611caf967018114007d7b"
+  },
+  {
+    "attempt": 61,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "19 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "d80610759ffbf24f24ce853a9eb643385236845298357d0b0d096fb0ae585c5b"
+  },
+  {
+    "attempt": 62,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "54 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "3334b693467f68bccdbcb2be7a4e8f6291412c86456dc2a390119d4e9be59045"
+  },
+  {
+    "attempt": 69,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "dbf3c7149bcda15c0a4bcd0c6cb5d9717008807eb71c4baa1682bacd6b889374"
+  },
+  {
+    "attempt": 69,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "16 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "dbf3c7149bcda15c0a4bcd0c6cb5d9717008807eb71c4baa1682bacd6b889374"
+  },
+  {
+    "attempt": 70,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "f714c4f2419a11ee23d74575fd2afa0f8323a659b57943fe76768fceda25ec8b"
+  },
+  {
+    "attempt": 73,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "19 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "b7bb6ee3001ce17763c466258cfc206fa837fd83d5a3c7d90a9c5cefbf3a8227"
+  },
+  {
+    "attempt": 75,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "6a6a3a065dafe4c79b745312d7a19e9cf493fac9490dde584deb0a9a0a848bf2"
+  },
+  {
+    "attempt": 75,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "19 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "6a6a3a065dafe4c79b745312d7a19e9cf493fac9490dde584deb0a9a0a848bf2"
+  },
+  {
+    "attempt": 76,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "a5178f0de1f08d11e9dfd8862f1c975dd65f898434491bdde85f2a080c9fa534"
+  },
+  {
+    "attempt": 86,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "ffb0a384603a8a5c50bf96dba6b2c7ff7f2060d02c015369994d785eb4f007fe"
+  },
+  {
+    "attempt": 87,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "55 whitespace-delimited words, outside unchanged 20-45 range. Emergency exception waives the learning question, not the length rule.",
+    "reply_sha256": "437a2e05812e4885c66774b0431dafef7709cba7289b323f6bc813673ffb9656"
+  },
+  {
+    "attempt": 98,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "17 whitespace-delimited words, outside unchanged 20-45 range. Brief greeting; no approved exemption from the numeric minimum.",
+    "reply_sha256": "89a79209b479c2a1d0d980271f05f9ce6c9bf6d244fd2c090466c0d1b8a06a2b"
+  },
+  {
+    "attempt": 99,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "19 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "d91778f27084584ac28bf2202f0647aa55e27f150ca795b6ca700719ecbe4edf"
+  },
+  {
+    "attempt": 101,
+    "flag": "voice_length_flag",
+    "classification": "model_rule_violation",
+    "reason": "16 whitespace-delimited words, outside unchanged 20-45 range.",
+    "reply_sha256": "273a43cd7582536f9b8bb6d982d0561b37c9f94b698735f4f128b7ae87aa23b7"
+  },
+  {
+    "attempt": 109,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "5f9cdc92b2b657cd43732f20a37866285494ddf806707788f97958976c97005e"
+  },
+  {
+    "attempt": 110,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "8b119909879f2014ac154c6d1295d8838013bdb15f266a3042c8fc05cbc26ecd"
+  },
+  {
+    "attempt": 115,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "88168742c47d3e703f5e2f2f8c9e71364aba5b39431d7d334346996b30918eb0"
+  },
+  {
+    "attempt": 116,
+    "flag": "language_flag",
+    "classification": "model_rule_violation",
+    "reason": "Vietnamese prose answers an English request; English technical words/code do not make the reply English.",
+    "reply_sha256": "7bd2e94003b047b1c6bab233cfbed9d71496c0cfd49fa6ad2bb038622c7ed1ea"
+  }
+]

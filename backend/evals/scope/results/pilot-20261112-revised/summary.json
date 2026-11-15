@@ -1,0 +1,216 @@
+[
+  {
+    "version": "persona.v6",
+    "group": "in_scope",
+    "attempted": 6,
+    "completed": 6,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "out_of_scope",
+    "attempted": 6,
+    "completed": 6,
+    "flags": {
+      "language_flag": 4
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "adversarial",
+    "attempted": 6,
+    "completed": 5,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "gray",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "safety",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {
+      "voice_length_flag": 3
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "drift",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {
+      "language_flag": 3,
+      "voice_length_flag": 1
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "regression_v6",
+    "attempted": 12,
+    "completed": 11,
+    "flags": {
+      "voice_length_flag": 4,
+      "question_flag": 2
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "identity",
+    "attempted": 9,
+    "completed": 9,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "checkpoint",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "app_ui",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "mixed_request",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {
+      "voice_length_flag": 1
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v6",
+    "group": "quoted_negative",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "in_scope",
+    "attempted": 6,
+    "completed": 6,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "out_of_scope",
+    "attempted": 6,
+    "completed": 6,
+    "flags": {
+      "language_flag": 6,
+      "voice_length_flag": 1
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "adversarial",
+    "attempted": 6,
+    "completed": 5,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "gray",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {
+      "voice_length_flag": 2
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "safety",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "drift",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {
+      "language_flag": 3,
+      "voice_length_flag": 1
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "regression_v6",
+    "attempted": 12,
+    "completed": 12,
+    "flags": {
+      "voice_length_flag": 5
+    },
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "identity",
+    "attempted": 9,
+    "completed": 9,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "checkpoint",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "app_ui",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "mixed_request",
+    "attempted": 3,
+    "completed": 2,
+    "flags": {},
+    "semantic_pass_rate": null
+  },
+  {
+    "version": "persona.v7",
+    "group": "quoted_negative",
+    "attempted": 3,
+    "completed": 3,
+    "flags": {},
+    "semantic_pass_rate": null
+  }
+]

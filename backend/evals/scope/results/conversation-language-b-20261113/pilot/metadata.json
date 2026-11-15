@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-13",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+  "campaign_prompt_sha256": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+  "corpus_sha256": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+  "stage": "pilot",
+  "slot_budget": 30,
+  "request_budget": 60,
+  "max_502_retries_per_slot": 1,
+  "interval_seconds": 6.0,
+  "max_output_tokens": 2048,
+  "temperature": "provider_default",
+  "judge_calls": 0,
+  "blaze_calls": 0,
+  "version_prompt_sha256": {
+    "persona.v7": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+    "persona.v6": "9182194098261c8b2a1c7fea098cf31b1285c3e19692ca27268d4217d6f4f399"
+  },
+  "frozen_files": {
+    "backend\\app\\prompts\\lesson.v1.txt": "6c9f1cfca8b1579aa1a0c3bc99cc675ae9f246005bf78cb220e6b5c2c53ff645",
+    "backend\\app\\prompts\\persona.v2.txt": "4ca618636d6ba3b389bebb568e9225cff9643dc931d018db2534bf7e0eaa28a5",
+    "backend\\app\\prompts\\persona.v3.txt": "894533337b3fde1c43c98c1af9eb5f14ce1ff179244c5338bdab45c768509aa0",
+    "backend\\app\\prompts\\persona.v4.txt": "4e42bf1bdaa7da986a615452e54157a9cfb85f610f4d8eddd627fe80005fe24d",
+    "backend\\app\\prompts\\persona.v5.txt": "d8cd3a4ce8a76b4f48b4902f6ec768cf1530dc7eb291b2e4788e6e7a2c52913b",
+    "backend\\app\\prompts\\persona.v6.txt": "9182194098261c8b2a1c7fea098cf31b1285c3e19692ca27268d4217d6f4f399",
+    "backend\\app\\prompts\\persona.v7.txt": "499c38fb2fc2d8ee8de26e9c9f32b44e1925c7423e8446784c0c85fef5c90838",
+    "backend\\app\\prompts\\voice-identity.v1.txt": "2139f762accb7973ccc596ae3c655b9973419eb5d37c9fc103dcea41840afff4",
+    "backend\\evals\\scope\\cases.jsonl": "6a1fe7090ec8b14b382d62313cb1e0f9d879a7f1d4ba067e2459ff2afe2b22cb",
+    "backend\\evals\\scope\\manifest.json": "ced95511082f41a5cddf20555fc09ad0d0ba0e82fabda00fd24e9c30ea4266f4",
+    "backend\\evals\\scope\\screening.py": "d177402fc6500c6838960f139ee0c3edb9da8a32e765139c20e3d48091d503f1",
+    "backend\\evals\\scope\\run.py": "8708169829083610f1ef06aec3be01766fb5142c9d625e3beef1c494086bd055",
+    "backend\\evals\\scope\\campaign.py": "9d17633c987b41e4b47540801e9affbc9ec72b8e26e417f3731416c02b69c32f",
+    "backend\\app\\content\\toeic.v1.json": "931f42394108f314c19afa5410bd27f85646ed3fe88d4be0aedcd5735b77bceb",
+    "backend\\app\\llm\\gemini.py": "db107437f4503a2c89bb58b624b4fb4693955022ac0e4c5e83db7c2771bf1dcb"
+  },
+  "gate_rule": "30 responses; >=27/30 language matches; 0 mixed; voice<=45",
+  "started_at": "2026-11-13T08:23:52.248284+07:00"
+}

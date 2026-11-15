@@ -1,5 +1,17 @@
 # Kiến trúc hội thoại EngMate-AI
 
+## Thiết kế module từ vựng — 15/11/2026, chưa triển khai
+
+[Kiểm toán và thiết kế](LEARNING_VOCABULARY_DESIGN_2026-11-15.md) đề xuất
+`src/vocabulary/` và chuỗi router → service → bảng mới, catalog JSON có schema,
+prompt riêng `vocab.v1`, LLM interface hiện có. Job riêng reserve → sinh lô ngoài
+DB lock → xác thực → publish atomic; không thay lifecycle hội thoại/giọng nói.
+Trạng thái từ tự đánh giá tách khỏi evidence TOEIC. Bảng/quota/adapter còn chờ duyệt.
+
+Đối chiếu runtime: sidebar desktop hiện ghim mặc định, hover/focus không mở rộng;
+`voice-first/LearningViews.tsx` chỉ cho `?mode=preview`. Những mô tả hover và dữ
+liệu mẫu trong các đoạn lịch sử dưới đây không mô tả màn học thật hiện hành.
+
 ## Xác nhận liên kết Google — 2026-10-30
 
 Google đã xác minh nhưng trùng email cũ sẽ tạo PendingGoogleLink trong app một
@@ -147,7 +159,7 @@ mới tạo chat khác và giữ tiến độ cũ. Mỗi lesson binding kiểm t
 cho đổi một conversation sang lesson khác.
 
 Chat giáo án có `PromptVersion=toeic.v1`. Với marker này, ConversationService
-ghép `persona.v6.txt`, hướng dẫn `prompts/lesson.v1.txt` và JSON giáo án chuẩn
+ghép `persona.v7.txt`, hướng dẫn `prompts/lesson.v1.txt` và JSON giáo án chuẩn
 không có câu kiểm tra/khóa đáp án vào system prompt. JSON chứa phase hiện tại và
 lời mở đầu để hiểu câu trả lời đầu tiên của người học. Chat tự do giữ lifecycle
 và prompt hiện hành; không truy vấn bảng học tập khi không có marker. Ngữ cảnh dùng
@@ -171,6 +183,20 @@ Feedback có đáp án sau nộp nên lần làm lại không được coi là b
 đặt sau một ngày khi chưa đạt, ba ngày khi đạt; thất bại khi ôn không xóa lần
 hoàn thành trước. Đề xuất nằm từ chặng bắt đầu đến mục tiêu đã lưu, trả null nếu
 đã hoàn tất; tất cả bài vẫn truy cập được để học thử hoặc ôn.
+
+## Module VAD và cổng transcript (cờ mặc định tắt)
+
+`voice/vad.ts` chứa EnergyVad thuần PCM, giữ thuật toán gốc; `adaptiveVad.ts`
+chứa AdaptiveVad/ResilientVad opt-in và fallback energy. `blaze.ts` sở hữu capture,
+cancel, ticket/STT, Gemini và TTS; detector không gọi mạng. `transcriptGate.ts`
+chỉ lọc chữ sau STT, trước transcript/Gemini/lưu lượt khi cờ A bật. Notice nhẹ
+qua callback riêng, không thêm VoiceState/CSS và không đổi kênh lỗi thật.
+`voiceDebug.ts` chỉ tồn tại khi VITE_VOICE_DEBUG=true, giữ/log scalar gộp;
+không PCM/text/storage/network. Bộ đo tách trong `frontend/benchmarks/vad`.
+
+B loại stationary_noise trước transcribe ở batch; ở realtime request đã mở
+khi onset nên việc hủy không đồng nghĩa tiết kiệm request. [Thiết kế onset mới](VOICE_ONSET_DESIGN.md)
+chưa nối vào runtime. visualLevel RMS×5/clamp không hiệu chuẩn; C/D/E chưa làm.
 
 ## Luồng thoại hiện hành: Blaze STT → Gemini text → Blaze TTS
 
@@ -246,7 +272,7 @@ nhận; không chứa token hoặc khóa API. Lộ trình TOEIC mới dùng nhó
 riêng mô tả ở đầu tài liệu; các tự đánh dấu cũ không được chuyển thành kết quả
 kiểm tra hoặc hoàn thành bài TOEIC.
 
-`Chat.tsx` tái sử dụng lifecycle gửi/stream/cancel/idempotency; nhận bản nháp yêu cầu luyện tập do workspace chuẩn bị. `VoiceChat` thông báo trạng thái transport thật cho linh thú trong `TutorScene.tsx`. Khi rời màn chat, cleanup kết thúc phiên thoại như trước. Prompt hệ thống `persona.v6` được tải bởi ConversationService cho cả text và realtime; lượt thoại Blaze bổ sung `voice-identity.v1` theo giới tính giọng hiện tại, ưu tiên hơn cách xưng hô trong lịch sử.
+`Chat.tsx` tái sử dụng lifecycle gửi/stream/cancel/idempotency; nhận bản nháp yêu cầu luyện tập do workspace chuẩn bị. `VoiceChat` thông báo trạng thái transport thật cho linh thú trong `TutorScene.tsx`. Khi rời màn chat, cleanup kết thúc phiên thoại như trước. Prompt hệ thống `persona.v7` được tải bởi ConversationService cho cả text và realtime; lượt thoại Blaze bổ sung `voice-identity.v1` theo giới tính giọng hiện tại, ưu tiên hơn cách xưng hô trong lịch sử.
 
 `tutor.css` dùng token màu từ Figma, bố cục grid/flex responsive và giữ lựa chọn theme. SVG Figma tải về `public/tutor/`; không dùng URL asset tạm trong runtime. Linh thú là `LinhThu` hiện có theo yêu cầu người dùng. Animation ambient/orbit dựa trên chu kỳ 12 giây trong motion context; waveform chuyển động khi transport báo nói, có reduced-motion.
 
@@ -268,7 +294,7 @@ Chia sẻ HTTPS tạm thời: Pinggy → SSH reverse forward → `127.0.0.1:5180
 - `settings/VoiceSettings.tsx` tải metadata riêng từng ngôn ngữ qua `/api/speech/voices`, kiểm tra danh sách/ID/ngôn ngữ, giữ lựa chọn không còn sẵn và cho thử lại khi lỗi. Nghe thử chỉ bắt đầu bằng click; một lượt phát tại một thời điểm, hủy khi đổi giọng/tốc độ hoặc rời trang. Chat, câu mẫu và phiên Blaze tiếp theo dùng cùng preference. Catalog đối thoại không còn giọng đã lưu sẽ báo và yêu cầu chọn lại; native adapter vẫn dùng catalog riêng.
 - `speech/audio.ts`, `hooks/useThuAm.ts`: Blaze STT/TTS từng lượt, cache/controller/microphone cleanup; không tự preload trả phí. Cache phân biệt văn bản, giọng, ngôn ngữ và tốc độ; callback kết thúc phát tùy chọn bỏ qua lượt đã hủy/thay thế. `voice/gemini.ts` và `capture.worklet.js` quản lý PCM/AudioWorklet, queue, mute/reconnect/cleanup cho Gemini; `voice/session.ts` giữ WebRTC tùy chọn OpenAI. `VoiceChat.tsx` chọn transport theo capabilities và giữ style gốc.
 - `api/chat_routes.py`: tài khoản và conversation resources; `schemas/responses.py` giới hạn trường trả về và mô tả OpenAPI.
-- `ConversationService`: short transaction/khóa user để reserve turn, commit trước provider, finalize atomic; JSON API giữ tương thích. Context role-typed text tối đa 20 tin/32.000 ký tự, voice 12 tin/12.000 ký tự, tách khỏi prompt `persona.v6.txt`: theo ngôn ngữ lượt mới nhất (Việt/Anh), ưu tiên yêu cầu ngôn ngữ/dịch/luyện tập rõ ràng; không tự nhân đôi song ngữ. JSON provider timeout 30 giây, SSE 40 giây. Pending quá 90 giây chuyển failed; cancel chặn kết quả muộn. Reply thoại bị truncate chuyển cancelled và bỏ phần chưa nghe khỏi context.
+- `ConversationService`: short transaction/khóa user để reserve turn, commit trước provider, finalize atomic; JSON API giữ tương thích. Context role-typed text tối đa 20 tin/32.000 ký tự, voice 12 tin/12.000 ký tự, tách khỏi prompt `persona.v7.txt`: theo ngôn ngữ lượt mới nhất (Việt/Anh), ưu tiên yêu cầu ngôn ngữ/dịch/luyện tập rõ ràng; không tự nhân đôi song ngữ. SCOPE giới hạn học tiếng Anh/TOEIC và chuyển hướng ở nguyên phase; không thay quyền/tiến độ server. JSON provider timeout 30 giây, SSE 40 giây. Pending quá 90 giây chuyển failed; cancel chặn kết quả muộn. Reply thoại bị truncate chuyển cancelled và bỏ phần chưa nghe khỏi context.
 
 Giọng Live chọn qua catalog REST có xác thực, lưu trên từng GeminiSession rồi chuyển thành speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName; không sửa settings chung và không nhận cấu hình model qua WS. Cho phép đổi khi đang gọi bằng cách nối lại tuần tự, reconnect sau đó dùng giọng mới. Catalog gồm tám giọng prebuilt và GEMINI_VOICE nếu có cấu hình riêng. Gemini native audio tự nhận ngôn ngữ, không truyền languageCode. Giọng Blaze đọc tin nhắn là lựa chọn riêng theo tiếng Việt/Anh; ghi âm từng lượt truyền en/vi được chọn trong menu âm thanh.
 - `llm/gemini.py`, `llm/gemini_live.py`: transport mặc định cho Gemini text/Live; khóa chỉ backend và wire DEBUG bị tắt. `llm/openai.py`, `llm/realtime.py` giữ transport OpenAI tùy chọn cho cấu hình cũ.

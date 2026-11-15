@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VoiceChat } from './VoiceChat';
 import { liveVoices } from './catalog';
 import type { VoiceEvents } from './session';
@@ -106,6 +106,116 @@ function pendingStop(first: (typeof transport.instances)[number]) {
   );
   return () => act(async () => resolve());
 }
+describe('live voice error notifications', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('announces a soft notice without an alert, clears stale caption and expires the notice', async () => {
+    const { first } = await boot();
+    vi.useFakeTimers();
+    act(() => first.events.transcript('user', 'Noise partial'));
+    act(() => first.events.notice?.('Mình chưa nghe rõ, bạn nói lại nhé'));
+    expect(screen.getByText('Mình chưa nghe rõ, bạn nói lại nhé')).toHaveAttribute(
+      'role',
+      'status',
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bạn: Noise partial')).not.toBeInTheDocument();
+    expect(first.stop).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.queryByText('Mình chưa nghe rõ, bạn nói lại nhé')).not.toBeInTheDocument();
+  });
+  it('clears notices on Stop and ignores a notice from the old session', async () => {
+    const { first, unmount } = await boot();
+    act(() => first.events.notice?.('Nói lại nhé'));
+    fireEvent.click(screen.getByRole('button', { name: 'Kết thúc thoại' }));
+    await waitFor(() => expect(first.stop).toHaveBeenCalledOnce());
+    act(() => first.events.notice?.('Stale notice'));
+    expect(screen.queryByText('Nói lại nhé')).not.toBeInTheDocument();
+    expect(screen.queryByText('Stale notice')).not.toBeInTheDocument();
+    unmount();
+  });
+
+  it('shows a recoverable error for five seconds without stopping the call', async () => {
+    const { first, onActive } = await boot();
+    vi.useFakeTimers();
+    act(() => first.events.error('Chưa nghe rõ lời nói.'));
+    expect(screen.getByRole('alert')).toHaveTextContent('Chưa nghe rõ lời nói.');
+    act(() => vi.advanceTimersByTime(4999));
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText('Đang nghe')).toBeInTheDocument();
+    expect(onActive).toHaveBeenLastCalledWith(true);
+    expect(first.stop).not.toHaveBeenCalled();
+  });
+
+  it.each(['Chưa nghe rõ lời nói.', 'Không phát được âm thanh.'])(
+    'gives a subsequent error a full five seconds: %s',
+    async (nextError) => {
+      const { first } = await boot();
+      vi.useFakeTimers();
+      act(() => first.events.error('Chưa nghe rõ lời nói.'));
+      act(() => vi.advanceTimersByTime(3000));
+      act(() => first.events.error(nextError));
+      act(() => vi.advanceTimersByTime(2000));
+      expect(screen.getByRole('alert')).toHaveTextContent(nextError);
+      act(() => vi.advanceTimersByTime(2999));
+      expect(screen.getByRole('alert')).toHaveTextContent(nextError);
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
+
+  it('hides the failed-session notice and keeps the restart button available', async () => {
+    const { first, container, onActive } = await boot();
+    vi.useFakeTimers();
+    act(() => {
+      first.events.state('error');
+      first.events.error('Mất kết nối phiên thoại.');
+    });
+    expect(screen.getByText('Phiên thoại gặp lỗi')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Mất kết nối phiên thoại.');
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Phiên thoại gặp lỗi')).not.toBeInTheDocument();
+    expect(container.querySelector('.voice-feedback')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' })).toBeEnabled();
+    expect(onActive).toHaveBeenLastCalledWith(false);
+  });
+
+  it('also dismisses errors thrown while starting the call', async () => {
+    render(
+      <VoiceChat
+        identity={undefined}
+        ensureIdentity={vi.fn().mockRejectedValue(new Error('Chưa tạo được hội thoại.'))}
+        disabled={false}
+        provider="gemini"
+        audioOptions={null}
+        onActive={vi.fn()}
+        onSync={vi.fn()}
+      />,
+    );
+    const start = screen.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' });
+    await waitFor(() => expect(start).toBeEnabled());
+    vi.useFakeTimers();
+    await act(async () => fireEvent.click(start));
+    expect(screen.getByRole('alert')).toHaveTextContent('Chưa tạo được hội thoại.');
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText('Phiên thoại gặp lỗi')).not.toBeInTheDocument();
+    expect(start).toBeEnabled();
+  });
+
+  it('clears the pending dismissal when leaving the conversation', async () => {
+    const { first, unmount } = await boot();
+    vi.useFakeTimers();
+    act(() => first.events.error('Chưa nghe rõ lời nói.'));
+    expect(vi.getTimerCount()).toBe(1);
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
 describe('changing the live voice', () => {
   it('waits for old cleanup, keeps mute/history and ignores stale callbacks', async () => {
     const { select, first, onActive, onSync } = await boot();

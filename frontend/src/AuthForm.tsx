@@ -215,7 +215,11 @@ export function AuthForm({
                 </h1>
 
                 {/* SOCIAL AUTH: Google and Facebook */}
-                <div className="auth-social-grid" role="group" aria-label="Đăng nhập mạng xã hội">
+                <div
+                  className="auth-social-grid"
+                  role="group"
+                  aria-label={register ? 'Đăng ký mạng xã hội' : 'Đăng nhập mạng xã hội'}
+                >
                   <button
                     type="button"
                     className="social-login auth-social-btn social-google"
@@ -263,7 +267,9 @@ export function AuthForm({
                 </div>
 
                 <p className="auth-social-status">
-                  Tiếp tục bằng Google hoặc Facebook. Cửa sổ xác thực sẽ mở để bạn cấp quyền.
+                  {register
+                    ? 'Tạo tài khoản bằng Google hoặc Facebook, không cần đặt mật khẩu EngMate.'
+                    : 'Tiếp tục bằng Google hoặc Facebook. Cửa sổ xác thực sẽ mở để bạn cấp quyền.'}
                 </p>
                 <div className="auth-divider" aria-hidden="true">
                   <span>hoặc</span>

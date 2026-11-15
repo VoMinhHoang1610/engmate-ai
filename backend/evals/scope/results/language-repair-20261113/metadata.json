@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-13",
+  "model": "gemini-3.5-flash-lite",
+  "version": "persona.v7",
+  "prompt_sha256": "d7496d666745c9e04c47a321a1ca25a15f43d514302b8afcd717c26bd92772fc",
+  "corpus_sha256": "1316aa4e3e74ddaa1206e15e92ca9de53cd34db4c8c6f5c6078279c2ea69ebfc",
+  "max_output_tokens": 2048,
+  "temperature": "provider_default",
+  "slot_budget": 18,
+  "request_budget": 36,
+  "max_502_retries_per_slot": 1,
+  "interval_seconds": 6.0,
+  "campaign": "single_language_repair_20261113",
+  "previous_prompt_sha256": "997b9d670063be071e671e7dce7849c211aa4453b0ae0e56dc45f47d651ab958",
+  "precommitted_language_rule": {
+    "required_english": 15,
+    "denominator": 18,
+    "below_threshold": "stop_propose_B_diff_only_no_further_prompt_edit"
+  },
+  "wire_prompt_sha256": {
+    "refusal-language-A1-text": "b633acb94f06ed332fe30773ded383582493b341c11d6d1b279f7994f08722b9",
+    "refusal-language-A1-voice": "31dd49f4bd35ace623eb3c8779d12da1dbdc5b27dc08e57de038d26d8029c528",
+    "refusal-language-B1-text": "8e06106d2160be06c29daa64eea785d7152bf7e6c34e3642138a78eabb43319b",
+    "refusal-language-B1-voice": "ff8dc4aecbe9314739e333dbc40801ef19e835a56ba058c7069fc033c18d067c",
+    "refusal-language-C1-text": "e5c23e2dcda09b5891d0e47d7bb3ea6e411ccd3b20f1adc3ab5222a07c80b9fe",
+    "refusal-language-C1-voice": "a9828cc1a3634ade5a4c4610104617acfb288119f94089ed41c083c735436571"
+  },
+  "blaze_calls": 0,
+  "judge_calls": 0,
+  "voice_evaluation": "text_transcript_with_voice_identity_no_audio",
+  "started_at": "2026-11-13T07:55:40.623343+07:00"
+}

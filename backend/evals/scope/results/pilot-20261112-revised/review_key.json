@@ -1,0 +1,722 @@
+[
+  {
+    "review_id": "R001",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R002",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R003",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R004",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R005",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R006",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R007",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R008",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R009",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R010",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R011",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R012",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R013",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R014",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R015",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R016",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R017",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R018",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R019",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-002"
+  },
+  {
+    "review_id": "R020",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R021",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R022",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R023",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R024",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R025",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R026",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R027",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R028",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R029",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R030",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R031",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R032",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R033",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R034",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R035",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R036",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R037",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R038",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R039",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R040",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R041",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R042",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R043",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R044",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R045",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R046",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R047",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R048",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R049",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R050",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R051",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R052",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R053",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R054",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R055",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R056",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R057",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-002"
+  },
+  {
+    "review_id": "R058",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R059",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R060",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R061",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R062",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R063",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R064",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R065",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R066",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R067",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-002"
+  },
+  {
+    "review_id": "R068",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R069",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R070",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R071",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R072",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R073",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R074",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-002"
+  },
+  {
+    "review_id": "R075",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R076",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R077",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R078",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R079",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R080",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R081",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R082",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R083",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R084",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R085",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R086",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R087",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R088",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R089",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R090",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-checkpoint-001"
+  },
+  {
+    "review_id": "R091",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-app_ui-001"
+  },
+  {
+    "review_id": "R092",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R093",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-identity-003"
+  },
+  {
+    "review_id": "R094",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-identity-002"
+  },
+  {
+    "review_id": "R095",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "adversarial-021"
+  },
+  {
+    "review_id": "R096",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R097",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "in_scope-059"
+  },
+  {
+    "review_id": "R098",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R099",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "out_of_scope-016"
+  },
+  {
+    "review_id": "R100",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-safety-001"
+  },
+  {
+    "review_id": "R101",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "in_scope-055"
+  },
+  {
+    "review_id": "R102",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R103",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R104",
+    "version": "persona.v6",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R105",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R106",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R107",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-quoted_negative-001"
+  },
+  {
+    "review_id": "R108",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-002"
+  },
+  {
+    "review_id": "R109",
+    "version": "persona.v7",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R110",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-mixed_request-001"
+  },
+  {
+    "review_id": "R111",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R112",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "adversarial-005"
+  },
+  {
+    "review_id": "R113",
+    "version": "persona.v6",
+    "repetition": 3,
+    "case_id": "revision-regression_v6-008"
+  },
+  {
+    "review_id": "R114",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-identity-001"
+  },
+  {
+    "review_id": "R115",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-004"
+  },
+  {
+    "review_id": "R116",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "revision-regression_v6-007"
+  },
+  {
+    "review_id": "R117",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-out_of_scope-001"
+  },
+  {
+    "review_id": "R118",
+    "version": "persona.v6",
+    "repetition": 1,
+    "case_id": "drift-014"
+  },
+  {
+    "review_id": "R119",
+    "version": "persona.v7",
+    "repetition": 3,
+    "case_id": "gray-012"
+  },
+  {
+    "review_id": "R120",
+    "version": "persona.v7",
+    "repetition": 2,
+    "case_id": "revision-regression_v6-002"
+  }
+]

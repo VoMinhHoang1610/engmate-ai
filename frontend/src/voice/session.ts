@@ -12,6 +12,7 @@ export type VoiceState =
   | 'reconnecting'
   | 'error';
 export interface VoiceEvents {
+  notice?: (message: string) => void;
   level?: (level: number, channel: 'input' | 'output') => void;
   state: (state: VoiceState) => void;
   transcript: (role: 'user' | 'assistant', text: string) => void;

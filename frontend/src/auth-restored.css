@@ -236,3 +236,107 @@
     display: none;
   }
 }
+
+/* Shared visual roles; form markup, validation and mode transitions stay intact. */
+:root .auth-page.tutor-auth.auth-minimal {
+  --text: #0f172a;
+  --muted: #475569;
+  --panel: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --line: #d8e1ed;
+  --border: var(--line);
+  --accent: #2458db;
+  --cyan: var(--accent);
+  --ink: #ffffff;
+  background: var(--background);
+  color: var(--text);
+}
+:root[data-theme='dark'] .auth-page.tutor-auth.auth-minimal {
+  --text: #f1f5f9;
+  --muted: #b0bfd5;
+  --panel: #111c2e;
+  --surface: #111c2e;
+  --surface-soft: #18263b;
+  --line: #344761;
+  --accent: #8ab2ff;
+  --ink: #102047;
+}
+:root .auth-page.auth-minimal .auth-stage {
+  border-color: var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow:
+    0 16px 56px #0f172a0c,
+    0 2px 8px #0f172a06;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root .auth-page.auth-minimal .auth-form-pane {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root .auth-page.auth-minimal .auth-slide-pane {
+  color: var(--text);
+  background: var(--surface-soft);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:root .auth-page.auth-minimal .auth-slide-face p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+:root .auth-page.auth-minimal .auth-wave-path {
+  fill: var(--surface-soft);
+}
+:root .auth-page.auth-minimal .auth-field {
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 550;
+}
+:root .auth-page.auth-minimal .auth-input-wrap input {
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: var(--control-radius);
+  background: var(--surface);
+  box-shadow: none;
+}
+:root .auth-page.auth-minimal .auth-title-text {
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+:root .auth-page.auth-minimal .auth-social-btn {
+  min-height: 48px;
+  gap: 8px;
+  font-size: 14px;
+  border-radius: var(--control-radius);
+  box-shadow: none;
+}
+:root .auth-page.auth-minimal :is(.auth-submit-btn, .btn.primary) {
+  min-height: 50px;
+  border-radius: var(--control-radius);
+  background: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 3px 12px #2458db18;
+}
+:root .auth-page.auth-minimal :is(.auth-submit-btn, .btn.primary):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 92%, var(--text));
+  transform: none;
+}
+:root .auth-page.auth-minimal :is(button, a, input):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+:root .auth-page.auth-minimal .auth-social-status {
+  line-height: 1.65;
+}
+@media (max-width: 480px) {
+  :root .auth-page.auth-minimal .auth-stage {
+    border-radius: 18px;
+  }
+  :root .auth-page.auth-minimal .auth-social-btn {
+    gap: 6px;
+    font-size: 13px;
+  }
+}

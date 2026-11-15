@@ -7,6 +7,15 @@ import { SpokenText } from './spokenText';
 import { SpeechQueue } from './speechQueue';
 import { VoiceLatencyTrace } from './latency';
 import { RealtimeSTT } from './realtimeSTT';
+import { EnergyVad, VAD_SAMPLE_RATE, type VoiceVad } from './vad';
+import { ResilientVad } from './adaptiveVad';
+import { VoiceDebug } from './voiceDebug';
+import {
+  acceptsTranscript,
+  speechEvidence,
+  UNCLEAR_SPEECH_NOTICE,
+  type SpeechEvidence,
+} from './transcriptGate';
 import { voiceGender, type VoiceGender } from '../speech/identity';
 
 interface BlazeVoiceOptions {
@@ -18,17 +27,14 @@ interface BlazeVoiceOptions {
   speed?: number;
   opening?: string;
   sttMode?: 'batch' | 'realtime';
+  softTranscriptGate?: boolean;
+  adaptiveVad?: boolean;
+  debug?: boolean;
 }
 
-const SAMPLE_RATE = 16000;
-const FRAME_MS = 100;
-const START_FRAMES = 2;
-const SILENCE_FRAMES = 9;
-const MAX_FRAMES = 300;
-const PRE_ROLL_FRAMES = 3;
-const RMS_THRESHOLD = 0.018;
+const SAMPLE_RATE = VAD_SAMPLE_RATE;
 
-function wav(frames: Int16Array[]): Blob {
+function wav(frames: readonly Int16Array[]): Blob {
   const length = frames.reduce((total, frame) => total + frame.length, 0);
   const buffer = new ArrayBuffer(44 + length * 2);
   const view = new DataView(buffer);
@@ -72,11 +78,8 @@ export class BlazeVoiceSession {
   private textActive = false;
   private cancellation: Promise<void> = Promise.resolve();
   private cancellationError: unknown;
-  private preRoll: Int16Array[] = [];
-  private frames: Int16Array[] = [];
-  private voiced = 0;
-  private silence = 0;
-  private lastVoicedAt = 0;
+  private readonly vad: VoiceVad;
+  private readonly debug: VoiceDebug | null;
   private trace: VoiceLatencyTrace | null = null;
   private recognition: RealtimeSTT | null = null;
   private delivery: { id: number; heard: number } | null = null;
@@ -90,6 +93,7 @@ export class BlazeVoiceSession {
   private readonly speaker: string;
   private readonly speechLanguage: 'en' | 'vi';
   private readonly gender: VoiceGender | null;
+  private readonly softTranscriptGate: boolean;
 
   constructor(
     private readonly identity: number,
@@ -97,6 +101,14 @@ export class BlazeVoiceSession {
     voiceId?: string,
     private readonly options: BlazeVoiceOptions = {},
   ) {
+    this.debug =
+      (options.debug ?? import.meta.env.VITE_VOICE_DEBUG === 'true') ? new VoiceDebug() : null;
+    this.softTranscriptGate =
+      options.softTranscriptGate ?? import.meta.env.VITE_VOICE_SOFT_GATE === 'true';
+    this.vad =
+      (options.adaptiveVad ?? import.meta.env.VITE_VOICE_ADAPTIVE_VAD === 'true')
+        ? new ResilientVad()
+        : new EnergyVad();
     const language = options.language ?? 'vi';
     this.speaker =
       voiceId ||
@@ -116,6 +128,7 @@ export class BlazeVoiceSession {
   async start(): Promise<void> {
     if (!this.ended) return;
     this.ended = false;
+    this.debug?.start();
     this.cancellationError = undefined;
     const generation = ++this.generation;
     this.status('connecting');
@@ -196,26 +209,25 @@ export class BlazeVoiceSession {
   }
 
   private receive(frame: Int16Array): void {
-    if (frame.length !== (SAMPLE_RATE * FRAME_MS) / 1000) return;
-    const rms = Math.sqrt(
-      frame.reduce((sum, sample) => sum + (sample / 32768) ** 2, 0) / frame.length,
-    );
-    const speaking = rms >= RMS_THRESHOLD;
-    if (speaking) this.lastVoicedAt = performance.now();
-    if (!this.frames.length) {
-      this.preRoll.push(frame);
-      if (this.preRoll.length > PRE_ROLL_FRAMES) this.preRoll.shift();
-      this.voiced = speaking ? this.voiced + 1 : 0;
-      if (this.voiced < START_FRAMES) return;
+    const result = this.vad.push(frame);
+    this.debug?.observe(result, this.vad.diagnostics?.());
+    if (result.type === 'invalid' || result.type === 'pending') return;
+    if (result.type === 'discard') {
+      this.recognition?.cancel();
+      this.recognition = null;
+      this.resetCapture();
+      this.status('listening');
+      this.events.notice?.(UNCLEAR_SPEECH_NOTICE);
+      return;
+    }
+    if (result.type === 'start') {
       if (this.controller) {
         this.status('interrupting');
         this.interrupt();
       }
-      this.frames = this.preRoll;
-      this.preRoll = [];
-      this.silence = 0;
       this.status('user_speaking');
       if (this.options.sttMode === 'realtime') {
+        this.debug?.request('realtime');
         const recognition = new RealtimeSTT(
           this.identity,
           this.options.language ?? 'vi',
@@ -226,32 +238,33 @@ export class BlazeVoiceSession {
         );
         this.recognition = recognition;
         // Include pre-roll so connection setup never discards the start of a word.
-        for (const initial of this.frames) recognition.push(initial, true);
+        for (const initial of result.frames) recognition.push(initial, true);
       }
       return;
     }
-    this.frames.push(frame);
-    this.recognition?.push(frame, speaking);
+    this.recognition?.push(frame, result.speaking);
     if (this.ended) return;
-    this.silence = speaking ? 0 : this.silence + 1;
-    if (this.silence < SILENCE_FRAMES && this.frames.length < MAX_FRAMES) return;
-    const frames = this.frames;
+    if (!result.endpointReason) return;
     const recognition = this.recognition;
     this.recognition = null;
     const trace = new VoiceLatencyTrace(
-      this.lastVoicedAt,
-      this.silence >= SILENCE_FRAMES ? 'silence' : 'max_duration',
+      result.lastVoicedAt,
+      result.endpointReason,
       this.options.sttMode ?? 'batch',
       recognition?.traceId,
     );
     this.resetCapture();
-    void this.respond(recognition, wav(frames), trace);
+    void this.respond(
+      recognition,
+      wav(result.frames),
+      trace,
+      this.softTranscriptGate ? (result.evidence ?? speechEvidence(result.frames)) : undefined,
+    );
   }
 
-  private resetCapture(): void {
-    this.frames = [];
-    this.preRoll = [];
-    this.voiced = this.silence = 0;
+  private resetCapture(clearNoise = false): void {
+    this.debug?.endCapture();
+    this.vad.reset(clearNoise);
     this.capture?.port.postMessage({ reset: true });
   }
 
@@ -287,6 +300,7 @@ export class BlazeVoiceSession {
     input: RealtimeSTT | null,
     recording: Blob,
     trace: VoiceLatencyTrace,
+    evidence?: SpeechEvidence,
   ): Promise<void> {
     const turn = ++this.turn;
     const controller = new AbortController();
@@ -313,10 +327,17 @@ export class BlazeVoiceSession {
       }
       if (!live()) return;
       const message = transcript.trim();
-      if (!message)
-        throw new Error('Chưa nghe rõ lời nói. Hãy bắt đầu thoại lại và nói gần micro hơn.');
       if (message.length > 2000)
         throw new Error('Lời nói quá dài. Hãy chia thành câu hỏi ngắn hơn.');
+      if (evidence && !acceptsTranscript(message, evidence)) {
+        this.debug?.discard('transcript_gate');
+        trace.finish('cancelled');
+        this.status('listening');
+        this.events.notice?.(UNCLEAR_SPEECH_NOTICE);
+        return;
+      }
+      if (!message)
+        throw new Error('Chưa nghe rõ lời nói. Hãy bắt đầu thoại lại và nói gần micro hơn.');
       trace.mark('stt_final');
       this.events.transcript('user', message);
       await this.cancellation;
@@ -451,6 +472,7 @@ export class BlazeVoiceSession {
     const form = new FormData();
     form.append('file', recording, 'recording.wav');
     trace.mark('stt_requested');
+    this.debug?.request('batch');
     const response = await apiFetch(
       `/api/speech/stt?language=${this.options.language ?? 'vi'}&voice_trace_id=${trace.id}`,
       { method: 'POST', body: form, signal },
@@ -632,7 +654,7 @@ export class BlazeVoiceSession {
     this.microphone?.getAudioTracks().forEach((track) => {
       track.enabled = !value;
     });
-    this.resetCapture();
+    this.resetCapture(true);
     this.recognition?.cancel();
     this.recognition = null;
     if (value && this.state === 'user_speaking') this.status('listening');
@@ -643,8 +665,9 @@ export class BlazeVoiceSession {
     this.interrupt();
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-    this.resetCapture();
+    this.resetCapture(true);
     if (this.capture) this.capture.port.onmessage = null;
+    this.debug?.finish(this.vad.diagnostics?.());
     this.capture?.disconnect();
     this.capture?.port.close();
     this.stopInputMeter?.();

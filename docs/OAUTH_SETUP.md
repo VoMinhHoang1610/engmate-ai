@@ -4,6 +4,54 @@
 và đăng ký: tài khoản mới được tạo cùng hồ sơ và liên kết nền tảng trong một
 transaction; lần sau dùng lại liên kết đó. GitHub không còn được cung cấp.
 
+## Facebook trên Docker local — 06/11/2026
+
+Facebook dùng chung một nút ở cả màn hình **Đăng nhập** và **Đăng ký**. Khi chưa
+có liên kết Facebook, server tạo tài khoản và hồ sơ sau khi xác minh danh tính;
+lần sau dùng lại tài khoản đã liên kết. Không cần điền các ô mật khẩu EngMate
+trước khi bấm Facebook. Nếu email đã thuộc tài khoản khác, ứng dụng yêu cầu
+dùng phương thức đăng nhập cũ, không tự gộp tài khoản.
+
+Trong `.env` root, cấu hình:
+
+```dotenv
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+FACEBOOK_GRAPH_VERSION=v24.0
+```
+
+`FACEBOOK_CLIENT_ID` là **App ID**, `FACEBOOK_CLIENT_SECRET` là **App Secret**
+của ứng dụng Meta đã tạo. Chỉ điền secret trên máy chủ; không đặt trong biến
+`VITE_*`, commit hoặc gửi qua chat. Phiên bản Graph là cấu hình hiện có của
+dự án; chọn phiên bản ứng dụng Meta hỗ trợ nếu cần thay đổi.
+
+Callback phải trùng chính xác giá trị backend sinh từ `OAUTH_PUBLIC_ORIGIN`:
+
+```text
+http://127.0.0.1:5174/api/auth/oauth/facebook/callback
+```
+
+Với origin khác, thay phần origin trong callback tương ứng. Đăng ký callback
+này trong cấu hình Facebook Login của ứng dụng Meta. Xem thêm các bước cấu
+hình nhà cung cấp ở phần dưới.
+
+Sau khi lưu `.env`, chạy từ root:
+
+```powershell
+docker compose up -d --build --wait --wait-timeout 180 backend frontend
+```
+
+Mở đúng origin đã cấu hình, chọn **Facebook**, hoàn tất xác thực/cấp quyền
+trong cửa sổ Facebook rồi quay lại EngMate. Kiểm tra lần đầu tạo tài khoản và
+lần tiếp theo dùng lại tài khoản đó. Kiểm thử tự động dùng danh tính mẫu;
+HTTP 200 ở endpoint `/start` mới xác nhận cấu hình mở đầu luồng, chưa xác nhận
+nhà cung cấp đã cho phép app hoặc toàn bộ lần đăng nhập thật.
+
+Lần triển khai 06/11/2026 đã nạp cấu hình người dùng vào Docker và kiểm tra
+`/start` trả 200, callback/scopes/cookie đúng cấu hình; bảng liên kết OAuth đã
+có sẵn nên không chạy installer. Chi tiết kiểm thử và giới hạn xác nhận nằm
+trong [TESTING](TESTING.md#facebook-đăng-kýđăng-nhập-trên-docker--2026-11-06).
+
 ## Cấu hình để chạy thật
 
 1. Trong Google Cloud, tạo OAuth client loại **Web application** và cấu hình

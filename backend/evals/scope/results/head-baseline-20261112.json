@@ -1,0 +1,33 @@
+{
+  "commit": "e5097223d6a8648b9bccb2201f7af355059758ca",
+  "tracked_and_untracked_status_before": "",
+  "tracked_and_untracked_status_after": "",
+  "app_import_verified_from": "isolated worktree backend/app/__init__.py",
+  "python": "3.13.11",
+  "same_virtualenv": true,
+  "MYSQL_TEST_URL": "unset; no .env in clean worktree",
+  "command": "python -m pytest --cov=app --cov-report=term --cov-report=json:coverage-head.json --cov-report=xml:coverage-head.xml",
+  "passed": 210,
+  "skipped_mysql": 24,
+  "test_errors": 0,
+  "coverage_exit": 1,
+  "fail_under": 80,
+  "totals": {
+    "covered_lines": 2392,
+    "num_statements": 3157,
+    "percent_covered": 72.37928446334752,
+    "percent_covered_display": "72",
+    "missing_lines": 765,
+    "excluded_lines": 4,
+    "percent_statements_covered": 75.76813430471967,
+    "percent_statements_covered_display": "76",
+    "num_branches": 840,
+    "num_partial_branches": 93,
+    "covered_branches": 501,
+    "missing_branches": 339,
+    "percent_branches_covered": 59.642857142857146,
+    "percent_branches_covered_display": "60"
+  },
+  "workspace_previous_coverage": 73.98,
+  "conclusion": "HEAD baseline is 72.38%, not 73.98%; neither reaches 80%."
+}

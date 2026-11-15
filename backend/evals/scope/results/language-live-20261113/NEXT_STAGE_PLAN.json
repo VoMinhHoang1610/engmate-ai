@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-13",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_sha256": "997b9d670063be071e671e7dce7849c211aa4453b0ae0e56dc45f47d651ab958",
+  "corpus_sha256": "1316aa4e3e74ddaa1206e15e92ca9de53cd34db4c8c6f5c6078279c2ea69ebfc",
+  "authorization": "requires_user_confirmation_after_step_1",
+  "execution_status": "not_started",
+  "case_group_counts": {
+    "in_scope": 80,
+    "out_of_scope": 68,
+    "adversarial": 30,
+    "gray": 15,
+    "safety": 12,
+    "drift": 15,
+    "regression_v6": 10,
+    "identity": 6,
+    "checkpoint": 2,
+    "app_ui": 2,
+    "mixed_request": 2,
+    "quoted_negative": 2
+  },
+  "generation": {
+    "v7_primary": 732,
+    "v6_primary": 294,
+    "primary_total": 1026,
+    "max_502_retries": 1026,
+    "max_calls": 2052
+  },
+  "judge": {
+    "status": "not_started_first_pass_only_human_required",
+    "proposed_model": "gemini-3.5-flash-lite",
+    "groups": [
+      "adversarial",
+      "checkpoint",
+      "identity",
+      "out_of_scope",
+      "safety"
+    ],
+    "max_initial_v7": 354,
+    "max_initial_v6": 294,
+    "max_initial_total": 648,
+    "max_502_retries": 648,
+    "max_calls": 1296,
+    "rubric_status": "to_prepare_before_any_judge_call",
+    "no_assessment_keys_or_personal_data": true
+  },
+  "stage_2_3_combined_max_calls": 3348,
+  "manual_review_plan": "All three runs of every case with a rule/judge failure or uncertainty. Additionally sample distinct remaining case IDs with a fixed seed, targeting ceil(20% of all case IDs) per group/version; include all remaining IDs if fewer are available. Missing data is listed separately.",
+  "stop_on_429": true,
+  "max_502_retries_per_slot": 1,
+  "blaze_calls": 0
+}
