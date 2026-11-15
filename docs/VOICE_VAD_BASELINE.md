@@ -1,5 +1,23 @@
 # Đo nền VAD và đề xuất giảm nhiễu — 13/11/2026
 
+## Mốc kiểm chứng sau bảo toàn — 15–16/11/2026
+
+Các bảng VAD bên dưới giữ nguyên corpus/số đo; chưa chạy lại benchmark hoặc
+thử thiết bị trong bước bảo toàn. Các kết quả 73,98% backend/gate chưa qua ở
+những mục cũ là lịch sử trước MySQL test được duyệt. Lần được duyệt sau đó có
+log 254/254, 0 skip, coverage backend 93,04%; frontend toàn suite vẫn chưa xanh.
+Không dùng kết quả backend để kết luận thoại đã đạt mục tiêu hoặc frontend
+ổn định. Eval 86/86, VAD 23/23 và lint/build/smoke đã báo là lần trước bảo toàn.
+Ngày 16/11, eval workspace dùng fixture judge tổng hợp qua 89/89; không phải
+đo lại VAD hoặc kiểm chứng thiết bị thật.
+
+Nhánh scope/voice riêng đã được tạo từ d0adeaf bằng lệnh duyệt; backup ngoài
+repo giữ raw số đo/log. C1 405f030 và C2 d67f97b đã commit, kiểm byte checkout
+sạch rồi dọn; chưa chạy test trong checkout đó. Nhóm tài liệu thoại C3 chưa commit.
+[Kế hoạch từng file](CHANGESET_PLAN.md). Judge chưa phải nghiệm thu; v7 giữ
+hash khóa. Pha C/D/E/onset mới vẫn hoãn; ba cờ vẫn mặc định tắt. Không sửa
+runtime, số đo, timeout/assertion hoặc bật cờ ở bước này.
+
 ## Đo lại 14–15/11/2026 — cùng corpus, không đổi thuật toán
 
 23/23 test benchmark qua; seed 20261113, 28 kịch bản × 60 s × batch/realtime. Request là số mô phỏng, không phải API/provider thật. Mọi tỷ lệ request dùng phút audio tổng; FP dùng phút không có speech, nên hàng speech có mẫu số khác. CaptureState là thời gian trạng thái thu, không phải tổng PCM gồm pre-roll.
