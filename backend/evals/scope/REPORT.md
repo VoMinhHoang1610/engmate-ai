@@ -1,6 +1,173 @@
 # Báo cáo phạm vi Mate — rà offline 14–15/11/2026
 
-## Trạng thái mới nhất — không sinh thêm, chờ duyệt rubric
+## Commit và kiểm byte C2 — 16/11/2026
+
+C2 `d67f97bd78cc0bf63ecd8aea9e68d9ebbe4c1b6f` đã commit đúng 17 file được
+duyệt; hook backend/frontend qua và khôi phục thay đổi chưa stage. Checkout
+detached riêng xác nhận 15 file frozen generation khớp; 17 file C2 đúng kỳ
+vọng: 15 khớp byte, hai file judge-combined chỉ chuẩn hóa CRLF thành LF.
+Ba LOCK và toàn bộ attempts/summary judge-approved giữ byte gốc. Chín raw/CSV
+đã loại trừ đều vắng mặt. Chỉ đọc hash, không test/API; đã dọn checkout theo
+lệnh duyệt. Sau đó C3 `4e0698f` đã commit tài liệu thoại, hai hook qua; hash
+baseline và tám tài liệu chưa stage khớp trước/sau hook. C4 đang chuẩn bị;
+không push hoặc đụng worktree vocabulary. Các mốc “chưa commit” trong tài liệu
+baseline thuộc lúc soạn trước C3; trạng thái mới theo CHANGESET_PLAN.
+
+Bằng chứng cục bộ: `.artifacts/c2-postcommit-integrity-20261116.json` và
+`c2-clean-checkout-verification-20261116.json`. Chưa test C2 trên checkout sạch
+hoặc tái lập chiến dịch private. Các câu chưa commit/kiểm C2 ở mốc dưới là
+lịch sử trước C2. Judge chưa phải nghiệm thu; v7 giữ hash khóa.
+
+## Kiểm chứng C1 — 16/11/2026
+
+C1 `405f0304e40e3b9e296aceff48ae61cd29e050bb` đã commit ba file bảo toàn byte.
+Checkout detached riêng được tạo theo lệnh duyệt; chỉ đọc hash, không sửa file,
+test hoặc API. Persona.v7, manifest, full/attempts và attrs khớp; toàn bộ **15
+file frozen generation** trong metadata cũng khớp. Biên bản hash ở ngoài repo:
+`agent-coordination/backup-20261115/C1_CHECKOUT_VERIFICATION.json`.
+
+Raw full/results không có trong checkout đúng chính sách private. Chưa kiểm
+C2 judge trong checkout; cổng test độc lập raw đã xử lý ở mốc dưới. Không suy kết quả
+byte C1 thành tái lập đầy đủ hoặc nghiệm thu. Những câu chưa commit/chưa kiểm
+checkout trong mốc bảo toàn 15/11 dưới đây là lịch sử trước C1; C2–C4 còn chờ.
+WIP d0adeaf giữ nguyên, chưa push. Checkout kiểm chứng đã dọn bằng lệnh duyệt
+riêng; backup và biên bản hash vẫn còn.
+
+## Test C2 độc lập dữ liệu riêng tư — 16/11/2026
+
+Đã thay đầu vào của test judge bằng fixture tạm dùng phản hồi tổng hợp và
+corpus công khai đã version hóa. `inputs()` cùng kiểm tra hash vẫn chạy thật;
+giữ nguyên assertion cũ, thêm ba ca từ chối attempts/results/metadata bị sửa.
+Eval offline **89/89 qua** với HTTP thật và artifact judge/raw riêng tư bị chặn;
+bộ đếm cả hai loại truy cập đều **0**. Không gọi API hoặc sửa runner/snapshot,
+rubric, ledger và hash khóa. Tại mốc test này C2 chưa commit; trạng thái sau
+commit và kiểm byte checkout sạch được ghi ở đầu báo cáo.
+
+Giữ log lượt đầu lỗi quyền temp/cache (55 qua, 34 lỗi thiết lập); lượt chạy lại
+dùng temp/cache riêng qua. Bằng chứng cục bộ: `c2-eval-offline-20261116.log`,
+`c2-eval-offline-recheck-20261116.log`, `c2-eval-guard-result-20261116.json`
+trong `.artifacts/`. Những trạng thái chưa sửa test bên dưới là lịch sử 15/11.
+Judge chưa phải nghiệm thu; v7 giữ hash khóa.
+
+Kiểm cuối: 12/12 test judge, Ruff, Black check, mypy strict qua; AST assertion
+của sáu test cũ giữ nguyên. Hash v7, runner, rubric, ba LOCK, manifest và ledger/
+results khớp bản khóa hoặc backup. Bằng chứng tổng hợp cục bộ:
+`.artifacts/c2-synthetic-validation-20261116.json`. Artifact mới chưa nằm trong
+manifest backup lịch sử; không tự stage/commit hoặc tái chạy chiến dịch.
+
+## Bảo toàn sau kiểm toán — 15/11/2026
+
+Đã chuyển sang `feat/scope-voice-20261115` bằng đúng lệnh Git được duyệt, từ
+`d0adeafa117354e7f2ad927196e04730b291e588`. WIP giữ nguyên làm điểm neo; không
+stage/commit/push hoặc đụng worktree từ vựng. Các nhánh vẫn kế thừa snapshot
+hỗn hợp; chưa tách lại lịch sử 182 file.
+
+Backup ngoài repo giữ 151 file và manifest SHA-256 gốc/copy khớp. Quét 192
+ứng viên ghi 61 vị trí heuristic cần rà, chỉ tệp:dòng/loại, không công bố giá
+trị. Không có hit theo mẫu khóa provider/JWT/private key của bộ quét không
+đồng nghĩa đã chứng minh không bí mật. Fixture/vai trò có thể là false positive.
+Raw results/CSV có phản hồi giữ cục bộ đã sao lưu; ưu tiên commit hash và tổng
+hợp. Các link phiếu/raw bên dưới là artifact cục bộ, không cam kết có trong
+checkout chia sẻ. Không che đè bản khóa hoặc sửa rubric để nhận điểm khác.
+
+Kế hoạch attrs/byte khóa và bốn nhóm commit tại
+[CHANGESET_PLAN](../../../docs/CHANGESET_PLAN.md). Chưa stage, chưa có commit
+bảo toàn hoặc checkout sạch để kiểm chứng. Chỉ commit attrs chưa sửa blob LF
+trong WIP; cần đề xuất stage lại đúng hai file frozen. Cổng test judge độc lập
+raw private còn mở; chưa sửa test/skip/assertion/timeout.
+
+**Bằng chứng thiếu:** không tìm thấy `.artifacts/mysql-approved-run.log` từng
+được nhắc trong ký ức; không tái tạo hoặc suy diễn nội dung. Còn
+`.artifacts/mysql-approved-coverage.log`, `mysql-coverage-verification-20261115.json`
+và `mysql-approved-run.ps1`, đều đã sao lưu. Số 254/254 và 93,04% là kết quả
+lần chạy được duyệt trước đó, không phải chạy lại ở bước bảo toàn.
+
+Judge chưa phải nghiệm thu; v7 giữ hash khóa
+`e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
+
+## Kết quả judge đã hoàn tất — 15/11/2026
+
+Đã chấm đầu đủ **222 phản hồi** bằng `gemini-3.5-flash-lite`, dùng **222/444
+request**, 0 retry, 0 HTTP 429. Không gọi sinh nội dung học hoặc Blaze. Có
+**181 pass, 24 fail, 17 no_data**: 16 lượt đầu ra judge không hợp lệ và một
+timeout adapter 504; không tự quy no_data thành fail hoặc chấm lại.
+[Bảng từng nhóm và giới hạn](results/judge-combined-20261115/REVIEW.md),
+[229 phiếu ưu tiên chấm tay](results/judge-combined-20261115/manual_priority.csv)
+giữ đủ 215 phiếu ban đầu; [provenance và 19 bản ghi bất đồng](results/judge-combined-20261115/summary.json).
+19 bản ghi này thuộc 17 phản hồi riêng, có trường hợp nhiều loại bất đồng.
+Ba revision chỉ dẫn định dạng có snapshot/lock riêng, không đổi rubric/model;
+không dùng tỷ lệ gộp để kết luận v7 tốt hơn v6 hoặc nghiệm thu. Giáo viên cần
+xem cả pass có cờ tự động. Chưa đo chi phí tiền/token thực tế từ provider.
+
+MySQL cô lập sau duyệt: **254/254 test, 0 skip, coverage 93,04%**; đã cleanup.
+Eval offline **86/86**, benchmark VAD **23/23**, lint/build và smoke local qua.
+Frontend lần toàn suite cuối vẫn có lỗi; không thay assertion, timeout hay
+ngưỡng coverage. Chi tiết hiện hành ở [TESTING](../../../docs/TESTING.md).
+Persona.v7, nguồn sinh và các cờ thoại giữ nguyên; sinh vẫn chỉ 422 phản hồi,
+không nhóm nào đủ ba lần, chưa resume 624 slot chờ quota. Pha C/D/E hoãn.
+
+## Lịch sử đề xuất byte trước bảo toàn — đã thay thế
+
+Thêm quy tắc `.gitattributes` chỉ cho manifest, hai JSONL nguồn và JSON/JSONL
+judge có hash byte. Manifest/attempts gốc đang CRLF; snapshot Git cũ tự chuẩn hóa
+LF, nên clone từ blob đó có thể không khớp khóa. Giữ nguyên byte working tree,
+không normalize dữ liệu để làm khớp khóa; kiểm `hash-object --path` bằng
+`--no-filters` đã khớp sau quy tắc. Tại mốc này chưa stage/commit, snapshot cũ
+chưa chứa đầy đủ byte khóa. Đề xuất khi đó đưa raw results vào commit đã bị
+thay thế sau quét riêng tư: raw results/CSV giữ cục bộ và backup, chỉ commit
+hash/metadata/tổng hợp. C1/C2 đã kiểm byte checkout như mục đầu, không đưa raw
+private vào hai commit đó. Không thay hash v7, corpus, ledger hoặc kết quả sinh.
+Kiểm chứng hiện tại trên Windows; metadata frozen_files dùng dấu phân cách
+Windows, chưa xác minh replay công cụ rà trên Linux.
+
+## Judge được duyệt — kế hoạch chốt trước request đầu 15/11/2026
+
+Người dùng duyệt rubric/MySQL và chốt model/ngân sách “như cũ”. Dùng
+`gemini-3.5-flash-lite`, phạm vi judge lịch sử out_of_scope/adversarial/safety/
+identity/checkpoint: **222 phản hồi có sẵn, 222 lượt chấm đầu, tối đa 444 request**
+gồm một retry 502/lượt, dưới trần judge cũ 648 lượt/1.296 request. Không mở rộng
+sang các nhóm khác, không sinh lại phản hồi hoặc resume chiến dịch 429.
+Một runner riêng, tuần tự, delay ≥6 s; Retry-After, backoff retry ≥10 s;
+429 dừng ngay, không tự resume. Dữ liệu/runner/rubric có lock riêng; không sửa
+prompt hoặc nguồn sinh đã khóa. Judge cùng họ model có thiên lệch tự chấm,
+chỉ là chấm đầu; mọi kết luận nghiệm thu vẫn cần chấm tay.
+
+Runner mặc định offline: `python -m evals.scope.judge_available`; chỉ `--execute`
+mới đọc key/gọi API. Kế hoạch trước request đầu bên dưới được giữ để truy vết;
+kết quả đã chạy nằm ở bảng tổng hợp phía trên và ba thư mục ledger riêng.
+
+Lượt đầu đã thực hiện 1 request (HTTP provider 200), đầu ra judge không qua
+kiểm tra schema/bằng chứng: J0001 là **no_data**, không có điểm hợp lệ. Không
+lưu raw output ở revision đầu nên chưa phân biệt được chính xác lỗi schema
+nào; không đoán nguyên nhân hoặc gọi lại J0001. Snapshot runner/lock/ledger gốc
+được giữ nguyên trong revisions và thư mục kết quả đầu.
+Revision tiếp theo chỉ xét **221 phản hồi chưa gọi**, tối đa 442 request;
+cộng lượt đầu tối đa **443**, dưới trần đã chốt 444. Lock mới tham chiếu hash
+ba file lock/ledger/results cũ. Cho phép một JSON fence bao ngoài, vẫn giữ đủ
+14 tiêu chí, identity, aggregate và bằng chứng trích đúng; invalid output mới
+được redaction/lưu để chẩn đoán. Không tiếp tục sau 429, không tái chấm lượt cũ.
+Test offline bổ sung qua 8/8; kết quả continuation nằm trong
+`results/judge-approved-20261115-remaining/`.
+
+Sau tổng 124 request: 110 điểm hợp lệ, 14 no_data do schema/bằng chứng. Ba
+lượt v6 cuối chấm thô fail đúng nội dung lập trình ngoài phạm vi, nhưng dùng
+trích đoạn có `...`/bỏ backtick hoặc mô tả phase thay cho câu trích nguyên văn;
+giữ nguyên raw/điểm không hợp lệ, không gọi lại. Đợt cuối chỉ **98 phản hồi
+chưa gọi**, tối đa **196 request**, trần gộp lúc này **320 <444**.
+Chỉ làm rõ định dạng trích dẫn trong prompt judge (sao chép ngắn nguyên văn,
+để evidence rỗng khi tiêu chí về sự vắng mặt/ngữ cảnh); không đổi rubric hoặc
+persona.v7. Snapshot/lock của hai runner trước được giữ nguyên, lock mới tham
+chiếu cả hai ledger, và test offline chặn resume sau 429/gọi trùng vẫn qua.
+Kết quả đợt cuối: `results/judge-approved-20261115-final/`.
+**Các đợt khác yêu cầu định dạng judge; không dùng tỷ lệ gộp để kết luận v7
+tốt hơn v6 hoặc nghiệm thu.** Không chạy lại mẫu cũ để lấy điểm khác.
+
+## Rà offline trước phê duyệt judge — không sinh thêm
+
+[Kiểm tra nhánh và bàn giao 15/11/2026](../../../docs/PROMPT_VOICE_REVIEW_2026-11-15.md):
+snapshot đã có mã prompt/eval/thoại; ledger/results vẫn khớp hash. Lượt xác minh
+offline riêng trên nhánh hiện tại vẫn 422 phản hồi/215 phiếu, không đổi checks.
+Kết quả kỹ thuật cuối có lỗi frontend; không suy ra chất lượng prompt đã đạt.
 
 Giữ nguyên v7 SHA-256 `e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
 [Chính sách hiện hành](../../../docs/PROMPTS.md#current-policy) thay mọi mô tả A/B lịch sử bên dưới.
@@ -13,7 +180,7 @@ không kết luận đạt ngưỡng. Không cờ chỉ là screening, đặc bi
 
 [Bảng đủ/thiếu từng nhóm, lượt 1/2/3, lỗi 429/502, kế hoạch xen kẽ](results/available-review-20261114/REVIEW.md).
 [Phiếu mới](results/available-review-20261114/manual_review.csv) ·
-[Rubric chờ duyệt](JUDGE_RUBRIC_DRAFT.md).
+[Rubric đã duyệt sau lần rà offline này](JUDGE_RUBRIC_DRAFT.md).
 Mọi nhóm còn thiếu; 624 slot chưa gọi, bốn slot terminal thiếu phản hồi tách riêng.
 Chưa resume. Trần đề xuất phần chưa gọi: 1.248 request gồm retry; quota 429 chưa rõ loại.
 Runner cũ chưa hỗ trợ lịch xen kẽ mới, cần nối/test offline trước lần live được duyệt.

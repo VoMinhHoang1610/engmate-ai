@@ -1,5 +1,12 @@
 # Test Settings không ổn định dưới tải — điều tra 15/11/2026
 
+Xem [bàn giao kiểm chứng mới nhất](PROMPT_VOICE_REVIEW_2026-11-15.md): lượt toàn
+suite cuối có thêm lỗi ở các test UI khác và chuỗi lỗi DOM sau timeout; kết quả
+chạy riêng Settings phía dưới không chứng minh toàn suite ổn định.
+Chạy riêng bốn file liên quan với một worker trên nhánh snapshot: 54/57 qua,
+ba lỗi ở các test khác; JSON chỉ ghi STACK_TRACE_ERROR và thời gian >5 giây.
+Chưa có bằng chứng đủ để quy mọi lỗi này cho cùng nguyên nhân với Settings.
+
 Không sửa `App.test.tsx`, assertion, timeout hoặc code Settings. Không tái hiện
 bằng dữ liệu thật; fetch, auth, audio đều dùng doubles có sẵn của test.
 

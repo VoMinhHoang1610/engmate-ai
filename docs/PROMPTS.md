@@ -15,7 +15,10 @@ V7 **5.997 byte**, giữ `Version: 7.`, **khóa SHA-256, không sửa thêm**:
 `e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.
 Hạn chế được chấp nhận: người chỉ biết Anh vẫn nhận lời từ chối Việt khi
 chưa yêu cầu rõ trả lời Anh. Không pilot nữa; nhóm out_of_scope của full
-kiểm chứng. Chỉ sinh phản hồi/check quy tắc, không LLM-judge hoặc Blaze.
+kiểm chứng. Mốc sinh 13/11 chỉ sinh phản hồi/check quy tắc, không judge hoặc
+Blaze trong bước sinh đó. Sau phê duyệt riêng ngày 15/11, judge đã chấm đầu
+222 phản hồi có sẵn; không sinh thêm corpus hoặc Blaze. Kết quả và giới hạn
+tại [REPORT](../backend/evals/scope/REPORT.md); judge chưa phải nghiệm thu.
 Không deploy/restart. Những phương án A/B bên dưới là lịch sử, đã thay thế.
 
 ## Lịch sử đã thay thế: quy tắc B — 13/11/2026
@@ -85,7 +88,7 @@ theo level; thay `learner's language` bằng câu rõ ràng, giữ checker ngôn
 Sau pilot đầu 0/18 tiếng Anh, người dùng cho đúng một vòng sửa: khôi phục
 `even if earlier turns used another language` từ v6 và nhấn mạnh chuyển hướng
 theo lượt mới nhất `even when earlier turns were Vietnamese`. Không nén quy
-tắc khác. V7 hiện 5.684 byte, giới hạn mới 6.500 byte; hash
+tắc khác. Tại mốc lịch sử này, v7 có 5.684 byte, giới hạn 6.500 byte; hash
 `d7496d666745c9e04c47a321a1ca25a15f43d514302b8afcd717c26bd92772fc`.
 Chốt trước: chạy lại đúng 18 lượt; ≥15 tiếng Anh thì giữ A, thấp hơn chỉ đề
 xuất diff B và dừng, không tự sửa tiếp. Vòng mới 0/18 tiếng Anh nên đã dừng,
@@ -96,7 +99,9 @@ nên backend đang chạy cần restart để bỏ prompt cache; không tự dep
 Bộ 244 case (238 cũ giữ nguyên + 6 out_of_scope A1/B1/C1 × text/voice), pilot 20 case × 3 lần
 × 2 phiên bản, rubric và giới hạn công cụ:
 [eval scope](../backend/evals/scope/README.md). Runner opt-in, không vào `make
-test` hoặc coverage; không có judge trả phí. Test fake chỉ chứng minh kỹ thuật.
+test` hoặc coverage. Mô tả 244 case/pilot trên là lịch sử; corpus khóa hiện có
+248 case. Judge trả phí được duyệt riêng và chạy ngày 15/11 như REPORT, không
+thuộc test tự động. Test fake chỉ chứng minh kỹ thuật.
 Chờ chấm tay và giáo viên duyệt trước khi kết luận đạt các ngưỡng chất lượng.
 
 Rollback: đặt `PROMPT_VERSION = "persona.v6"` trong service rồi restart backend

@@ -1,20 +1,45 @@
-# MySQL test tạm — chỉ đề xuất, chưa chạy
+# MySQL test tạm — đã duyệt và chạy 15/11/2026
 
-Ngày 15/11/2026. Chờ duyệt trước khi pull image, tạo container/schema/tài khoản
-hoặc chạy 24 test tích hợp. Không sửa `.env`, không dùng DB thật, không hạ 80%.
+## Bằng chứng còn lại sau kiểm toán — 15/11/2026
+
+Không tìm thấy file .artifacts/mysql-approved-run.log từng nhắc trong ký ức;
+không tái tạo log hoặc suy diễn nội dung. Còn mysql-approved-coverage.log,
+mysql-coverage-verification-20261115.json và mysql-approved-run.ps1 trong
+.artifacts, đều đã sao lưu ngoài repo kèm SHA-256. Kết quả 254/254 và 93,04%
+bên dưới thuộc lần chạy được duyệt trước bảo toàn; không chạy Docker/DB/test
+lại trong giai đoạn này. Script/log private giữ cục bộ, không commit. Kế hoạch
+chia commit và cổng kiểm hash ở CHANGESET_PLAN.md.
+
+
+Người dùng đã duyệt và cho tiếp tục ngày 15/11/2026. Đã thực thi phương án bên
+dưới trong container riêng: **254/254 test qua, 0 skip, 1 warning; coverage backend
+93,04%**, vượt ngưỡng 80%. Không sửa `.env`, không dùng DB thật, không hạ ngưỡng.
+
+Image đã có sẵn, không cần pull mới:
+`sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b`.
+Đã xác nhận loopback `127.0.0.1:33317`, schema `engmate_scope_audit_test` rỗng
+trước bootstrap và mọi bảng ứng dụng rỗng trước pytest. Root chỉ bootstrap,
+pytest dùng user `engmate_test`. Cleanup `docker rm --force --volumes` thành công;
+kiểm tra lại không còn container test. Không xóa container/image khác.
+
+Log/số liệu cục bộ: `.artifacts/mysql-approved-coverage.log` và
+`.artifacts/mysql-coverage-verification-20261115.json`. Test có 1 warning có sẵn
+về Starlette/httpx; không cài dependency hoặc sửa warning trong phạm vi này.
+Đã kiểm fixture bằng URL giả schema không có `_test` và mock create_engine:
+assert chặn trước khi tạo engine; không nối database ở phép kiểm này.
 
 Fixture `backend/tests/integration/test_chat_database.py:36` bỏ qua nếu thiếu
 MYSQL_TEST_URL, **assert tên schema có hậu tố `_test` trước create_engine**,
 assert bảng NguoiDung không có hàng trước yield, rollback transaction sau test.
-Đã xác nhận bằng đọc code; chưa thử fixture trên MySQL. Fixture **không kiểm
+Đã xác nhận bằng đọc code, kiểm guard offline và test MySQL tạm. Fixture **không kiểm
 localhost, port, user, container, hay mọi bảng rỗng**. Không được coi hậu tố
 `_test` là đủ bảo vệ DB thật. Các chốt bổ sung dưới đây nằm trong phương án chạy,
 chưa sửa fixture/backend. SQL seed CEFR/schema version được phép; dữ liệu người
 dùng/hội thoại/lộ trình phải rỗng trước test.
 
-## Lệnh PowerShell đề xuất, từ root repo
+## Lệnh PowerShell đã duyệt, từ root repo
 
-Chạy nguyên khối trong terminal riêng **sau khi duyệt**. Container có tên riêng,
+Lệnh được giữ để tái lập; mỗi lần chạy cần phạm vi cho phép phù hợp. Container có tên riêng,
 bind loopback `127.0.0.1:33317`, user chỉ có quyền schema test. Không mount dữ
 liệu host, không dùng Docker Compose của app, không dùng volume sản xuất.
 Mật khẩu ngẫu nhiên chỉ nằm trong tiến trình/container, không in hoặc ghi file.
@@ -122,7 +147,10 @@ print('PASS: isolated URL and empty application tables')
 Vòng chờ trên chỉ là readiness của container được đề xuất, không đổi timeout
 của test. Không dùng `docker system prune`, không xóa image/volume khác.
 Root chỉ bootstrap DDL/trigger bên trong container test mới; test Python dùng
-user engmate_test riêng, không dùng root. Lệnh chưa chạy thực tế trên Docker.
+user engmate_test riêng, không dùng root. Đã chạy thực tế trên Docker 29.8.0.
+Máy chặn thực thi file .ps1; đã chạy cùng khối lệnh trực tiếp trong phiên
+PowerShell được duyệt, không đổi execution policy. Interpreter test được ghi
+rõ là `.venv\Scripts\python.exe`; không dùng Python ngoài môi trường repo.
 `docker rm --volumes` chỉ xóa container vừa tạo cùng anonymous volume của nó;
 phải kiểm nhãn trước cleanup. Nếu terminal bị đóng cưỡng bức, finally có thể
 không chạy: kiểm lại đúng tên/nhãn rồi mới xóa container đó bằng cùng lệnh.

@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-16 — Bảo toàn byte C1/C2 và kiểm thử judge độc lập raw
+
+- Commit C1 `405f030`, C2 `d67f97b` theo từng lệnh duyệt; hook backend/frontend qua.
+- Test judge dùng fixture tổng hợp, giữ assertion cũ và kiểm hash thật; eval
+  workspace 89/89, kiểm cuối judge 12/12 qua, không HTTP thật/đọc artifact private.
+- Kiểm hash checkout riêng C1/C2 rồi dọn; dữ liệu khóa giữ byte gốc, hai file
+  tổng hợp judge-combined chuẩn hóa LF. Chưa test trong checkout hoặc đo lại coverage.
+- C3 `4e0698f` đã commit tài liệu thoại, hook qua; C4 đang chuẩn bị.
+  Không đổi runtime/cờ hoặc resume sinh. Judge chưa phải nghiệm
+  thu; v7 giữ hash khóa. Các mốc chưa commit bên dưới là lịch sử trước C1/C2.
+
+## 2026-11-15 — Bảo toàn scope/voice sau kiểm toán
+
+- Sao lưu 151 file và manifest SHA-256 ngoài repo; quét riêng tư chỉ báo vị trí/loại.
+- Tạo nhánh scope/voice bằng lệnh được duyệt, giữ WIP; chưa stage/commit/push.
+- Phân loại từng file theo bốn nhóm commit; giữ raw results/CSV riêng tư và
+  nêu cổng hash checkout sạch/test không phụ thuộc raw trước commit.
+- Đồng bộ mốc sinh 13/11 với judge được duyệt 15/11; ghi thiếu run.log MySQL
+  và log/verification còn lại. Không chạy lại test/API hoặc đổi runtime/cờ.
+
 ## 2026-11-15 — Ghi nhận duyệt Từ vựng và chuẩn bị worktree/test riêng
 
 - Cập nhật D1–D10 cùng điều kiện TTS/IPA, env/cỡ lô, thiếu bảng DB, speech capability và chữ topbar.
@@ -15,9 +35,17 @@
 
 ## 2026-11-15 — Rà offline và chuẩn bị kiểm chứng, chưa triển khai mới
 
+- Sau phê duyệt: chạy MySQL test riêng đủ 254 test, coverage backend 93,04%;
+  cleanup môi trường tạm. Thêm runner judge riêng theo rubric/model/trần đã
+  duyệt, kiểm offline 86 test; không đổi backend runtime, v7 hoặc cờ thoại.
+- Hoàn tất judge 222 phản hồi/222 request: 181 pass, 24 fail, 17 no_data;
+  xuất 229 phiếu ưu tiên chấm tay và provenance, không tự nghiệm thu hoặc resume sinh.
+- Kiểm tra snapshot nhánh dùng chung, xác nhận mã prompt/eval/VAD đã có và giữ
+  nguyên tác vụ từ vựng/OAuth/UI/Docker. [Bàn giao](PROMPT_VOICE_REVIEW_2026-11-15.md)
+  ghi kết quả cuối chưa qua ở test/coverage frontend và các điểm chờ duyệt.
 - Làm rõ chính sách v7 hiện hành và các phương án lịch sử đã thay thế, giữ nguyên hash.
 - Thêm công cụ rà 422 phản hồi offline, phiếu chấm tay 215 phản hồi và kế hoạch slot
-  xen kẽ chờ quota; không gọi API/judge, không sửa ledger/checker đã khóa.
+  xen kẽ chờ quota; lần rà offline không gọi API/judge, không sửa ledger/checker đã khóa.
 - Bổ sung thiết kế onset 2/3 frame, CSV thử 3 phút/10 câu, đề xuất MySQL test riêng
   và điều tra CPU test Settings. Không đổi VAD runtime/cờ, CSS, TTS hoặc backend.
 - Kết quả kiểm chứng và hạn chế ở [TESTING](TESTING.md); chưa nghiệm thu prompt/thiết bị.

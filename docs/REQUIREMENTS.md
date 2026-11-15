@@ -17,18 +17,51 @@ thiếu bảng vocabulary vẫn đọc JSON và báo “chưa cài đặt” ở
 speech tắt; cho sửa riêng chữ topbar kèm test. Baseline sạch/MySQL/worktree theo
 [kế hoạch tiền triển khai](VOCABULARY_PREFLIGHT_2026-11-15.md), chưa chạy.
 
+## Bảo toàn C1/C2 — cập nhật 16/11/2026
+
+C1 `405f030`, C2 `d67f97b` đã commit theo từng lệnh duyệt và kiểm hash checkout
+sạch; checkout chỉ đọc rồi dọn, chưa chạy test ở đó. Eval workspace 89/89 và
+kiểm cuối judge 12/12 qua với fixture tổng hợp; HTTP thật/artifact private bị
+chặn, 0 lần thử truy cập. Không nới assertion, timeout hoặc ngưỡng coverage.
+C3 `4e0698f` đã commit tài liệu thoại, hook qua; C4 đang chuẩn bị.
+Không nghiệm thu judge hoặc kết luận coverage/frontend đã ổn.
+[Bằng chứng và phân loại file](CHANGESET_PLAN.md). Trạng thái dưới là lịch sử.
+
 ## Trạng thái rà soát 14–15/11/2026
+
+Bước bảo toàn sau kiểm toán: đã có backup 151 file/hash khớp, quét 192 file,
+chuyển nhánh riêng bằng lệnh duyệt; chưa stage/commit hoặc kiểm checkout sạch.
+[Kế hoạch mới](CHANGESET_PLAN.md) giữ raw results/CSV cục bộ, phân loại mỗi file
+và bốn nhóm commit; cổng test judge độc lập raw private chưa hoàn tất. Không
+suy việc có runner/backup thành đã nghiệm thu hoặc toàn bộ test xanh.
+
+Sau khi người dùng duyệt: MySQL tạm đã kiểm chứng đủ **254 test qua, 0 skip**,
+coverage backend **93,04% ≥80%**, cleanup xong. Rubric/model/ngân sách judge
+được duyệt; runner riêng qua test offline, xem REPORT/ledger để biết kết quả thật.
+Judge đã chấm đầu 222 phản hồi (222/444 request): 181 pass, 24 fail,
+17 no_data, không retry/429; [229 phiếu tay](../backend/evals/scope/results/judge-combined-20261115/manual_priority.csv)
+chưa được chấm, chưa nghiệm thu. Đổi định dạng giữa đợt giới hạn so sánh v6/v7.
+Resume sinh vẫn chờ xác nhận quota, Pha C/D/E vẫn chờ thiết bị; frontend chưa
+được kết luận ổn định từ kết quả backend này.
+Smoke local chạy lại sau duyệt đã qua health/proxy/capabilities/OpenAPI;
+không thay kiểm thiết bị hoặc đăng nhập/SSE thật.
+
+[Bàn giao mới nhất](PROMPT_VOICE_REVIEW_2026-11-15.md): mã đã có trong snapshot
+nhánh dùng chung; kiểm chứng frontend cuối chưa xanh. Chưa nghiệm thu hoặc bật
+cờ thoại; trạng thái judge/MySQL được cập nhật phía trên. Phần từ vựng thuộc
+tác vụ riêng được giữ nguyên.
 
 - Prompt v7 giữ nguyên hash `e75a86fd…722680`; chính sách cuối tại [PROMPTS](PROMPTS.md#current-policy).
 - 422 phản hồi đã screening lại offline; không thay checks, chưa nhóm nào đủ ba lượt.
-  Phiếu mới 215 phản hồi và [rubric](../backend/evals/scope/JUDGE_RUBRIC_DRAFT.md) chờ duyệt/chấm.
+  Phiếu mới 215 phản hồi giữ nguyên; [rubric](../backend/evals/scope/JUDGE_RUBRIC_DRAFT.md)
+  đã duyệt, kết quả judge có ledger riêng; chấm tay/nghiệm thu vẫn chờ.
 - Không resume sau 429; chưa rõ rate/day quota. Lịch 624 slot xen kẽ và trần 1.248 request
   bổ sung chỉ được chuẩn bị; runner live chưa nối lịch mới, bốn lỗi terminal tách riêng.
 - Thoại A/B/debug vẫn mặc định tắt. Mục tiêu ≥70% theo từng nhiễu/RMS/SNR chưa đạt;
   [onset thích nghi](VOICE_ONSET_DESIGN.md) chỉ thiết kế. Pha C/D/E chờ thiết bị thật.
-- Coverage backend chưa đạt 80%; [MySQL tạm](MYSQL_TEST_PROPOSAL.md) chờ duyệt,
+- Coverage backend đã đạt 93,04% sau [MySQL tạm](MYSQL_TEST_PROPOSAL.md), cleanup xong;
   không coi hậu tố schema là đủ bảo vệ. [Flake Settings](SETTINGS_TEST_INVESTIGATION.md)
-  đã điều tra CPU, chưa sửa. Smoke local chưa qua. Không tái tạo PROGRESS.md.
+  đã điều tra CPU, chưa sửa. Không tái tạo PROGRESS.md.
 
 ## Bổ sung đo/giải thích, không mở pha mới — 14/11/2026
 

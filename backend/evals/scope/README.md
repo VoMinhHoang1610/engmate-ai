@@ -1,5 +1,20 @@
 # Đánh giá phạm vi Mate
 
+Sau bảo toàn 15/11, raw `results.jsonl` và CSV có reply giữ private trong
+workspace/backup; không commit nguyên trạng. Link phiếu trong báo cáo là
+artifact cục bộ. [Kế hoạch](../../../docs/CHANGESET_PLAN.md) ghi C1 `405f030`
+và C2 `d67f97b` đã commit theo từng lệnh duyệt và kiểm hash checkout sạch.
+Checkout kiểm chứng đã dọn, không chạy test/API trong đó. Eval workspace
+89/89 qua với fixture tổng hợp; HTTP thật và artifact riêng tư bị chặn, 0 lần
+thử truy cập. C3 `4e0698f` đã commit tài liệu thoại; C4 đang chuẩn bị.
+Không gọi API để bù dữ liệu thiếu.
+
+Sau phê duyệt 15/11: [judge hoàn tất](results/judge-combined-20261115/REVIEW.md)
+222 lượt/222 request trên trần 444, 181 pass/24 fail/17 no_data; không chấm lại,
+không resume sinh. Phiếu ưu tiên tay 229 phản hồi còn chờ; các revision định
+dạng giới hạn kết luận so sánh. Runner mới `python -m evals.scope.judge_available`
+mặc định offline; không dùng `--execute` để chạy lại các ledger đã hoàn tất.
+
 ## Rà offline hiện có — 14–15/11/2026
 
 Từ backend: `python -m evals.scope.review_available` và `python -m pytest evals/scope -q`.
@@ -31,8 +46,9 @@ Output `results/final-default-vi-20261113/{PROMPT_LOCK.json,full/}`. Mọi reply
 checks; phiếu tay mọi case cờ/không chắc/thiếu dữ liệu + ceil(20%) case ID
 ngẫu nhiên mỗi nhóm/phiên bản, đủ ba lượt (seed 20261113). Mẫu 24 cũ giữ nguyên.
 Thiếu/chưa chạy được báo riêng, không tính đạt/trượt. Sau sinh dừng; xem
-[rubric judge nháp](JUDGE_RUBRIC_DRAFT.md) và duyệt riêng. Không có lời gọi
-LLM-judge/Blaze. Những kế hoạch A/B/pilot phía dưới là lịch sử đã thay thế.
+[rubric judge](JUDGE_RUBRIC_DRAFT.md). Tại mốc sinh 13/11 này không có lời gọi
+LLM-judge/Blaze; judge đã được duyệt riêng và chạy ngày 15/11 như mục đầu.
+Những kế hoạch A/B/pilot phía dưới là lịch sử đã thay thế, không cấp quyền chạy mới.
 
 Chiến dịch hiện **đã dừng 429 tại request 428/2.100**, 422 phản hồi,
 4 lượt cuối thiếu dữ liệu, 624 lượt chưa chạy. Không tự resume. Hai retry

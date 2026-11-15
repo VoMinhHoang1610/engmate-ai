@@ -27,19 +27,83 @@ Kiểm tra browser dùng fixture `frontend/tests/ui-audit.html`, chặn mọi fe
 thật, Edge có sẵn và Node built-ins; artifact riêng trong
 `.artifacts/learning-vocabulary-audit-20261115/`, không thêm dependency.
 
+## Kiểm chứng C2 offline — 16/11/2026
+
+Eval qua **89/89** sau khi test judge chuyển sang fixture tổng hợp tạm;
+giữ nguyên assertion cũ và kiểm tra hash thật, thêm ba ca sửa lệch nguồn.
+Chặn HTTP thật và artifact judge/raw phản hồi riêng tư: **0 lần thử truy cập**.
+Không sửa runner/snapshot, dữ liệu khóa, timeout hoặc ngưỡng coverage; không API.
+Sau đó C2 đã commit `d67f97b`, hook backend/frontend qua. Checkout riêng chỉ
+kiểm hash: 15 frozen generation khớp; 17 file C2 đúng kỳ vọng (15 khớp byte,
+hai file judge-combined chuẩn hóa CRLF thành LF); chín artifact private đã
+loại trừ đều vắng mặt. Không chạy test ở đó; đã dọn theo lệnh duyệt. Bằng chứng:
+`.artifacts/c2-clean-checkout-verification-20261116.json`.
+Chưa chạy lại toàn bộ backend/frontend/coverage trong lượt C2.
+
+Lượt đầu có 55 test qua, 34 lỗi thiết lập do quyền temp/cache; giữ log lỗi.
+Lượt temp/cache riêng qua; bằng chứng trong `.artifacts/c2-eval-offline-20261116.log`,
+`c2-eval-offline-recheck-20261116.log`, `c2-eval-guard-result-20261116.json`.
+C1 đã commit/kiểm byte bằng checkout riêng rồi dọn theo lệnh được duyệt;
+C2 đã commit; C3 `4e0698f` đã commit tài liệu thoại, hook backend/frontend qua.
+Hash baseline, 12 file khóa và tám tài liệu chưa stage khớp trước/sau hook;
+bằng chứng `.artifacts/c3-postcommit-integrity-20261116.json`. C4 đang chuẩn bị.
+Các trạng thái bảo toàn 15/11 bên dưới là lịch sử.
+
+Kiểm cuối test judge **12/12 qua** sau chỉnh import; Ruff, Black check và mypy
+strict qua. So AST của sáu test cũ với backup xác nhận assertion không đổi.
+Biên bản `.artifacts/c2-synthetic-validation-20261116.json`; log kiểm cuối
+`c2-judge-final-20261116.log` và `c2-judge-final-guard-20261116.json` ghi 0 lần
+thử đọc artifact riêng tư/HTTP thật. Các artifact mới giữ cục bộ, chưa sao lưu
+vào manifest lịch sử. Không dùng kết quả này thay coverage toàn repo.
+
 ## Rà offline 14–15/11/2026 và các điểm chờ duyệt
+
+Bảo toàn sau kiểm toán: chỉ sao lưu/quét riêng tư/đồng bộ tài liệu và chạy một
+lệnh switch đã duyệt, **không chạy lại test/lint/build/benchmark/API**. Backup
+151 file khớp hash; chưa có commit attrs hoặc checkout sạch để kiểm chứng.
+Theo [kế hoạch](CHANGESET_PLAN.md), raw phản hồi private không commit nguyên
+trạng. Test judge hiện gọi inputs đọc raw nên chưa chứng minh clean checkout
+chạy unit test độc lập; chưa sửa assertion/timeout/skip hoặc hạ ngưỡng.
+
+Không tìm thấy `.artifacts/mysql-approved-run.log`; vẫn có và đã sao lưu
+`mysql-approved-coverage.log`, `mysql-coverage-verification-20261115.json`,
+`mysql-approved-run.ps1`. Không tái tạo log thiếu. Các số kỹ thuật dưới đây
+thuộc lần chạy trước bảo toàn; không phải kết quả đo lại.
+
+Sau phê duyệt 15/11: [MySQL test tạm](MYSQL_TEST_PROPOSAL.md) đã chạy đủ
+**254/254 test, 0 skip**, coverage backend **93,04%**; container/volume tạm đã
+cleanup. Không sửa fixture hoặc logic backend. Eval sau thêm runner judge riêng
+đã qua **86/86 test**; model/phạm vi/trần judge được ghi trong rubric và REPORT.
+Judge live đã kết thúc 222/444 request: 181 pass, 24 fail, 17 no_data,
+0 retry/429; kết quả này không phải test kỹ thuật hoặc nghiệm thu chất lượng.
+[Bảng nhóm/phiếu tay](../backend/evals/scope/results/judge-combined-20261115/REVIEW.md).
+Không dùng các số backend thiếu MySQL lịch sử bên dưới làm kết quả hiện tại.
+Kiểm hash byte và `git hash-object --path`/`--no-filters` đã khớp với quy tắc
+Git hẹp cho dữ liệu khóa. Chưa kiểm công cụ rà trên Linux (metadata dùng đường
+dẫn Windows), chưa stage/commit dữ liệu gốc đang untracked.
+Smoke chạy lại sau duyệt **qua**, exit 0, ở localhost:8010/5174: health,
+frontend/proxy, capabilities, OpenAPI chat/lộ trình; không paid provider/readiness
+hoặc kiểm luồng đăng nhập/SSE/thiết bị thật. Log `.artifacts/approved-final-smoke.log`.
+
+Kết quả cuối và kiểm tra nhánh dùng chung nằm tại
+[bàn giao prompt/thoại](PROMPT_VOICE_REVIEW_2026-11-15.md).
+Lượt test/coverage frontend cuối chưa qua; các lần qua lịch sử bên dưới không
+thay thế kết quả đó. Không sửa assertion/timeout hoặc phần từ vựng của tác vụ khác.
 
 Từ `backend`: `..\.venv\Scripts\python.exe -m pytest evals/scope -q`;
 `..\.venv\Scripts\python.exe -m evals.scope.review_available` chỉ đọc dữ liệu
-synthetic đã lưu, kiểm hash và xuất bản rà riêng; không đọc key hoặc gọi provider.
+đã lưu trong workspace/backup, kiểm hash và xuất bản rà riêng; không đọc key
+hoặc gọi provider. Công cụ rà cần phục hồi raw private đúng hash; unit test judge
+dùng fixture tổng hợp độc lập raw, không coi hai cách chạy là cùng một phép kiểm.
 Không chạy `campaign --execute --resume` hiện tại: lịch xen kẽ mới mới là đề xuất.
 Từ `frontend`: `npm.cmd run benchmark:vad` đã qua 23/23 test, 28 kịch bản × 2 mode.
 [Screening và phiếu tay](../backend/evals/scope/results/available-review-20261114/REVIEW.md).
 
 [Test Settings không ổn định và CPU profile](SETTINGS_TEST_INVESTIGATION.md):
 không tăng timeout hoặc sửa assertion. [MySQL test tạm](MYSQL_TEST_PROPOSAL.md)
-chỉ là lệnh đề xuất; chưa chạy Docker/MySQL, fixture không tự kiểm host/port.
-Smoke đã thử bằng `python scripts/manage.py smoke`, thất bại WinError 10061 ở
+đã chạy sau phê duyệt như kết quả phía trên; fixture không tự kiểm host/port,
+nên script preflight riêng đã kiểm các điều kiện cô lập trước khi chạy.
+Smoke ở lần trước đã thử bằng `python scripts/manage.py smoke`, thất bại WinError 10061 ở
 kết nối local; không tự bật app/DB. Smoke này chỉ health/capabilities/routes,
 không thay kiểm đăng nhập/chat thật.
 

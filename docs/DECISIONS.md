@@ -1,5 +1,34 @@
 # Quyết định kỹ thuật
 
+## 2026-11-16 — Kiểm byte C1/C2 và tách test judge khỏi raw private
+
+C1 `405f030`, C2 `d67f97b` đã commit theo từng lệnh duyệt. Chọn fixture tổng
+hợp từ corpus version hóa thay vì commit raw, skip test hoặc nới assertion.
+Giữ `inputs()`/hash thật, thêm ba ca sửa lệch nguồn; eval workspace 89/89 qua,
+0 lần thử HTTP thật/đọc artifact riêng tư. Assertion cũ không đổi.
+
+Checkout detached chỉ kiểm hash rồi dọn: 15 frozen generation khớp; 17 file
+C2 đúng kỳ vọng, hai file judge-combined chuẩn hóa LF, các file khóa nguyên
+byte. Không chạy test trong checkout, không suy ra nghiệm thu. C3 `4e0698f`
+đã commit tài liệu thoại, hook qua; C4 đang chuẩn bị.
+WIP giữ nguyên, chưa push. [Bằng chứng và kế hoạch](CHANGESET_PLAN.md).
+Judge chưa phải nghiệm thu; v7 giữ hash khóa. Resume sinh và Pha C/D/E vẫn hoãn.
+
+## 2026-11-15 — Bảo toàn trước stage, nhánh scope/voice riêng
+
+Sao lưu 151 file ngoài repo và kiểm hash gốc/copy; chạy lệnh switch được duyệt
+riêng sang `feat/scope-voice-20261115` từ d0adeaf, giữ WIP làm điểm neo. Không
+đụng worktree vocabulary, không stage/commit/push. Mỗi lệnh Git sau cần duyệt.
+
+Chọn giữ raw results/CSV có reply cục bộ; chỉ đề xuất commit hash/tổng hợp và
+metadata đã rà riêng tư. Không che đè raw/rubric/lock. 61 vị trí heuristic trên
+192 file cần rà, không tự coi là bí mật thật hoặc chứng nhận sạch. Attrs và
+stage lại byte hai file frozen phải đi cùng cổng hash checkout sạch sau commit;
+không renormalize toàn repo. Chưa kiểm checkout sạch, chưa sửa test phụ thuộc
+raw private. [Phân loại từng file và lệnh đề xuất](CHANGESET_PLAN.md).
+
+Judge chưa phải nghiệm thu; v7 giữ hash khóa. Pha C/D/E và resume sinh vẫn hoãn.
+
 ## 2026-11-15 — Duyệt D1–D10 có điều kiện; chờ cổng tiền triển khai
 
 Người dùng duyệt thiết kế Từ vựng và thứ tự bốn mục. D2 giữ IPA Anh–Anh sau
@@ -36,6 +65,23 @@ eval trả phí/installer/database test cần quyền riêng. Không tái tạo 
 giữ mọi thay đổi chưa commit khác, không stage/commit/push.
 
 ## 2026-11-15 — Giữ khóa prompt, rà dữ liệu hiện có và chờ các duyệt riêng
+
+**Cập nhật sau phê duyệt:** người dùng duyệt rubric/MySQL và trả lời cấu hình
+judge “như cũ”. Chốt Gemini 3.5 Flash-Lite, năm nhóm judge lịch sử, 222 phản hồi
+có sẵn, tối đa 444 request gồm retry (dưới trần cũ 1.296); không cấp quyền resume
+sinh sau 429. Runner judge mới có lock riêng, không thay nguồn campaign đã khóa.
+MySQL test riêng đã chạy đủ 254 test, coverage 93,04%, guard schema sai được
+kiểm và container/volume cleanup. Chi tiết tại MYSQL_TEST_PROPOSAL/REPORT.
+
+Khóa eval dùng SHA-256 theo byte: thêm quy tắc `.gitattributes` hẹp để giữ CRLF
+của manifest/ledger đã ghi nhận và các lock mới; không normalize nguồn đã khóa,
+không renormalize toàn repo hoặc stage. Metadata có đường dẫn Windows; kiểm
+chứng Linux chưa thực hiện. Không coi blob snapshot cũ là bản lưu byte đúng.
+
+Khi tiếp tục theo yêu cầu mới, nhánh thực tế là `wip/snapshot-20261115`, HEAD
+`d0adeaf`, đã chứa phần prompt/thoại cùng thay đổi tác vụ khác. Agent tiếp tục
+ngay nhánh này, chỉ cập nhật phần tài liệu của mình; không tự commit/tách snapshot
+hoặc sửa phần từ vựng của opencode. [Bằng chứng và kết quả cuối](PROMPT_VOICE_REVIEW_2026-11-15.md).
 
 Người dùng duyệt sửa cách ghi lịch sử A/B, giữ nguyên v7 hash
 `e75a86fdad0368dd343d04215859b8bcb52658d9699b6cd9a18f6deb0e722680`.

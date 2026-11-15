@@ -237,11 +237,28 @@ Lần chạy do agent thiết lập dùng SSH nền và khóa riêng tạm thờ
 - [Yêu cầu và trạng thái còn thiếu](docs/REQUIREMENTS.md), [nhật ký](docs/PROGRESS.md), [quyết định](docs/DECISIONS.md).
 - Tuân thủ [AGENT.md](AGENT.md) và [CLAUDE.md](CLAUDE.md). Nhánh tiếng Việt không dấu; mô tả commit bằng tiếng Việt, giữ tiền tố Conventional Commits. Không tự commit/push khi chưa được yêu cầu.
 
-## Rà prompt và thoại — trạng thái 15/11/2026
+## Rà prompt và thoại — trạng thái 16/11/2026
+
+Sau kiểm toán đã chuyển sang nhánh `feat/scope-voice-20261115` bằng lệnh duyệt
+riêng; WIP giữ làm điểm neo. C1 `405f030` và C2 `d67f97b` đã commit theo từng
+lệnh duyệt; C3 `4e0698f` đã commit tài liệu thoại, C4 đang chuẩn bị. Có backup ngoài repo 151 file
+và manifest hash; [kế hoạch bảo toàn](docs/CHANGESET_PLAN.md) phân loại từng
+file và trình từng lệnh Git. Raw results/CSV chấm tay là bằng chứng cục bộ,
+không commit nguyên trạng hoặc hứa có trong checkout chia sẻ. Hash checkout
+sạch C1/C2 đã kiểm và checkout đã dọn. Test judge dùng fixture tổng hợp;
+eval workspace 89/89 qua, chưa chạy test trong checkout sạch hoặc đo lại coverage.
+
+Sau phê duyệt: MySQL test tạm đã chạy đủ 254 test, coverage backend 93,04%,
+cleanup xong. Judge đã chấm đầu 222 phản hồi/222 request trên trần 444:
+181 pass, 24 fail, 17 no_data; [229 phiếu tay](backend/evals/scope/results/judge-combined-20261115/REVIEW.md)
+còn chờ xem, chưa nghiệm thu. Resume sinh vẫn chờ xác nhận quota riêng.
+
+[Bàn giao kiểm chứng/nhánh mới nhất](docs/PROMPT_VOICE_REVIEW_2026-11-15.md)
+ghi rõ kết quả test/coverage chưa qua và phần cần thử tay; chưa kết luận nghiệm thu.
 
 V7 đã khóa; từ chối ngoài phạm vi mặc định Việt, ưu tiên yêu cầu rõ bằng Anh,
 cho phép ví dụ luyện Anh. [Chính sách/hash](docs/PROMPTS.md#current-policy).
-Không resume chiến dịch hoặc chạy judge khi chưa có xác nhận riêng.
+Không resume chiến dịch hoặc chạy thêm judge khi chưa có xác nhận riêng.
 [Phiếu chấm tay và đủ/thiếu từng nhóm](backend/evals/scope/results/available-review-20261114/REVIEW.md).
 
 VITE_VOICE_SOFT_GATE, VITE_VOICE_ADAPTIVE_VAD và VITE_VOICE_DEBUG đều false mặc định.
