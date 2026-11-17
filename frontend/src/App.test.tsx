@@ -1,16 +1,52 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  act as rtlAct,
+  configure,
+  fireEvent,
+  getConfig,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { registerAsyncCleanup, TestAsyncBoundary } from '../tests/asyncBoundary';
 import App from './App';
 import { saveSession, hasSession } from './api/database';
 import { docVanBan, dungDoc } from './speech/audio';
 import type { Capabilities, Conversation, Message } from './types';
 import type { VoiceState } from './voice/session';
 import type { LearningLesson, LearningPlan, LessonProgress } from './learning/types';
+import vocabularyContent from '../../backend/app/content/vocabulary.v1.json';
+
+const asyncBoundary = new TestAsyncBoundary();
+let restoreAsyncBoundary = () => {};
+
+function act<T>(callback: () => T | Promise<T>): Promise<T> {
+  asyncBoundary.assertActive();
+  let asynchronous = false;
+  const result = rtlAct(() => {
+    const value = callback();
+    asynchronous = value != null && typeof (value as PromiseLike<T>).then === 'function';
+    return value;
+  });
+  return asynchronous ? asyncBoundary.run(() => result) : result;
+}
 
 // Module transformation is test setup; keep UI interaction deadlines unchanged.
 beforeAll(async () => {
   await Promise.all([import('./tutor/TutorWorkspace'), import('./landing/LandingPage')]);
+  const originalAsyncWrapper = getConfig().asyncWrapper;
+  const unregister = registerAsyncCleanup(() => asyncBoundary.drain());
+  restoreAsyncBoundary = () => {
+    configure({ asyncWrapper: originalAsyncWrapper });
+    unregister();
+  };
+  configure({
+    asyncWrapper: (callback) => asyncBoundary.run(() => originalAsyncWrapper(callback)),
+  });
 });
+
+afterAll(() => restoreAsyncBoundary());
 
 const voice = vi.hoisted(() => ({
   callbacks: null as null | {
@@ -166,7 +202,8 @@ let intercept:
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
-beforeEach(() => {
+beforeEach(({ signal }) => {
+  asyncBoundary.start(signal);
   localStorage.removeItem('engmate-learning:learner');
   window.history.replaceState(null, '', '/');
   saveSession({
@@ -216,6 +253,20 @@ beforeEach(() => {
           ? (JSON.parse(options.body) as Record<string, unknown>)
           : {};
       calls.push({ path, body });
+      if (path === '/api/vocabulary/me/states') return json({ states: [], legacy_imported: false });
+      if (path === '/api/vocabulary/topics')
+        return json({
+          ...vocabularyContent,
+          topics: vocabularyContent.topics.map(({ words, ...topic }) => ({
+            ...topic,
+            word_count: words.length,
+            levels: [...new Set(words.map((word) => word.cefr))],
+          })),
+        });
+      const vocabularyTopic = vocabularyContent.topics.find(
+        (topic) => path === `/api/vocabulary/topics/${topic.id}`,
+      );
+      if (vocabularyTopic) return json(vocabularyTopic);
       if (path === '/api/learning/catalog') return json(courseCatalog);
       if (path === '/api/learning/plan') {
         if (options.method === 'PUT')
@@ -297,6 +348,19 @@ beforeEach(() => {
   );
 });
 
+async function conversationQueries() {
+  const textbox = await screen.findByLabelText('Tin nhắn', { selector: 'textarea' });
+  const chatRegion = textbox.closest('section');
+  if (!chatRegion) throw new Error('Missing conversation region');
+  expect(chatRegion).toHaveRole('region');
+  expect(chatRegion).toHaveAccessibleName('Hội thoại');
+  expect(chatRegion).toBeVisible();
+  const chat = within(chatRegion);
+  expect(await chat.findByRole('textbox', { name: 'Tin nhắn' })).toBe(textbox);
+  expect(textbox).toBeVisible();
+  return chat;
+}
+
 async function open(selectHistory = true) {
   await act(async () => {
     render(<App />);
@@ -304,21 +368,28 @@ async function open(selectHistory = true) {
   await act(async () => {
     await vi.dynamicImportSettled();
   });
-  await screen.findByRole('textbox', { name: 'Tin nhắn' });
+  await conversationQueries();
   if (selectHistory && history.length) {
-    fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
+    const sidebar = within(screen.getByRole('complementary', { name: 'Thanh bên học tập' }));
+    fireEvent.click(sidebar.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
+    const historyDialog = within(screen.getByRole('dialog', { name: 'Lịch sử hội thoại' }));
     fireEvent.click(
-      screen.getByRole('button', { name: new RegExp(`^Chat ${history[0].conversation_id},`) }),
+      historyDialog.getByRole('button', {
+        name: new RegExp(`^Chat ${history[0].conversation_id},`),
+      }),
     );
   }
   await waitFor(() => expect(screen.queryByText('Đang tải tin nhắn…')).not.toBeInTheDocument());
 }
-async function send(text = 'Hello, Mate') {
-  fireEvent.change(screen.getByRole('textbox', { name: 'Tin nhắn' }), {
+async function send(
+  text = 'Hello, Mate',
+  chat: Pick<typeof screen, 'getByRole' | 'findByText'> = screen,
+) {
+  fireEvent.change(chat.getByRole('textbox', { name: 'Tin nhắn' }), {
     target: { value: text },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Gửi tin nhắn' }));
-  await screen.findByText('[Mock/A2] Hello');
+  fireEvent.click(chat.getByRole('button', { name: 'Gửi tin nhắn' }));
+  await chat.findByText('[Mock/A2] Hello');
 }
 
 function openHistory() {
@@ -326,25 +397,45 @@ function openHistory() {
     fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
 }
 
-function closeHistory() {
-  fireEvent.click(screen.getByRole('button', { name: 'Đóng lịch sử' }));
+function closeHistory(history: Pick<typeof screen, 'getByRole'> = screen) {
+  fireEvent.click(history.getByRole('button', { name: 'Đóng lịch sử' }));
+}
+
+function learningNavigation() {
+  return within(screen.getByRole('navigation', { name: 'Điều hướng học tập' }));
+}
+
+function openLegacyVocabulary() {
+  fireEvent.click(learningNavigation().getByRole('button', { name: 'Từ vựng' }));
+  const disclosure = screen.getByText('Ôn giao tiếp cũ');
+  fireEvent.click(disclosure);
+  const group = disclosure.closest('details');
+  if (!group) throw new Error('Missing legacy vocabulary disclosure');
+  return within(group);
 }
 
 describe('conversation-only application', () => {
   it('preserves an unsent draft across learning tabs and restores a conversation created in this session', async () => {
     await open(false);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Tin nhắn' }), {
+    const main = within(screen.getByRole('main'));
+    const navigation = learningNavigation();
+    const initialChat = within(main.getByRole('region', { name: 'Hội thoại' }));
+    fireEvent.change(initialChat.getByRole('textbox', { name: 'Tin nhắn' }), {
       target: { value: 'Keep my question' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Bài học' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Cùng Mate' }));
-    expect(screen.getByRole('textbox', { name: 'Tin nhắn' })).toHaveValue('Keep my question');
-    await send();
-    fireEvent.click(screen.getByRole('button', { name: 'Bài học' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Cùng Mate' }));
-    await screen.findByText('[Mock/A2] Hello');
+    fireEvent.click(navigation.getByRole('button', { name: 'Bài học' }));
+    fireEvent.click(navigation.getByRole('button', { name: 'Cùng Mate' }));
+    const restoredDraft = within(main.getByRole('region', { name: 'Hội thoại' }));
+    expect(restoredDraft.getByRole('textbox', { name: 'Tin nhắn' })).toHaveValue(
+      'Keep my question',
+    );
+    await send('Hello, Mate', restoredDraft);
+    fireEvent.click(navigation.getByRole('button', { name: 'Bài học' }));
+    fireEvent.click(navigation.getByRole('button', { name: 'Cùng Mate' }));
+    const restoredChat = within(main.getByRole('region', { name: 'Hội thoại' }));
+    await restoredChat.findByText('[Mock/A2] Hello');
     expect(calls.filter((c) => c.path === '/api/conversations')).toHaveLength(1);
-    expect(screen.getByRole('heading', { name: 'Chat 200' })).toBeInTheDocument();
+    expect(restoredChat.getByRole('heading', { name: 'Chat 200' })).toBeInTheDocument();
   });
 
   it('keeps keyboard focus inside history and returns to its trigger after closing', async () => {
@@ -363,23 +454,29 @@ describe('conversation-only application', () => {
   });
   it('opens profile and settings directly from the sidebar and keeps the chat draft', async () => {
     await open(false);
-    fireEvent.change(screen.getByRole('textbox', { name: 'Tin nhắn' }), {
+    const chat = within(screen.getByRole('region', { name: 'Hội thoại' }));
+    fireEvent.change(chat.getByRole('textbox', { name: 'Tin nhắn' }), {
       target: { value: 'Keep my speaking question' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'A1 → A2' }));
-    await screen.findByRole('heading', { name: 'Hồ sơ học tập' });
-    expect(await screen.findByLabelText('Họ và tên')).toHaveValue('Learner');
-    expect(await screen.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Cài đặt' }));
-    expect(screen.getByRole('heading', { name: 'Cài đặt' })).toBeInTheDocument();
-    expect(await screen.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
-    expect(screen.getByLabelText('Bật hoặc tắt âm thanh tương tác')).toBeDisabled();
-    const motion = screen.getByLabelText('Bật hoặc tắt giảm chuyển động');
+    const topbar = screen.getByText('Mức tự chọn: A1').closest('header');
+    if (!topbar) throw new Error('Missing workspace topbar');
+    fireEvent.click(within(topbar).getByRole('button', { name: 'Mức tự chọn: A1' }));
+    const main = within(screen.getByRole('main'));
+    await main.findByRole('heading', { name: 'Hồ sơ học tập' });
+    expect(await main.findByLabelText('Họ và tên')).toHaveValue('Learner');
+    expect(await main.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
+    const sidebar = within(screen.getByRole('complementary', { name: 'Thanh bên học tập' }));
+    fireEvent.click(sidebar.getByRole('button', { name: 'Cài đặt' }));
+    expect(main.getByRole('heading', { name: 'Cài đặt' })).toBeInTheDocument();
+    expect(await main.findByText(/Mục tiêu 650 điểm/)).toBeInTheDocument();
+    expect(main.getByLabelText('Bật hoặc tắt âm thanh tương tác')).toBeDisabled();
+    const motion = main.getByLabelText('Bật hoặc tắt giảm chuyển động');
     fireEvent.click(motion);
     expect(document.documentElement.dataset.reducedMotion).toBe('true');
     fireEvent.click(motion);
-    fireEvent.click(screen.getByRole('button', { name: 'Cùng Mate' }));
-    expect(screen.getByRole('textbox', { name: 'Tin nhắn' })).toHaveValue(
+    fireEvent.click(learningNavigation().getByRole('button', { name: 'Cùng Mate' }));
+    const restoredChat = within(main.getByRole('region', { name: 'Hội thoại' }));
+    expect(restoredChat.getByRole('textbox', { name: 'Tin nhắn' })).toHaveValue(
       'Keep my speaking question',
     );
     expect(calls.some((call) => call.path === '/api/conversations')).toBe(false);
@@ -394,10 +491,12 @@ describe('conversation-only application', () => {
     await open(false);
     const menu = screen.getByRole('button', { name: 'Mở menu điều hướng' });
     fireEvent.click(menu);
-    expect(screen.getByRole('dialog', { name: 'Menu học tập' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
+    const menuDialog = screen.getByRole('dialog', { name: 'Menu học tập' });
+    expect(menuDialog).toBeInTheDocument();
+    fireEvent.click(within(menuDialog).getByRole('button', { name: 'Mở lịch sử hội thoại' }));
     expect(screen.queryByRole('dialog', { name: 'Menu học tập' })).not.toBeInTheDocument();
-    const close = screen.getByRole('button', { name: 'Đóng lịch sử' });
+    const historyDialog = within(screen.getByRole('dialog', { name: 'Lịch sử hội thoại' }));
+    const close = historyDialog.getByRole('button', { name: 'Đóng lịch sử' });
     expect(close).toHaveFocus();
     fireEvent.click(close);
     expect(menu).toHaveFocus();
@@ -471,21 +570,24 @@ describe('conversation-only application', () => {
 
   it('records real self-reported vocabulary and lesson completion instead of demo scores', async () => {
     await open(false);
-    fireEvent.click(screen.getByRole('button', { name: 'Từ vựng' }));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Đánh dấu đã nhớ' })[0]);
-    expect(screen.getByRole('button', { name: 'Đã nhớ' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Hoàn thành buổi học' }));
-    expect(screen.getByText('1 / 4')).toBeInTheDocument();
-    expect(screen.getByText('1 cụm từ')).toBeInTheDocument();
+    const legacy = openLegacyVocabulary();
+    fireEvent.click(legacy.getAllByRole('button', { name: 'Đánh dấu đã nhớ' })[0]);
+    expect(legacy.getByRole('button', { name: 'Đã nhớ' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(legacy.getByRole('button', { name: 'Hoàn thành buổi học' }));
+    const summarySection = screen.getByText('BÀI ĐÃ HỌC').closest('section');
+    if (!summarySection) throw new Error('Missing legacy session summary');
+    const summary = within(summarySection);
+    expect(summary.getByText('1 / 4')).toBeInTheDocument();
+    expect(summary.getByText('1 cụm từ')).toBeInTheDocument();
     expect(screen.queryByText('86 / 100')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Xem tiến độ học tập' }));
+    fireEvent.click(summary.getByRole('button', { name: 'Xem tiến độ học tập' }));
     await screen.findByRole('heading', { name: 'Tiến độ học tập' });
     expect(
       await screen.findByText('Bạn chưa bắt đầu bài học nào. Mở Bài học để bắt đầu cùng Mate.'),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Từ vựng' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Đã nhớ' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Tiến độ' }));
+    const reopenedLegacy = openLegacyVocabulary();
+    fireEvent.click(reopenedLegacy.getByRole('button', { name: 'Đã nhớ' }));
+    fireEvent.click(learningNavigation().getByRole('button', { name: 'Tiến độ' }));
     await screen.findByText('Bạn chưa bắt đầu bài học nào. Mở Bài học để bắt đầu cùng Mate.');
     expect(screen.queryByText('86 / 100')).not.toBeInTheDocument();
   });
@@ -493,8 +595,8 @@ describe('conversation-only application', () => {
   it('persists only the learner account progress and does not count a lesson twice', async () => {
     await open(false);
     for (let i = 0; i < 2; i++) {
-      fireEvent.click(screen.getByRole('button', { name: 'Từ vựng' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Hoàn thành buổi học' }));
+      const legacy = openLegacyVocabulary();
+      fireEvent.click(legacy.getByRole('button', { name: 'Hoàn thành buổi học' }));
     }
     const stored = JSON.parse(localStorage.getItem('engmate-learning:learner')!);
     expect(stored.completed).toEqual(['cafe']);
@@ -618,19 +720,22 @@ describe('conversation-only application', () => {
 
   it('creates once on the first message, keeps the draft and sends to that conversation', async () => {
     await open(false);
-    await send('A fresh conversation');
+    const chat = within(screen.getByRole('region', { name: 'Hội thoại' }));
+    await send('A fresh conversation', chat);
     expect(calls.filter((c) => c.path === '/api/conversations')).toHaveLength(1);
     expect(calls.find((c) => c.path.endsWith('/messages'))).toMatchObject({
       path: '/api/conversations/200/messages',
       body: { message: 'A fresh conversation' },
     });
-    openHistory();
-    expect(screen.getByRole('button', { name: /^Chat 200,/ })).toHaveAttribute(
+    const sidebar = within(screen.getByRole('complementary', { name: 'Thanh bên học tập' }));
+    fireEvent.click(sidebar.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
+    const historyDialog = within(screen.getByRole('dialog', { name: 'Lịch sử hội thoại' }));
+    expect(historyDialog.getByRole('button', { name: /^Chat 200,/ })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    closeHistory();
-    await send('A second message');
+    closeHistory(historyDialog);
+    await send('A second message', chat);
     expect(calls.filter((c) => c.path === '/api/conversations')).toHaveLength(1);
   });
 
@@ -956,21 +1061,26 @@ describe('conversation-only application', () => {
   it('creates new chats and supports the mobile history menu', async () => {
     history = [row(100), row(99)];
     await open();
-    fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
-    expect(screen.getByRole('button', { name: 'Đóng danh sách hội thoại' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Đóng danh sách hội thoại' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Mở lịch sử hội thoại' }));
+    const sidebar = within(screen.getByRole('complementary', { name: 'Thanh bên học tập' }));
+    const historyTrigger = sidebar.getByRole('button', { name: 'Mở lịch sử hội thoại' });
+    const main = within(screen.getByRole('main'));
+    fireEvent.click(historyTrigger);
+    const closeList = screen.getByRole('button', { name: 'Đóng danh sách hội thoại' });
+    expect(closeList).toBeInTheDocument();
+    fireEvent.click(closeList);
+    fireEvent.click(historyTrigger);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(
       screen.queryByRole('button', { name: 'Đóng danh sách hội thoại' }),
     ).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Hội thoại mới/ }));
-    expect(screen.getByRole('heading', { name: 'Nói cùng Mate' })).toBeInTheDocument();
+    fireEvent.click(sidebar.getByRole('button', { name: /Hội thoại mới/ }));
+    expect(main.getByRole('heading', { name: 'Nói cùng Mate' })).toBeInTheDocument();
     await send();
-    await screen.findByRole('heading', { name: 'Chat 200' });
-    openHistory();
-    fireEvent.click(screen.getByRole('button', { name: /Chat 99/ }));
-    await screen.findByRole('heading', { name: 'Chat 99' });
+    await main.findByRole('heading', { name: 'Chat 200' });
+    fireEvent.click(historyTrigger);
+    const reopenedHistory = within(screen.getByRole('dialog', { name: 'Lịch sử hội thoại' }));
+    fireEvent.click(reopenedHistory.getByRole('button', { name: /Chat 99/ }));
+    await main.findByRole('heading', { name: 'Chat 99' });
   });
 
   it('handles an empty account and a failed create without changing the retry identity', async () => {
@@ -1244,16 +1354,17 @@ describe('conversation-only application', () => {
           ? json({}, 503)
           : undefined;
     await open();
-    await screen.findByRole('button', { name: 'Tải lại giọng đối thoại' });
-    expect(screen.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' })).toBeDisabled();
+    const chat = within(screen.getByRole('region', { name: 'Hội thoại' }));
+    await chat.findByRole('button', { name: 'Tải lại giọng đối thoại' });
+    expect(chat.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' })).toBeDisabled();
     expect(voice.start).not.toHaveBeenCalled();
     fail = false;
-    fireEvent.click(screen.getByRole('button', { name: 'Tải lại giọng đối thoại' }));
+    fireEvent.click(chat.getByRole('button', { name: 'Tải lại giọng đối thoại' }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' })).toBeEnabled(),
+      expect(chat.getByRole('button', { name: 'Bắt đầu thoại trực tiếp' })).toBeEnabled(),
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Tùy chọn âm thanh' }));
-    expect(screen.getByRole('combobox', { name: 'Giọng đối thoại' })).toHaveValue('Kore');
+    fireEvent.click(chat.getByRole('button', { name: 'Tùy chọn âm thanh' }));
+    expect(chat.getByRole('combobox', { name: 'Giọng đối thoại' })).toHaveValue('Kore');
   });
 
   it('sends Vietnamese without changing the user message and reads the returned content', async () => {
@@ -1272,12 +1383,13 @@ describe('conversation-only application', () => {
       }
     };
     await open();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Tin nhắn' }), {
+    const chat = within(screen.getByRole('region', { name: 'Hội thoại' }));
+    fireEvent.change(chat.getByRole('textbox', { name: 'Tin nhắn' }), {
       target: { value: 'Hôm nay tôi hơi mệt.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Gửi tin nhắn' }));
-    await screen.findByText('Bạn có muốn nghỉ ngơi một chút không?');
-    fireEvent.click(screen.getByRole('button', { name: 'Nghe câu trả lời' }));
+    fireEvent.click(chat.getByRole('button', { name: 'Gửi tin nhắn' }));
+    await chat.findByText('Bạn có muốn nghỉ ngơi một chút không?');
+    fireEvent.click(chat.getByRole('button', { name: 'Nghe câu trả lời' }));
     expect(docVanBan).toHaveBeenCalledWith(
       'Bạn có muốn nghỉ ngơi một chút không?',
       1,
@@ -1290,12 +1402,15 @@ describe('conversation-only application', () => {
     window.history.replaceState(null, '', '/?from=auth#dang-nhap');
     const entries = window.history.length;
     render(<App />);
-    fireEvent.change(screen.getByLabelText('Tài khoản hoặc email'), {
+    const account = screen.getByLabelText('Tài khoản hoặc email');
+    const loginForm = account.closest('form');
+    if (!loginForm) throw new Error('Missing login form');
+    fireEvent.change(account, {
       target: { value: 'learner' },
     });
     fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password-for-test' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
-    await screen.findByRole('textbox', { name: 'Tin nhắn' });
+    fireEvent.click(within(loginForm).getByRole('button', { name: 'Đăng nhập' }));
+    await conversationQueries();
     expect(window.location.hash).toBe('#hoi-thoai');
     expect(window.location.search).toBe('?from=auth');
     expect(window.history.length).toBe(entries);
@@ -1303,16 +1418,24 @@ describe('conversation-only application', () => {
       saveSession(null);
     });
     expect(window.location.hash).toBe('#dang-nhap');
-    fireEvent.click(screen.getByRole('button', { name: 'Chưa có tài khoản? Đăng ký' }));
-    fireEvent.change(screen.getByLabelText('Tên hiển thị'), { target: { value: 'Người học' } });
+    const authPane = screen.getByLabelText('Tài khoản hoặc email').closest('section');
+    if (!authPane) throw new Error('Missing restored authentication panel');
+    expect(authPane).toHaveRole('region');
+    expect(authPane).toHaveAccessibleName('Đăng nhập');
+    expect(authPane).toBeVisible();
+    fireEvent.click(within(authPane).getByRole('button', { name: 'Chưa có tài khoản? Đăng ký' }));
+    const displayName = screen.getByLabelText('Tên hiển thị');
+    const registrationForm = displayName.closest('form');
+    if (!registrationForm) throw new Error('Missing registration form');
+    fireEvent.change(displayName, { target: { value: 'Người học' } });
     fireEvent.change(screen.getByLabelText('Tên tài khoản'), { target: { value: 'newlearner' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'learner@example.test' } });
     fireEvent.change(screen.getByLabelText('Mật khẩu'), { target: { value: 'password-for-test' } });
     fireEvent.change(screen.getByLabelText('Nhập lại mật khẩu'), {
       target: { value: 'password-for-test' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Tạo tài khoản' }));
-    await screen.findByRole('textbox', { name: 'Tin nhắn' });
+    fireEvent.click(within(registrationForm).getByRole('button', { name: 'Tạo tài khoản' }));
+    await conversationQueries();
     expect(window.location.hash).toBe('#hoi-thoai');
     expect(calls.find((c) => c.path === '/api/auth/register')?.body).toMatchObject({
       display_name: 'Người học',

@@ -10,13 +10,16 @@ import { BookOpen, Mic, ArrowRight, Check } from 'lucide-react';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
 import { ProfilePage } from '../profile/ProfilePage';
 import { SettingsPage } from '../settings/SettingsPage';
-import { levels, useAccountProfile } from '../profile/api';
+import { useAccountProfile } from '../profile/api';
 import { RoadmapPage } from '../learning/RoadmapPage';
 import { LessonsPage, ProgressPage } from '../learning/LearningPages';
 import { LearningAccountSummary } from '../learning/LearningAccountSummary';
 import { LessonGuide } from '../learning/LessonGuide';
 import { getLearningProgress } from '../learning/api';
 import type { LearningLesson, LessonProgress } from '../learning/types';
+import { VocabularyPage } from '../vocabulary/VocabularyPage';
+import { VocabularySummary } from '../vocabulary/VocabularyStatus';
+import { useVocabularyState } from '../vocabulary/useVocabularyState';
 import './course.css';
 
 interface Props {
@@ -71,6 +74,23 @@ export function TutorWorkspace(props: Props) {
   const courseSync = useRef<AbortController | null>(null);
   useEffect(() => () => courseSync.current?.abort(), []);
   const [learning, setLearning] = useState(() => readLearning(account.username));
+  const vocabulary = useVocabularyState(account.username);
+  const legacyWords = lessons.flatMap((item) =>
+    item.words.map((word, index) => ({
+      key: `${item.id}:${word[0]}`,
+      topicId: `legacy-${item.id}`,
+      wordId: `word-${index + 1}`,
+    })),
+  );
+  const legacyRemembered = vocabulary.lastData?.legacy_imported
+    ? legacyWords
+        .filter((word) =>
+          vocabulary.lastData?.states.some(
+            (row) => row.topic_id === word.topicId && row.word_id === word.wordId && row.remembered,
+          ),
+        )
+        .map((word) => word.key)
+    : learning.remembered;
   const personal = useAccountProfile(account.username);
   const profileLevel = personal.profile?.cefr_level;
   const profileMinutes = personal.profile?.daily_goal_minutes;
@@ -245,6 +265,12 @@ export function TutorWorkspace(props: Props) {
     }
   }
   function toggleWord(key: string) {
+    if (vocabulary.lastData?.legacy_imported) {
+      const identity = legacyWords.find((word) => word.key === key);
+      if (identity)
+        vocabulary.save(identity.topicId, identity.wordId, !legacyRemembered.includes(key));
+      return;
+    }
     setLearning((old) => ({
       ...old,
       remembered: old.remembered.includes(key)
@@ -284,9 +310,9 @@ export function TutorWorkspace(props: Props) {
       'Nghe mẫu, đọc lại rồi luyện từng âm cùng Mate.',
     ],
     vocabulary: [
-      'ÔN TẬP GIAO TIẾP',
-      'Nhớ từ qua tình huống',
-      'Đọc ví dụ, tự kiểm tra và đánh dấu những cụm bạn đã nhớ.',
+      'TỪ VỰNG THEO CHỦ ĐỀ',
+      'Mỗi ngày, thêm một cách diễn đạt',
+      'Chọn chủ đề, đọc ví dụ và tự ôn những từ bạn muốn dùng.',
     ],
     progress: [
       'HÀNH TRÌNH CỦA BẠN',
@@ -364,8 +390,7 @@ export function TutorWorkspace(props: Props) {
             disabled={recording.active}
             title="Đổi mục tiêu và trình độ tự chọn"
           >
-            {learning.level} <span>→</span>{' '}
-            {levels[Math.min(levels.indexOf(learning.level) + 1, levels.length - 1)]}
+            Mức tự chọn: {learning.level}
           </button>
         </header>
         <main id="noi-dung" className="tutor-main" tabIndex={-1} ref={mainPane}>
@@ -464,6 +489,9 @@ export function TutorWorkspace(props: Props) {
                     <p>{pageHeading[2]}</p>
                   </header>
                 )}
+                {['profile', 'settings', 'summary'].includes(view) && (
+                  <VocabularySummary state={vocabulary} />
+                )}
                 {view === 'profile' &&
                   (personal.loading ? (
                     <p role="status">Đang tải hồ sơ…</p>
@@ -483,7 +511,7 @@ export function TutorWorkspace(props: Props) {
                         profile={personal.profile}
                         avatar={personal.avatar}
                         avatarError={personal.avatarError}
-                        remembered={learning.remembered.length}
+                        remembered={legacyRemembered.length}
                         completed={learning.completed.length}
                         onSaved={personal.onSaved}
                         onAvatarChanged={personal.avatarChanged}
@@ -494,7 +522,7 @@ export function TutorWorkspace(props: Props) {
                 {view === 'settings' && (
                   <SettingsPage
                     account={account}
-                    learning={learning}
+                    learning={{ ...learning, remembered: legacyRemembered }}
                     onNavigateProfile={() => navigate('profile')}
                     onNavigateSetup={() => navigate('setup')}
                     onLogout={props.onLogout}
@@ -591,7 +619,7 @@ export function TutorWorkspace(props: Props) {
                     </div>
                   </>
                 )}
-                {(view === 'pronunciation' || view === 'vocabulary') && (
+                {view === 'pronunciation' && (
                   <label className="practice-topic">
                     Chủ đề giao tiếp
                     <select
@@ -677,11 +705,38 @@ export function TutorWorkspace(props: Props) {
                   </>
                 )}
                 {view === 'vocabulary' && (
-                  <>
+                  <VocabularyPage
+                    key={account.username}
+                    state={vocabulary}
+                    speech={capabilities?.speech === true}
+                    legacyKeys={learning.remembered}
+                    onPractice={(words) => {
+                      props.onNew();
+                      setDraft(
+                        `Mate ơi, giúp tôi luyện các từ sau bằng một tình huống ngắn. Hãy hỏi từng câu và đợi tôi trả lời. Dữ liệu từ đã chọn: ${JSON.stringify(words.map((word) => ({ term: word.term, meaning_vi: word.meaning_vi, example_en: word.example_en })))}`,
+                      );
+                      setView('mate');
+                    }}
+                  >
+                    <label className="practice-topic">
+                      Chủ đề giao tiếp cũ
+                      <select
+                        value={lesson.id}
+                        onChange={(event) =>
+                          setLearning((old) => ({ ...old, lessonId: event.target.value }))
+                        }
+                      >
+                        {lessons.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.topic}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                     <div className="vocabulary-grid">
                       {lesson.words.map(([word, ipa, meaning, example]) => {
                         const key = `${lesson.id}:${word}`;
-                        const remembered = learning.remembered.includes(key);
+                        const remembered = legacyRemembered.includes(key);
                         return (
                           <article className="tutor-card word-card" key={word}>
                             <h2>{word}</h2>
@@ -691,6 +746,10 @@ export function TutorWorkspace(props: Props) {
                             <button
                               className={`tutor-chip ${remembered ? 'remembered' : ''}`}
                               aria-pressed={remembered}
+                              disabled={
+                                vocabulary.lastData?.legacy_imported &&
+                                (!vocabulary.data || vocabulary.busy || !!vocabulary.pending)
+                              }
                               onClick={() => toggleWord(key)}
                             >
                               <BieuTuong ten={remembered ? 'check' : 'plus'} size={14} />
@@ -717,7 +776,7 @@ export function TutorWorkspace(props: Props) {
                         Hoàn thành buổi học <BieuTuong ten="arrow" size={16} />
                       </button>
                     </div>
-                  </>
+                  </VocabularyPage>
                 )}
                 {view === 'summary' && (
                   <>
@@ -740,9 +799,13 @@ export function TutorWorkspace(props: Props) {
                         <p>Lịch sử từ tài khoản của bạn</p>
                       </article>
                       <article className="tutor-card">
-                        <span className="eyebrow">TỪ VỰNG ĐÃ NHỚ</span>
-                        <strong>{learning.remembered.length} cụm từ</strong>
-                        <p>Theo các cụm bạn đã đánh dấu</p>
+                        <span className="eyebrow">CỤM GIAO TIẾP CŨ ĐÃ NHỚ</span>
+                        <strong>{legacyRemembered.length} cụm từ</strong>
+                        <p>
+                          {vocabulary.lastData?.legacy_imported
+                            ? 'Dấu nhớ cụm cũ đã tải từ tài khoản'
+                            : 'Dấu nhớ cụm cũ trên trình duyệt này'}
+                        </p>
                       </article>
                     </div>
                     <div className="progress-columns">

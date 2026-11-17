@@ -13,8 +13,9 @@ import { useMockVoice } from './useMockVoice';
 
 function renderApp() {
   const result = render(<VoiceFirstApp />);
-  screen.getByRole('main').scrollTo = vi.fn();
-  return result;
+  const main = screen.getByRole('main');
+  main.scrollTo = vi.fn();
+  return { ...result, main };
 }
 
 function navigate(name: string) {
@@ -36,11 +37,15 @@ describe('voice-first preview', () => {
   });
 
   it.each([0, 1, 2, 3, 4])('shows all 20 correctly numbered lessons in stage %i', async (index) => {
-    renderApp();
-    fireEvent.click(screen.getByRole('button', { name: 'Học theo lộ trình' }));
-    await screen.findByRole('heading', { name: 'Từng bước, mỗi ngày' });
-    const level = screen.getByRole('combobox', { name: 'Chọn cấp độ' });
-    const roadmap = within(level.closest('.mate-roadmap-view') as HTMLElement);
+    const { main } = renderApp();
+    const content = within(main);
+    fireEvent.click(content.getByRole('button', { name: 'Học theo lộ trình' }));
+    const level = await content.findByLabelText('Chọn cấp độ', { selector: 'select' });
+    const roadmapView = level.closest('.mate-roadmap-view');
+    if (!roadmapView) throw new Error('Missing preview roadmap');
+    const roadmap = within(roadmapView as HTMLElement);
+    expect(roadmap.getByRole('heading', { name: 'Từng bước, mỗi ngày' })).toBeInTheDocument();
+    expect(roadmap.getByRole('combobox', { name: 'Chọn cấp độ' })).toBe(level);
     fireEvent.change(level, { target: { value: String(index) } });
     const nodes = roadmap.getAllByRole('button', { name: /^Bài \d+:/ });
     expect(nodes).toHaveLength(20);

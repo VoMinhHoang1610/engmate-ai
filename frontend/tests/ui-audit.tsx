@@ -5,6 +5,7 @@ import { saveSession } from '../src/api/database';
 import { applyTheme } from '../src/theme';
 import { applyReducedMotion } from '../src/settings/motion';
 import catalog from '../../backend/app/content/toeic.v1.json';
+import vocabulary from '../../backend/app/content/vocabulary.v1.json';
 
 const params = new URLSearchParams(location.search);
 const root = document.getElementById('root')!;
@@ -50,6 +51,28 @@ if (width && !params.has('frame')) {
       location.origin,
     );
     const path = url.pathname;
+    if (path === '/api/vocabulary/me/states')
+      return params.get('vocabulary') === 'missing'
+        ? json({ detail: { code: 'vocabulary_not_installed' } }, 503)
+        : json({
+            states: [
+              { topic_id: 'food-and-drink', word_id: 'apple', remembered: true, version: 1 },
+            ],
+            legacy_imported: false,
+          });
+    if (path === '/api/vocabulary/topics')
+      return json({
+        ...vocabulary,
+        topics: vocabulary.topics.map(({ words, ...topic }) => ({
+          ...topic,
+          word_count: words.length,
+          levels: [...new Set(words.map((word) => word.cefr))],
+        })),
+      });
+    const vocabularyTopic = vocabulary.topics.find(
+      (topic) => path === `/api/vocabulary/topics/${topic.id}`,
+    );
+    if (vocabularyTopic) return json(vocabularyTopic);
     if (params.get('error') && path === `/api/learning/${params.get('error')}`)
       return json({}, 503);
     if (path === '/api/me') return json({ username: 'ui-fixture', email: 'ui@example.test' });

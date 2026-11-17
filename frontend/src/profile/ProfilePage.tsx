@@ -147,7 +147,7 @@ export function ProfilePage({
           </div>
           <div>
             <strong>{remembered}</strong>
-            <span>Cụm tự đánh dấu đã nhớ</span>
+            <span>Cụm giao tiếp cũ đã nhớ</span>
           </div>
           <div>
             <strong>{completed}</strong>

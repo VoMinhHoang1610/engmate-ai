@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { drainAsyncCleanup } from './asyncBoundary';
 
 beforeEach(() => {
   // Use browser storage from jsdom, including when Node exposes its own Web Storage.
@@ -14,7 +15,11 @@ beforeEach(() => {
   sessionStorage.setItem('engmate-auth-intro-done', '1');
 });
 
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
+afterEach(async () => {
+  try {
+    cleanup();
+    await drainAsyncCleanup();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
