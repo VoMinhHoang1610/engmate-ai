@@ -4,8 +4,8 @@
 
 | Mã | Yêu cầu | Trạng thái |
 | --- | --- | --- |
-| VOCAB-01 | Lưới chủ đề thường gặp, trang chủ đề đủ từ, schema và nội dung server | Duyệt 18×50; chỉ triển khai 2×50 sau cổng tiền triển khai |
-| VOCAB-02 | Đã nhớ theo owner, tìm/lọc, thẻ/quiz, TTS theo click, migration local cũ | Thiết kế; chưa triển khai |
+| VOCAB-01 | Lưới chủ đề thường gặp, trang chủ đề đủ từ, schema và nội dung server | Có mã 2×50 trong worktree; chưa nghiệm thu nội dung; demo Docker source-mount, chưa build/deploy image (xác nhận lần cuối 16/11/2026) |
+| VOCAB-02 | Đã nhớ theo owner, tìm/lọc, thẻ/quiz, TTS theo click, migration local cũ | Đã có UI/API/test; kiểm browser/phiếu rà và gate sau sửa CSS còn đang hoàn tất |
 | VOCAB-03 | Chủ đề AI riêng, UUID bền vững, lô nhỏ/validation/quota/expiry | Thiết kế; chưa gọi provider |
 | LEARN-UX-01 | Bổ sung Phát âm, Bài học, Lộ trình, Tiến độ theo từng cổng | Đã duyệt thứ tự; từng mục vẫn có cổng riêng |
 
@@ -15,7 +15,12 @@ Nội dung TOEIC/logic hoàn thành, persona, chat/voice/auth giữ nguyên.
 Điều kiện mới: IPA Anh–Anh đối chiếu TTS UK mặc định; quota/cỡ lô qua env;
 thiếu bảng vocabulary vẫn đọc JSON và báo “chưa cài đặt” ở phần DB; ẩn nghe khi
 speech tắt; cho sửa riêng chữ topbar kèm test. Baseline sạch/MySQL/worktree theo
-[kế hoạch tiền triển khai](VOCABULARY_PREFLIGHT_2026-11-15.md), chưa chạy.
+[kế hoạch tiền triển khai](VOCABULARY_PREFLIGHT_2026-11-15.md), đã qua baseline
+riêng và M1/M2. Trạng thái hiện tại/bằng chứng:
+[nhật ký kiểm thử](VOCABULARY_TEST_INVESTIGATION_2026-11-15.md).
+CSV rà lấy ngẫu nhiên đúng 5/50 mỗi chủ đề cộng 7 mục có cờ:
+[phiếu 17 mục](VOCABULARY_CONTENT_REVIEW_2026-11-16.csv), tất cả **chờ người duyệt**,
+không thay cho thẩm định chuyên môn. Chưa mở 16 chủ đề hoặc sinh AI hàng loạt.
 
 ## Trạng thái rà soát 14–15/11/2026
 

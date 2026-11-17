@@ -1,12 +1,26 @@
 # Kiến trúc hội thoại EngMate-AI
 
-## Thiết kế module từ vựng — 15/11/2026, chưa triển khai
+## Module từ vựng — mã lát cắt 2×50, Docker demo source-mount, chưa build/deploy image (xác nhận lần cuối 16/11/2026)
 
-[Kiểm toán và thiết kế](LEARNING_VOCABULARY_DESIGN_2026-11-15.md) đề xuất
-`src/vocabulary/` và chuỗi router → service → bảng mới, catalog JSON có schema,
-prompt riêng `vocab.v1`, LLM interface hiện có. Job riêng reserve → sinh lô ngoài
-DB lock → xác thực → publish atomic; không thay lifecycle hội thoại/giọng nói.
-Trạng thái từ tự đánh giá tách khỏi evidence TOEIC. Bảng/quota/adapter còn chờ duyệt.
+- `backend/app/content/vocabulary.v1.json` → schema/loader
+  `services/vocabulary_catalog.py` → `api/vocabulary_routes.py`: hai chủ đề đầy
+  đủ, IPA Anh–Anh, CEFR gợi ý, nhãn AI soạn/chưa thẩm định. Catalog không phụ
+  thuộc bảng vocabulary SQL.
+- `services/vocabulary.py` → hai bảng additive trong `db/vocabulary.py`:
+  state theo owner và receipt UUID; khóa account/optimistic version, receipt và
+  state cùng transaction. Không có SQL DDL tự động lúc startup.
+- `frontend/src/vocabulary/`: API client, state controller, catalog/detail,
+  tìm không dấu/lọc, thẻ và quiz deterministic, chọn tối đa 5 từ tạo draft Mate.
+  Chỉ người học tự gửi draft; không gọi LLM nền, không đổi chat lifecycle.
+- `VocabularySummary` tách tự đánh giá khỏi evidence TOEIC. Bốn bộ 3 cụm cũ ở
+  khu riêng, import có xác nhận/whitelist, không xóa dữ liệu local.
+- CSS riêng scope `.workspace-shell`. TTS dùng pipeline/settings cũ và chỉ khi
+  click; ẩn khi speech tắt/chưa biết. Không sửa auth/OAuth, VAD, prompts hoặc
+  logic hoàn thành TOEIC.
+
+Job AI/chủ đề riêng/quota và 16 chủ đề còn lại vẫn là thiết kế ở
+[phụ lục](LEARNING_VOCABULARY_DESIGN_2026-11-15.md), không phải runtime đã có.
+Kiểm UI fixture không chứng minh persistence tài khoản thật.
 
 Đối chiếu runtime: sidebar desktop hiện ghim mặc định, hover/focus không mở rộng;
 `voice-first/LearningViews.tsx` chỉ cho `?mode=preview`. Những mô tả hover và dữ

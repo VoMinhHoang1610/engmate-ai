@@ -1,5 +1,24 @@
 # Quyết định kỹ thuật
 
+## 2026-11-16 — Lát cắt authored trước demo, không tự mở rộng
+
+- Đã thực hiện snapshot/worktree/baseline riêng và MySQL M1/M2 được duyệt.
+  Mã feature hiện có hai chủ đề 50 từ, năm route, hai bảng additive; chưa AI,
+  chưa 16 chủ đề còn lại, chưa build/deploy image; demo Docker đang source-mount
+  từ worktree (xác nhận lần cuối 16/11/2026). Các trạng thái chờ duyệt lịch sử
+  bên dưới không thay cho quyết định/lệnh đã thực hiện sau đó.
+- Người dùng muốn hoàn tất để tự commit/main và demo; trợ lý không tự commit,
+  push, merge, đổi `.env`, bật cờ, gọi API trả phí hay restart Docker.
+- Giữ cổng trình ảnh/CSV của hai chủ đề trước khi mở rộng. Bốn mục tiếp theo
+  theo thứ tự Phát âm → Bài học → Lộ trình → Tiến độ, không báo đã nâng cấp.
+- Người dùng duyệt sửa label checkbox bị CSS label chung xếp column: chỉ thêm
+  row/width/min-width/flex checkbox trong CSS vocabulary scoped; không sửa CSS
+  chung/Settings runtime. Duyệt điều tra browser timeout bằng console/network,
+  không tăng deadline; checkbox Settings ẩn được duyệt kiểm bằng Tab/Space với
+  đủ assertion trước/sau. Mọi lỗi/bằng chứng giữ trong nhật ký.
+- Nội dung vẫn `ai_authored_unreviewed`. Phiếu 17 mục gồm 5/50 ngẫu nhiên mỗi
+  chủ đề và 7 mục cần chú ý; ghi chú sơ bộ AI không phải người thẩm định.
+
 ## 2026-11-15 — Duyệt D1–D10 có điều kiện; chờ cổng tiền triển khai
 
 Người dùng duyệt thiết kế Từ vựng và thứ tự bốn mục. D2 giữ IPA Anh–Anh sau

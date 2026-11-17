@@ -1,7 +1,11 @@
 # Đề xuất duyệt: năm mục học tập, ưu tiên Từ vựng
 
-**15/11/2026 · D1–D10 đã được duyệt có điều kiện · Chưa triển khai tính năng.**
+**Cập nhật 17/11/2026 · D1–D10 đã duyệt có điều kiện · Có mã lát cắt 2×50 trong
+worktree; Docker demo source-mount, chưa nghiệm thu/build-deploy image (xác nhận
+lần cuối 16/11/2026).**
 Phụ lục [kiểm toán, hợp đồng và bằng chứng kiểm thử](LEARNING_VOCABULARY_DESIGN_2026-11-15.md).
+[Trạng thái bàn giao demo hiện tại](VOCABULARY_DEMO_HANDOFF_2026-11-16.md).
+Các mô tả thiết kế rộng dưới đây không có nghĩa job AI/18 chủ đề đã triển khai.
 
 ## Điều kiện duyệt mới nhất
 

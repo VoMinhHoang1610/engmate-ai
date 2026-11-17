@@ -1,13 +1,32 @@
 # REST API EngMate-AI — hội thoại
 
-## Từ vựng — hợp đồng nháp, chưa triển khai (15/11/2026)
+## Từ vựng — lát cắt 2×50 trong worktree (16/11/2026)
 
-Nhóm `/api/vocabulary/*` **chưa tồn tại trong runtime**. [Thiết kế §4–6](LEARNING_VOCABULARY_DESIGN_2026-11-15.md)
-đề xuất catalog/chi tiết đầy đủ, trạng thái từ theo phiên server, import whitelist,
-chủ đề riêng/create/append/delete và GET job tiến trình. UUID cùng payload replay
-kể cả lỗi, khác payload 409; không tự gọi lại provider khi GET/retry mạng.
-Response whitelist, owner từ phiên, không đưa đáp án TOEIC vào model.
-Đợi duyệt trước khi cập nhật OpenAPI hoặc thêm route.
+Đã có năm route sau trong mã feature, **đang chạy source-mount trong Docker demo
+(xác nhận lần cuối 16/11/2026), chưa build/deploy image**. Tất cả cần phiên đăng
+nhập hiện có; owner lấy từ phiên, không nhận trong body.
+
+| Method | Route dưới `/api/vocabulary` | Kết quả |
+| --- | --- | --- |
+| GET | `/topics` | Version/accent/review_status và metadata hai chủ đề, word_count/levels; không trả words |
+| GET | `/topics/{topic_id}` | Đầy đủ 50 mục từ, không ngầm lọc theo hồ sơ |
+| GET | `/me/states` | `{states: [{topic_id, word_id, remembered, version}], legacy_imported}` |
+| PUT | `/topics/{topic_id}/words/{word_id}/state` | Nhận `{client_request_id: UUID, remembered: boolean, version: integer >= 0}`; trả state/version mới |
+| POST | `/me/import-legacy` | Nhận `{client_request_id: UUID, remembered_keys: string[]}`; trả `{imported, skipped}` |
+
+State mới bắt đầu version 0, mỗi lần lưu hợp lệ tăng 1. Cùng UUID/payload đã
+thành công replay acknowledgement cũ trước kiểm version; UUID đổi payload hoặc
+version cũ trả 409. Receipt và thay đổi state cùng transaction. Không cam kết
+lưu/replay mọi lỗi validation/409 như thiết kế job AI tương lai.
+Import chỉ nhận whitelist 12 khóa, tối đa 12 phần tử, một lần theo account;
+không ghi đè state đã có, kể cả false; giữ nguyên localStorage.
+
+401 khi chưa đăng nhập, 404 topic/word không tồn tại, 422 body/khóa import sai.
+503 `detail.code=vocabulary_not_installed` chỉ khi thiếu đúng bảng vocabulary;
+`vocabulary_mysql_required` khi backend không dùng MySQL. Lỗi DB khác không bị
+đổi thành catalog rỗng. Catalog JSON vẫn đọc khi thiếu bảng mới; response giữ
+chính sách no-store hiện có. Không có route generate/job/chủ đề riêng trong lát
+cắt này, không mở lại API legacy đã loại bỏ.
 
 ## OAuth Google/Facebook — 2026-10-29
 

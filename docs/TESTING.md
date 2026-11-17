@@ -1,5 +1,46 @@
 # Kiểm thử bản hội thoại
 
+## Từ vựng — trạng thái hiện tại tại worktree 16/11/2026
+
+- Baseline sạch đã chạy đúng một lần: frontend **472/472**. Các mục
+  “chưa chạy/chưa triển khai” bên dưới là lịch sử tại thời điểm ghi.
+- Backend full **282/282**, coverage **93,44%**, có MySQL tạm riêng, không skip
+  integration MySQL. Installer M1/M2 additive/idempotent qua.
+- Frontend đầy đủ gần nhất `vocabulary-frontend-label-layout-controlled-02`:
+  **487/490**, **3 timeout**, trong đó **2 lỗi ngoài sáu ngoại lệ App**;
+  Vocabulary **10/11**, VoiceFirst **9/10**, LandingPage **2/2**, App **43/44**.
+  Coverage statements/branches/functions/lines **90,08 / 82,64 / 86,20 /
+  93,17%**; runner exit 1. Không gọi suite hoàn toàn xanh. Lint/type/format qua;
+  build sau CSS đã qua: 2.491 module, Vite 33,11 giây, tổng 72,15 giây, exit 0.
+- Browser Desktop đã kết nối, kiểm fixture 800px, iframe rộng thực đo 1364px
+  và mobile 374px, sáng/tối; đủ 50 từ, tìm không dấu/lọc, quiz 4/5, chọn 5 từ
+  tạo draft không tự gửi, thiếu DB vẫn đọc catalog/khóa lưu, keyboard/focus.
+  Ảnh và kết quả từng bước ở nhật ký. Không dùng fixture chứng minh lưu tài
+  khoản thật hoặc provider TTS thật. Không gọi API trả phí.
+- Browser phát hiện label bị column theo CSS chung; đã duyệt sửa chỉ CSS
+  vocabulary, đo lại 50 label row/min-height 44px/không tràn ngang qua ở
+  desktop sáng và mobile tối. Lint/type/format và regression Vocabulary 11/11
+  đã qua sau sửa.
+- **Gate coverage sau sửa CSS vẫn thất bại:** lượt đầu
+  `vocabulary-frontend-label-layout-01` chỉ **466/490**, **24 timeout**, **19
+  lỗi ngoài sáu ngoại lệ App**; một ca kéo dài **92.804,89 ms** dù hạn 5.000 ms.
+  Sau khi đóng preview/Vite, canary profile/settings qua **4.213 ms**, nên chạy
+  lại có kiểm soát đúng một lượt `...-controlled-02`: **487/490**, **3 timeout**,
+  còn **2 lỗi ngoài ngoại lệ** — Vocabulary `shows both complete topics...`
+  **5.359,7 ms** và VoiceFirst stage 2 `shows all 20...` **5.618,26 ms**; ca App
+  server-bound **5.494,86 ms** thuộc ngoại lệ đã duyệt. Coverage **90,08 / 82,64
+  / 86,20 / 93,17%** (vẫn trên ngưỡng 80% từng chỉ số), CPU mean **64,77%**, p95
+  **100%**, 149 mẫu >=90%, RAM tối thiểu **8.957 MiB**. Gate test **chưa đạt**;
+  đã dừng, không chạy lại full suite. **Build sau CSS đã qua** (2.491 module,
+  Vite 33,11 giây). Không tăng timeout/giảm assertion hoặc retry suite nguyên
+  trạng.
+- Không tăng timeout, giảm assertion/coverage, retry full suite nguyên trạng
+  để chọn lượt xanh. CPU/RAM kiểm trước việc nặng, một worker/BelowNormal,
+  không chạy browser/build/test nặng đồng thời. Lỗi mới ngoài ngoại lệ phải dừng.
+
+[Bằng chứng, lỗi công cụ và giới hạn](VOCABULARY_TEST_INVESTIGATION_2026-11-15.md).
+[Phiếu rà nội dung](VOCABULARY_CONTENT_REVIEW_2026-11-16.csv) chưa có người duyệt.
+
 ## Cổng tiền triển khai Từ vựng sau duyệt — 15/11/2026
 
 D1–D10 đã duyệt có điều kiện. [Lệnh baseline sạch và MySQL test riêng](VOCABULARY_PREFLIGHT_2026-11-15.md)
