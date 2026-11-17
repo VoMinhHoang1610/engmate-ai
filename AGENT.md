@@ -59,7 +59,7 @@ Tài liệu này quy định cách agent (AI lập trình) phải làm việc tr
 
 ## 7. Quy tắc về tài liệu và nhật ký tiến trình
 Cập nhật tài liệu là một phần của công việc, không phải việc làm thêm. Trước khi báo hoàn thành, cập nhật những file liên quan trong `docs/`:
-- `PROGRESS.md`: thêm mục mới ở **đầu file** gồm ngày, giai đoạn/tác vụ, việc đã làm, file đã thay đổi, kết quả test và coverage, vấn đề tồn đọng, việc tiếp theo. Không xóa mục cũ.
+- `CHANGELOG.md`: thêm mục mới ở **đầu file** gồm ngày, giai đoạn/tác vụ, việc đã làm, file đã thay đổi, kết quả test và coverage, vấn đề tồn đọng, việc tiếp theo; bổ sung quyết định vào cuối mục liên quan trong `DECISIONS.md`. Giữ lịch sử.
 - `REQUIREMENTS.md`: cập nhật trạng thái yêu cầu (Chưa làm / Đang làm / Xong / Đã test).
 - `ARCHITECTURE.md`, `API.md`: cập nhật khi đổi kiến trúc, mô hình dữ liệu hoặc endpoint.
 - `TESTING.md`: cập nhật khi thêm loại test hoặc cách chạy mới; giữ bảng truy vết yêu cầu → test.
@@ -94,6 +94,6 @@ Cập nhật tài liệu là một phần của công việc, không phải vi�
 - [ ] Lint, type-check và toàn bộ test liên quan đều qua; có số liệu thật.
 - [ ] Có test cho hành vi mới hoặc lỗi vừa sửa.
 - [ ] Không có bí mật, file tạm, code gỡ lỗi hoặc thay đổi ngoài phạm vi trong `git diff`.
-- [ ] Tài liệu và `PROGRESS.md` đã cập nhật.
+- [ ] Tài liệu, `CHANGELOG.md` và `DECISIONS.md` đã cập nhật theo phạm vi thay đổi.
 - [ ] Không còn TODO chưa ghi nhận; rủi ro và việc tồn đọng đã nêu rõ.
 - [ ] Đã tóm tắt cho người dùng và chờ xác nhận trước khi sang bước tiếp theo.

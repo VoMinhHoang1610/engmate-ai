@@ -12,7 +12,7 @@ Khung được dựng lại theo yêu cầu người dùng ngày 2026-10-04.
 - Lộ trình dùng catalog chuẩn `backend/app/content/toeic.v1.json`, prompt `lesson.v1.txt`, liên kết hội thoại `PromptVersion=toeic.v1` và bốn bảng `engmate_learning_*`. SQL khởi tạo mới đã có đủ 13 bảng; database cũ thiếu bảng lộ trình dùng `scripts/install_learning.py`, không bootstrap lại database người dùng. Hoàn thành bài dựa trên lượt luyện và kiểm tra server; không quy đổi thành điểm TOEIC hoặc phát âm.
 - Thêm test cùng tính năng: pytest unit/integration, Vitest + React Testing Library; E2E khi có luồng nghiệp vụ.
 - Chạy `python scripts/manage.py lint`, `test`, `coverage`, `build` trước khi bàn giao. Không báo qua nếu chưa chạy thật.
-- Cập nhật `docs/PROGRESS.md` bằng mục mới ở đầu file; giữ lịch sử. Cập nhật yêu cầu, API, kiến trúc và changelog khi thay đổi tương ứng.
+- Cập nhật `docs/CHANGELOG.md` bằng mục mới ở đầu file và bổ sung quyết định vào cuối mục liên quan trong `docs/DECISIONS.md`; giữ lịch sử. Cập nhật yêu cầu, API và kiến trúc khi thay đổi tương ứng.
 - Không hard-code secret hoặc commit `.env`. Commit theo Conventional Commits; không tự push.
 - Phạm vi gồm tài khoản, lịch sử, Chat streaming và Voice Realtime có ngắt lời; giữ nguyên nhận diện giao diện gốc. Phiên thoại/registry hủy hiện dùng một backend worker; không bật nhiều worker trước khi có coordination dùng chung. Xem trạng thái kiểm chứng thật tại `docs/REQUIREMENTS.md`.
 - Hướng dẫn chạy nằm trong README. Windows dùng `make.cmd` hoặc Python task runner; GNU Make là tùy chọn.

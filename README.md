@@ -234,7 +234,7 @@ Lần chạy do agent thiết lập dùng SSH nền và khóa riêng tạm thờ
 ## Tài liệu
 
 - [REST API](docs/API.md), [kiến trúc](docs/ARCHITECTURE.md), [kiểm thử](docs/TESTING.md).
-- [Yêu cầu và trạng thái còn thiếu](docs/REQUIREMENTS.md), [nhật ký](docs/PROGRESS.md), [quyết định](docs/DECISIONS.md).
+- [Yêu cầu và trạng thái còn thiếu](docs/REQUIREMENTS.md), [nhật ký thay đổi](docs/CHANGELOG.md), [quyết định](docs/DECISIONS.md).
 - Tuân thủ [AGENT.md](AGENT.md) và [CLAUDE.md](CLAUDE.md). Nhánh tiếng Việt không dấu; mô tả commit bằng tiếng Việt, giữ tiền tố Conventional Commits. Không tự commit/push khi chưa được yêu cầu.
 
 ## Rà prompt và thoại — trạng thái 16/11/2026

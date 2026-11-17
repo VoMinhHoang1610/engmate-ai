@@ -14,6 +14,27 @@ byte. Không chạy test trong checkout, không suy ra nghiệm thu. C3 `4e0698f
 WIP giữ nguyên, chưa push. [Bằng chứng và kế hoạch](CHANGESET_PLAN.md).
 Judge chưa phải nghiệm thu; v7 giữ hash khóa. Resume sinh và Pha C/D/E vẫn hoãn.
 
+### 2026-11-17 — C5: dữ liệu kế thừa và bản chính thức của PROMPT_LOCK
+
+Theo xác nhận của người dùng sau rà soát, 19 file results/CSV đã được Git theo
+dõi và kế thừa từ `d0adeaf` chỉ chứa dữ liệu giả của corpus. Đối chiếu SHA-256
+trên toàn bộ tập cảnh báo cho thấy 57/61 vị trí trùng giá trị trong corpus/test;
+ba vị trí còn lại đã được người dùng xem. Email trong `results.jsonl` cục bộ
+được phân loại riêng; 57/61 không phải tỷ lệ của riêng 19 file kế thừa và không
+là bằng chứng độc lập về nguồn gốc của mọi nội dung trong file.
+
+Các bản `results.jsonl` chỉ có cục bộ không bao giờ được commit; quyết định này
+không đưa thêm raw results/CSV vào Git. Không đưa bản sao lưu raw lên nơi chia
+sẻ khi chưa che email; giữ nguyên bản gốc cục bộ để đối chiếu.
+
+Bản chính thức của `results/final-default-vi-20261113/PROMPT_LOCK.json` (tính từ
+`backend/evals/scope/`) là bản LF trong HEAD, SHA-256
+`46187d9c60f4c680c196bb9577cef6245937f4c48e837ea29ce514a8d0b030ce`.
+Bản này tương đương JSON với bản CRLF đã khóa, SHA-256
+`0ca1759214bb7753b09c4f66ccbf324f2551b694fbfeca153b22bf22fc6aafc3`.
+Khác biệt hash là khác biệt byte xuống dòng. C5 chỉ ghi nhận quyết định, không
+sửa file lock, `.gitattributes` hoặc thêm lock vào quy tắc bảo toàn byte.
+
 ## 2026-11-15 — Bảo toàn trước stage, nhánh scope/voice riêng
 
 Sao lưu 151 file ngoài repo và kiểm hash gốc/copy; chạy lệnh switch được duyệt
