@@ -1,5 +1,17 @@
 # Prompt và AI
 
+## Runtime v8 — 20/11/2026, chưa nghiệm thu bằng provider thật
+
+Runtime chọn `persona.v8`; v7 và các thành phần ghép của chiến dịch v7 giữ
+nguyên. V8 trả danh sách tối đa 30 từ, mặc định 10; có ví dụ khi N≤10,
+N=11–30 dùng bản gọn để dành ngân sách thinking trong cap 2.048 hiện có.
+Chat dùng văn bản thuần; voice xem trước tối đa 3 từ rồi hỏi xem đủ bằng chat.
+Không tạo bộ từ ôn, không gợi ý tính năng AI của trang Từ vựng.
+
+**V8 chưa chạy eval/smoke thật; kết quả eval v7 không áp dụng cho v8; chưa merge.**
+Xem [thiết kế, hash, test và bộ ca Cổng 2](PROMPT_RELAX_V8_2026-11-20.md).
+Các phần khóa/chính sách v7 bên dưới là hồ sơ của chiến dịch v7, vẫn giữ nguyên.
+
 <a id="current-policy"></a>
 
 ## Chính sách cuối đã khóa — 13/11/2026

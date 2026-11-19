@@ -30,8 +30,9 @@ from app.services.common import (
 )
 from app.services.voice_identity import voice_instructions
 
-PROMPT_VERSION = "persona.v7"
+PROMPT_VERSION = "persona.v8"
 PROMPT_PATH = Path(__file__).resolve().parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
+NATIVE_VOICE_PROMPT_PATH = PROMPT_PATH.with_name("native-voice.v1.txt")
 TEXT_CONTEXT_MESSAGES = 20
 VOICE_CONTEXT_MESSAGES = 12
 TEXT_CONTEXT_CHARS = 32000
@@ -132,7 +133,9 @@ class ConversationService(PersistenceService):
 
                 prompt += learning_context(repo, user_id, identity)
             return (
-                prompt + f"\nLearner level: {conversation['CefrLevel']}",
+                prompt
+                + read_prompt(NATIVE_VOICE_PROMPT_PATH)
+                + f"\nLearner level: {conversation['CefrLevel']}",
                 self.context(repo, identity, voice=True),
             )
 
