@@ -11,10 +11,14 @@ from sqlalchemy import Connection, and_, select
 from sqlalchemy.exc import DBAPIError
 
 from app.db.database import Database, Record
-from app.db.vocabulary import metadata, requests, word_states
+from app.db.vocabulary import custom_words, metadata, requests, word_states
 from app.schemas.vocabulary import LegacyImport, WordStateUpdate
 from app.services.common import now
-from app.services.vocabulary_catalog import LEGACY_KEYS, require_word
+from app.services.vocabulary_catalog import (
+    LEGACY_KEYS,
+    require_word,
+    vocabulary_catalog,
+)
 
 IMPORT_MARKER = "legacy-import-v1"
 
@@ -107,11 +111,30 @@ class VocabularyService:
         self, user_id: int, topic_id: str, word_id: str, data: WordStateUpdate
     ) -> Record:
         """Replay before version checks; a new UUID cannot overwrite stale state."""
-        require_word(topic_id, word_id)
+        custom = False
+        try:
+            require_word(topic_id, word_id)
+        except HTTPException:
+            authored_topic = any(
+                topic.id == topic_id for topic in vocabulary_catalog().topics
+            )
+            if authored_topic or topic_id.startswith("legacy-"):
+                raise
+            custom = True
         payload = ["state", topic_id, word_id, data.remembered, data.version]
         digest = hashlib.sha256(json.dumps(payload).encode()).hexdigest()
         request_id = str(data.client_request_id)
         with self.transaction(user_id) as connection:
+            if custom:
+                owned_word = connection.execute(
+                    select(custom_words.c.WordId).where(
+                        custom_words.c.UserId == user_id,
+                        custom_words.c.TopicId == topic_id,
+                        custom_words.c.WordId == word_id,
+                    )
+                ).first()
+                if owned_word is None:
+                    raise HTTPException(404, "Vocabulary word not found.")
             receipt = self.receipt(connection, user_id, request_id)
             if receipt:
                 if receipt["PayloadHash"] != digest:

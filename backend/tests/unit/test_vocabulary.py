@@ -98,6 +98,10 @@ def test_state_contract_rejects_owner_injection_and_boolean_versions() -> None:
     [
         (1146, "engmate_vocabulary_word_states", "vocabulary_not_installed"),
         (1146, "engmate_vocabulary_requests", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_custom_topics", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_custom_words", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_generation_jobs", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_usage", "vocabulary_not_installed"),
         (1146, "NguoiDung", None),
         (1146, "engmate_vocabulary_word_states_other", None),
         (1045, "engmate_vocabulary_word_states", None),

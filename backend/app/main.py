@@ -5,7 +5,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -20,7 +21,7 @@ from app.api.vocabulary_routes import router as vocabulary_router
 from app.api.voice_routes import router as voice_router
 from app.core.admission import Admission
 from app.core.config import Settings, get_settings
-from app.core.request_limits import RequestLimits
+from app.core.request_limits import AuthLimiter, RequestLimits
 from app.core.voice_timing import VoiceTimingMiddleware
 from app.db.database import Database
 from app.services.blaze_stt import BlazeSTTManager
@@ -28,6 +29,10 @@ from app.services.gemini_voice import GeminiVoiceManager
 from app.services.oauth import OAuthService
 from app.services.realtime import RealtimeManager
 from app.services.speech import VoiceCatalogCache
+from app.services.vocabulary_generation import (
+    VocabularyGenerationService,
+    VocabularyJobManager,
+)
 
 
 def create_app(
@@ -73,12 +78,20 @@ def create_app(
             application.state.speech_http = speech_http
             application.state.gemini_http = gemini_http
             try:
+                await run_in_threadpool(
+                    application.state.vocabulary_generation.recover_stale_jobs
+                )
+            except (DBAPIError, HTTPException):
+                # Readiness reports missing tables; startup must never install them.
+                pass
+            try:
                 yield
             finally:
                 try:
                     await application.state.voice.shutdown()
                 finally:
                     try:
+                        await application.state.vocabulary_jobs.shutdown()
                         await application.state.blaze_stt.shutdown()
                         await application.state.speech_admission.shutdown()
                         await application.state.chat_admission.shutdown()
@@ -105,6 +118,16 @@ def create_app(
     application.state.blaze_stt = BlazeSTTManager(config)
     application.state.speech_http = None
     application.state.gemini_http = None
+    application.state.vocabulary_jobs = VocabularyJobManager(config)
+    application.state.vocabulary_limiter = AuthLimiter(
+        config.vocabulary_generations_per_minute
+    )
+    application.state.vocabulary_generation = VocabularyGenerationService(
+        db,
+        config,
+        application.state.vocabulary_jobs,
+        application.state.vocabulary_limiter,
+    )
     application.state.voice = (
         GeminiVoiceManager(config, db)
         if config.voice_provider == "native" and config.llm_provider == "gemini"

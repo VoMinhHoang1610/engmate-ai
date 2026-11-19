@@ -8,6 +8,50 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+def plain_text(value: str) -> str:
+    """Keep generated content plain text; reject hidden controls and markup."""
+    if value != value.strip() or any(
+        unicodedata.category(char).startswith("C") or char in "<>" for char in value
+    ):
+        raise ValueError("Expected trimmed plain text without controls")
+    return unicodedata.normalize("NFC", value)
+
+
+INJECTION_MARKERS = (
+    "ignore previous",
+    "ignore all previous",
+    "ignore the previous",
+    "system prompt",
+    "developer message",
+    "you are now",
+    "jailbreak",
+    "disregard",
+    "follow these instructions",
+    "bỏ qua hướng dẫn",
+    "bỏ qua mọi hướng dẫn",
+    "lời nhắc hệ thống",
+    "từ bây giờ bạn là",
+)
+
+
+def clean_topic(value: str) -> str:
+    """Normalize a user topic and reject controls, markup and prompt steering."""
+    topic = unicodedata.normalize("NFC", value)
+    topic = " ".join(topic.split())
+    if not 2 <= len(topic) <= 80:
+        raise ValueError("Topic must contain 2 to 80 characters")
+    if any(
+        unicodedata.category(char).startswith("C") or char in "<>{}`" for char in topic
+    ):
+        raise ValueError("Topic must be plain text without controls or markup")
+    lowered = topic.casefold()
+    if any(marker in lowered for marker in INJECTION_MARKERS):
+        raise ValueError("Topic contains a prompt-control phrase")
+    if re.search(r"(?:https?://|www\.|\S+@\S+\.\S+)", topic, re.IGNORECASE):
+        raise ValueError("Topic must not contain links or email addresses")
+    return topic
+
+
 class VocabularyInput(BaseModel):
     """Reject unexpected owner fields and implicit value coercion."""
 
@@ -28,13 +72,9 @@ class Word(VocabularyInput):
 
     @field_validator("term", "ipa", "meaning_vi", "example_en", "example_vi")
     @classmethod
-    def plain_text(cls, value: str) -> str:
+    def plain_content(cls, value: str) -> str:
         """Keep content plain text; reject hidden controls and markup."""
-        if value != value.strip() or any(
-            unicodedata.category(char).startswith("C") or char in "<>" for char in value
-        ):
-            raise ValueError("Expected trimmed plain text without controls")
-        return unicodedata.normalize("NFC", value)
+        return plain_text(value)
 
     @model_validator(mode="after")
     def example_contains_term(self) -> Self:
@@ -120,3 +160,80 @@ class LegacyImport(VocabularyInput):
     remembered_keys: list[Annotated[str, Field(min_length=1, max_length=120)]] = Field(
         max_length=12
     )
+
+
+class GenerationCreate(VocabularyInput):
+    """Request a private generated topic without claiming an owner or title."""
+
+    client_request_id: UUID
+    topic: str = Field(min_length=2, max_length=200)
+    target_count: Literal[30, 60] = 30
+
+    @field_validator("topic")
+    @classmethod
+    def sanitized_topic(cls, value: str) -> str:
+        """Normalize and screen untrusted topic text before any persistence."""
+        return clean_topic(value)
+
+
+class GeneratedWord(VocabularyInput):
+    """One model-produced word; the server assigns its stable ID."""
+
+    term: str = Field(min_length=1, max_length=80)
+    part_of_speech: Literal["noun", "verb", "adjective", "adverb", "phrase"]
+    ipa: str = Field(min_length=3, max_length=120, pattern=r"^/[^/]+/$")
+    meaning_vi: str = Field(min_length=2, max_length=180)
+    example_en: str = Field(min_length=5, max_length=220)
+    example_vi: str = Field(min_length=5, max_length=260)
+    cefr: Literal["A1", "A2", "B1", "B2", "C1", "C2"]
+
+
+class GeneratedTopic(VocabularyInput):
+    """Display metadata must come from validated generated output."""
+
+    title_vi: str = Field(min_length=2, max_length=60)
+    title_en: str = Field(min_length=2, max_length=60)
+    description: str = Field(min_length=5, max_length=240)
+
+    @field_validator("title_vi", "title_en")
+    @classmethod
+    def clean_title(cls, value: str) -> str:
+        """Apply the user-topic sanitizer so generated titles are inert text."""
+        return clean_topic(value)
+
+    @field_validator("description")
+    @classmethod
+    def plain_description(cls, value: str) -> str:
+        """Keep generated descriptions trimmed plain text."""
+        return plain_text(value)
+
+
+class GeneratedBatch(VocabularyInput):
+    """Strict provider envelope; malformed or partial batches are recoverable."""
+
+    status: Literal["ok", "refused", "needs_clarification"]
+    topic: GeneratedTopic | None = None
+    words: list[GeneratedWord] = Field(default_factory=list, max_length=6)
+    reason_code: str | None = Field(default=None, max_length=40)
+    suggestions: list[str] = Field(default_factory=list, max_length=3)
+
+
+class GenerationJobResponse(VocabularyInput):
+    """Stable polling contract; never includes the submitted topic or raw output."""
+
+    request_id: str
+    status: Literal[
+        "pending",
+        "running",
+        "completed",
+        "failed",
+        "cancelled",
+        "deleted",
+    ]
+    target_count: int
+    validated_count: int
+    batch_size: int
+    poll_after_ms: int
+    topic_id: str | None = None
+    error_code: str | None = None
+    retry_after: int | None = None

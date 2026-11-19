@@ -48,6 +48,15 @@ class Settings(BaseModel):
     speech_max_jobs_per_user: int = Field(default=4, ge=1, le=16)
     chat_max_jobs: int = Field(default=16, ge=1, le=128)
     chat_max_jobs_per_user: int = Field(default=2, ge=1, le=16)
+    vocabulary_daily_jobs: int = Field(default=3, ge=1, le=100)
+    vocabulary_daily_provider_calls: int = Field(default=30, ge=2, le=1000)
+    vocabulary_max_jobs: int = Field(default=2, ge=1, le=32)
+    vocabulary_max_jobs_per_user: int = Field(default=1, ge=1, le=4)
+    vocabulary_generations_per_minute: int = Field(default=2, ge=1, le=60)
+    vocabulary_batch_size: int = Field(default=6, ge=4, le=10)
+    vocabulary_max_words: int = Field(default=60, ge=30, le=60)
+    vocabulary_job_deadline_seconds: int = Field(default=660, ge=60, le=1800)
+    vocabulary_job_retention_days: int = Field(default=30, ge=1, le=365)
     voice_timing_logs: bool = False
     database_odbc_connection: SecretStr | None = None
     database_mysql_url: SecretStr | None = None
@@ -162,6 +171,25 @@ def get_settings() -> Settings:
             "speech_max_jobs_per_user": os.getenv("SPEECH_MAX_JOBS_PER_USER", "4"),
             "chat_max_jobs": os.getenv("CHAT_MAX_JOBS", "16"),
             "chat_max_jobs_per_user": os.getenv("CHAT_MAX_JOBS_PER_USER", "2"),
+            "vocabulary_daily_jobs": os.getenv("VOCABULARY_DAILY_JOBS", "3"),
+            "vocabulary_daily_provider_calls": os.getenv(
+                "VOCABULARY_DAILY_PROVIDER_CALLS", "30"
+            ),
+            "vocabulary_max_jobs": os.getenv("VOCABULARY_MAX_JOBS", "2"),
+            "vocabulary_max_jobs_per_user": os.getenv(
+                "VOCABULARY_MAX_JOBS_PER_USER", "1"
+            ),
+            "vocabulary_generations_per_minute": os.getenv(
+                "VOCABULARY_GENERATIONS_PER_MINUTE", "2"
+            ),
+            "vocabulary_batch_size": os.getenv("VOCABULARY_BATCH_SIZE", "6"),
+            "vocabulary_max_words": os.getenv("VOCABULARY_MAX_WORDS", "60"),
+            "vocabulary_job_deadline_seconds": os.getenv(
+                "VOCABULARY_JOB_DEADLINE_SECONDS", "660"
+            ),
+            "vocabulary_job_retention_days": os.getenv(
+                "VOCABULARY_JOB_RETENTION_DAYS", "30"
+            ),
             "voice_timing_logs": os.getenv("VOICE_TIMING_LOGS", "false"),
             "database_odbc_connection": os.getenv("DATABASE_ODBC_CONNECTION") or None,
             "database_mysql_url": os.getenv("DATABASE_MYSQL_URL") or None,

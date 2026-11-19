@@ -18,12 +18,13 @@ from fastapi import (
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select
 
 from app.api.dependencies import get_llm_client
 from app.core.config import Settings
 from app.core.voice_timing import VoiceTimings
-from app.db.database import Record
+from app.db.database import Database, Record
+from app.db.vocabulary import VOCABULARY_TABLE_NAMES
 from app.llm.base import LLMClient
 from app.schemas.chat import (
     MAX_ID,
@@ -89,6 +90,25 @@ async def chat_slot(user: User, request: Request) -> AsyncIterator[None]:
         yield
 
 
+def vocabulary_status(database: Database) -> Record:
+    """Report vocabulary installation without changing core readiness semantics."""
+    if not database.mysql:
+        return {"status": "not_supported", "missing": []}
+    try:
+        with database.transaction() as connection:
+            schema = inspect(connection)
+            missing = [
+                name for name in VOCABULARY_TABLE_NAMES if not schema.has_table(name)
+            ]
+    except Exception:
+        # A readiness probe must answer with a state, not leak a DB error.
+        return {"status": "unknown", "missing": []}
+    return {
+        "status": "not_installed" if missing else "ok",
+        "missing": missing,
+    }
+
+
 @router.get("/ready", tags=["health"])
 def ready(request: Request) -> Record:
     """Check only chat tables; provider readiness is separate from liveness."""
@@ -109,6 +129,7 @@ def ready(request: Request) -> Record:
         "schema_version": version,
         "provider": settings.llm_provider,
         "is_mock": settings.llm_provider == "mock",
+        "vocabulary": vocabulary_status(database),
     }
 
 
