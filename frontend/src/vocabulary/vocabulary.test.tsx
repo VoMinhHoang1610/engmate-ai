@@ -852,4 +852,28 @@ describe('AI custom topics', () => {
       await custom.findByText('Chưa có chủ đề AI nào. Hãy nhập chủ đề ở trên để bắt đầu.'),
     ).toBeInTheDocument();
   });
+
+  it('never stores the submitted topic in browser storage', async () => {
+    vi.useFakeTimers();
+    const topic = 'chủ đề bí mật 2026';
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    try {
+      render(<Harness />);
+      await flushTimers();
+      const custom = within(screen.getByRole('region', { name: 'Chủ đề AI của tôi' }));
+      await startCustomJob(custom, topic);
+      const localValues = [...Array(localStorage.length)].map((_, index) =>
+        localStorage.getItem(localStorage.key(index)!),
+      );
+      const sessionValues = [...Array(sessionStorage.length)].map((_, index) =>
+        sessionStorage.getItem(sessionStorage.key(index)!),
+      );
+      expect(localValues.join('\n')).not.toContain(topic);
+      expect(sessionValues.join('\n')).not.toContain(topic);
+      expect(setItem).not.toHaveBeenCalledWith(expect.anything(), expect.stringContaining(topic));
+    } finally {
+      setItem.mockRestore();
+      vi.useRealTimers();
+    }
+  });
 });
