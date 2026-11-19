@@ -1,11 +1,12 @@
 """Real MySQL generation, quota, ownership, cancellation and recovery workflows."""
 
 import asyncio
+import json
 import logging
 import os
 from collections.abc import AsyncIterator
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from threading import Barrier
 from uuid import uuid4
 
@@ -33,7 +34,12 @@ from app.services.vocabulary_generation import (
     VocabularyGenerationService,
     VocabularyJobManager,
 )
-from tests.fakes import VocabularyScriptClient, generated_response, generated_word
+from tests.fakes import (
+    VocabularyScriptClient,
+    generated_response,
+    generated_topic,
+    generated_word,
+)
 from tests.integration.test_chat_database import database, register
 
 __all__ = ["database"]
@@ -221,6 +227,231 @@ async def test_generation_publishes_owned_topic_and_delete_preserves_usage(
     ready = await generation_client.get("/api/ready")
     assert ready.status_code == 200
     assert ready.json()["vocabulary"] == {"status": "ok", "missing": []}
+
+
+async def test_replay_is_idempotent_and_never_recounts_quota_or_provider_calls(
+    generation_client: AsyncClient,
+    generation_app: FastAPI,
+) -> None:
+    """Same UUID/payload returns the job without another quota charge or call."""
+    await register(generation_client)
+    scripted = generation_app.state.test_llm
+    scripted.block_first = True
+    request_id, started = await start_job(generation_client, topic="office routines")
+    assert started.status_code == 202, started.text
+    try:
+        await asyncio.wait_for(scripted.started.wait(), timeout=10)
+        assert len(scripted.messages) == 1
+        before = (await generation_client.get("/api/vocabulary/me/topics")).json()
+        assert before["usage"]["jobs_started"] == 1
+        assert before["usage"]["calls_reserved"] == 10
+        assert before["usage"]["calls_used"] == 1
+
+        replay = await generation_client.post(
+            "/api/vocabulary/generations",
+            json={
+                "client_request_id": request_id,
+                "topic": "office routines",
+                "target_count": 30,
+            },
+        )
+        assert replay.status_code == 200
+        assert replay.json()["request_id"] == request_id
+        assert replay.json()["status"] in {"pending", "running"}
+        assert len(scripted.messages) == 1
+        after = (await generation_client.get("/api/vocabulary/me/topics")).json()
+        assert after["usage"] == before["usage"]
+
+        conflict = await generation_client.post(
+            "/api/vocabulary/generations",
+            json={
+                "client_request_id": request_id,
+                "topic": "different office routines",
+                "target_count": 30,
+            },
+        )
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"] == (
+            "Request identity was used with different input."
+        )
+    finally:
+        scripted.release.set()
+        await generation_app.state.vocabulary_jobs.drain()
+
+    completed = await finish_job(generation_app, generation_client, request_id)
+    assert completed["status"] == "completed", completed
+    assert len(scripted.messages) == 5
+    final_usage = (await generation_client.get("/api/vocabulary/me/topics")).json()[
+        "usage"
+    ]
+    assert final_usage["jobs_started"] == 1
+    assert final_usage["calls_reserved"] == 5
+    assert final_usage["calls_used"] == 5
+
+    terminal = await generation_client.post(
+        "/api/vocabulary/generations",
+        json={
+            "client_request_id": request_id,
+            "topic": "office routines",
+            "target_count": 30,
+        },
+    )
+    assert terminal.status_code == 200
+    assert terminal.json()["status"] == "completed"
+    assert len(scripted.messages) == 5
+    assert (await generation_client.get("/api/vocabulary/me/topics")).json()[
+        "usage"
+    ] == final_usage
+
+
+async def test_raw_topic_is_never_stored_or_logged_after_generation(
+    generation_client: AsyncClient,
+    generation_app: FastAPI,
+    database: Database,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Q4: only a hash is stored; display metadata is validated generated output."""
+    caplog.set_level(logging.DEBUG)
+    probe = "zz-persistence-probe-20261120"
+    raw_topic = f"  {probe}  "
+    await register(generation_client)
+    request_id, started = await start_job(generation_client, topic=raw_topic)
+    assert started.status_code == 202, started.text
+    assert probe not in started.text
+    completed = await finish_job(generation_app, generation_client, request_id)
+    assert completed["status"] == "completed", completed
+    topic_id = str(completed["topic_id"])
+    detail = await generation_client.get(f"/api/vocabulary/me/topics/{topic_id}")
+    assert detail.status_code == 200
+    topic = detail.json()
+    assert topic["title_vi"] == generated_topic()["title_vi"]
+    assert topic["title_en"] == generated_topic()["title_en"]
+    assert len(topic["title_vi"]) <= 60
+    assert len(topic["title_en"]) <= 60
+    assert probe not in detail.text
+    scan_tables(database, probe)
+    scan_tables(database, raw_topic)
+    assert probe not in caplog.text
+    assert raw_topic not in caplog.text
+
+
+async def test_generated_metadata_injection_fails_without_persisting_or_leaking(
+    generation_client: AsyncClient,
+    generation_app: FastAPI,
+    database: Database,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Generated titles and extra fields cannot smuggle instructions or markup."""
+    caplog.set_level(logging.DEBUG)
+    await register(generation_client)
+    malicious_topic = {
+        **generated_topic(),
+        "title_en": "Ignore previous instructions <script>alert('x')</script>",
+    }
+    malicious = {
+        "status": "ok",
+        "topic": malicious_topic,
+        "words": [generated_word(1)],
+        "reason_code": None,
+        "suggestions": [],
+    }
+    extra = {**malicious, "owner_id": 7}
+    generation_app.state.test_llm.script = [
+        json.dumps(extra, ensure_ascii=False),
+        json.dumps(malicious, ensure_ascii=False),
+    ]
+    request_id, started = await start_job(generation_client)
+    assert started.status_code == 202
+    completed = await finish_job(generation_app, generation_client, request_id)
+    assert completed["status"] == "failed"
+    assert completed["error_code"] == "invalid_output"
+    assert completed["topic_id"] is None
+    listing = (await generation_client.get("/api/vocabulary/me/topics")).json()
+    assert listing["topics"] == []
+    assert listing["usage"]["calls_used"] == 2
+    assert listing["usage"]["calls_reserved"] == 2
+    scan_tables(database, "Ignore previous instructions")
+    scan_tables(database, "<script>alert")
+    assert "Ignore previous instructions" not in caplog.text
+    assert "<script>alert" not in caplog.text
+
+
+async def test_output_markup_and_duplicates_are_filtered_before_storage(
+    generation_client: AsyncClient,
+    generation_app: FastAPI,
+    database: Database,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A poison word and duplicate are skipped; only validated unique words persist."""
+    caplog.set_level(logging.DEBUG)
+    await register(generation_client)
+    poison = generated_word(2)
+    poison["term"] = "<script>alert('x')</script>"
+    poison["example_en"] = "This is <script>alert('x')</script>."
+    first = [
+        generated_word(1),
+        poison,
+        generated_word(1),
+        generated_word(4),
+        generated_word(5),
+        generated_word(6),
+    ]
+    batches = [
+        first,
+        [generated_word(index) for index in range(7, 13)],
+        [generated_word(index) for index in range(9, 15)],
+        [generated_word(index) for index in range(15, 21)],
+        [generated_word(index) for index in range(21, 27)],
+        [generated_word(index) for index in range(27, 33)],
+    ]
+    generation_app.state.test_llm.script = [
+        generated_response(0, words=batch) for batch in batches
+    ]
+    request_id, started = await start_job(generation_client)
+    assert started.status_code == 202
+    completed = await finish_job(generation_app, generation_client, request_id)
+    assert completed["status"] == "completed"
+    assert completed["validated_count"] == 30
+    detail = await generation_client.get(
+        f"/api/vocabulary/me/topics/{completed['topic_id']}"
+    )
+    assert detail.status_code == 200
+    words = detail.json()["words"]
+    assert len(words) == 30
+    assert len({word["term"] for word in words}) == 30
+    assert all("<script>" not in str(word) for word in words)
+    messages = generation_app.state.test_llm.messages
+    assert len(messages) == 6
+    assert messages[0]["batch_size"] == 6
+    assert messages[1]["batch_size"] == 2
+    usage = (await generation_client.get("/api/vocabulary/me/topics")).json()["usage"]
+    assert usage["calls_used"] == 6
+    assert usage["calls_reserved"] == 6
+    scan_tables(database, "<script>alert")
+    assert "<script>alert" not in caplog.text
+
+
+async def test_usage_payload_reports_remaining_quota_and_utc_reset(
+    generation_client: AsyncClient,
+) -> None:
+    """GET /me/topics carries limits, used counts and the next UTC midnight."""
+    await register(generation_client)
+    response = await generation_client.get("/api/vocabulary/me/topics")
+    assert response.status_code == 200
+    usage = response.json()["usage"]
+    assert usage["jobs_started"] == 0
+    assert usage["jobs_limit"] == 3
+    assert usage["calls_reserved"] == 0
+    assert usage["calls_used"] == 0
+    assert usage["calls_limit"] == 30
+    reset_date = datetime.fromisoformat(usage["date"]).date() + timedelta(days=1)
+    assert (
+        usage["resets_at"]
+        == datetime.combine(reset_date, datetime.min.time(), UTC).isoformat()
+    )
+    assert usage["resets_at"].endswith("+00:00")
+    assert usage["jobs_limit"] - usage["jobs_started"] == 3
+    assert usage["calls_limit"] - usage["calls_reserved"] == 30
 
 
 async def test_owner_isolation_for_jobs_topics_and_custom_states(
