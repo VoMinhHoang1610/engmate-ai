@@ -1,4 +1,5 @@
 import { apiFetch } from '../api/database';
+import { assistantSpeechText } from '../chat/formatAssistantText';
 /** Session-only speech cache; stopping playback does not discard reusable audio. */
 const MAX_CLIPS = 32;
 const MAX_CACHE_BYTES = 16 * 1024 * 1024;
@@ -46,6 +47,7 @@ function loiSpeech(status: number): string {
 }
 
 function speechBody(text: string, rate: number) {
+  text = assistantSpeechText(text);
   const preference = Number(document.documentElement.dataset.speechRate ?? 1);
   const language = /[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/i.test(
     text.normalize('NFC'),

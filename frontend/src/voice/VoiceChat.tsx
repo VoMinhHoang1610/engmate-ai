@@ -5,6 +5,7 @@ import { BlazeVoiceSession } from './blaze';
 import { liveVoices, type VoiceCatalog } from './catalog';
 import { BieuTuong } from '../components/BieuTuong';
 import { AudioSettingsMenu } from '../components/AudioSettingsMenu';
+import { AssistantText } from '../chat/AssistantText';
 import { getSpeechPreferences, setSpeechVoice, useSpeechPreferences } from '../speech/preferences';
 
 const ERROR_NOTICE_DURATION_MS = 5000;
@@ -438,7 +439,7 @@ export function VoiceChat({
           )}
           {active && caption && !onCaption && (
             <p className="chat-disclaimer" aria-live="polite">
-              {caption}
+              <AssistantText text={caption} />
             </p>
           )}
           {error && (

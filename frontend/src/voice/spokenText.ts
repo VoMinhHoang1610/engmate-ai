@@ -1,3 +1,5 @@
+import { assistantSpeechText } from '../chat/formatAssistantText';
+
 const MAX_REPLY_CHARS = 12000;
 const MAX_PHRASE_CHARS = 600;
 // Start the first TTS job before a long opening sentence has finished streaming.
@@ -96,11 +98,7 @@ export class SpokenText {
         /[\uDC00-\uDFFF]/.test(this.pending[boundary] ?? '')
       )
         boundary--;
-      const plain = this.pending
-        .slice(0, boundary)
-        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-        .replace(/[*_`#>|]/g, '')
-        .trim();
+      const plain = assistantSpeechText(this.pending.slice(0, boundary));
       const remainder = this.pending.slice(boundary);
       const trimmed = remainder.trimStart();
       this.consumed +=
