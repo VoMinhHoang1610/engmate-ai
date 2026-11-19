@@ -254,6 +254,20 @@ beforeEach(({ signal }) => {
           : {};
       calls.push({ path, body });
       if (path === '/api/vocabulary/me/states') return json({ states: [], legacy_imported: false });
+      if (path === '/api/vocabulary/me/topics')
+        return json({
+          topics: [],
+          active_jobs: [],
+          usage: {
+            date: '2026-11-20',
+            jobs_started: 0,
+            jobs_limit: 3,
+            calls_reserved: 0,
+            calls_used: 0,
+            calls_limit: 30,
+            resets_at: '2026-11-21T00:00:00+00:00',
+          },
+        });
       if (path === '/api/vocabulary/topics')
         return json({
           ...vocabularyContent,

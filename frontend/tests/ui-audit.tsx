@@ -57,9 +57,86 @@ if (width && !params.has('frame')) {
         : json({
             states: [
               { topic_id: 'food-and-drink', word_id: 'apple', remembered: true, version: 1 },
+              ...(vocabulary.topics[0]?.words || []).slice(0, 12).map((word) => ({
+                topic_id: 'custom-sample-1',
+                word_id: word.id,
+                remembered: true,
+                version: 1,
+              })),
             ],
             legacy_imported: false,
           });
+    if (path === '/api/vocabulary/me/topics')
+      return params.get('vocabulary') === 'missing'
+        ? json({ detail: { code: 'vocabulary_not_installed' } }, 503)
+        : json({
+            topics: [
+              {
+                topic_id: 'custom-sample-1',
+                title_vi: 'Pha cà phê & thức uống',
+                title_en: 'Coffee Brewing & Drinks',
+                description: 'Từ vựng các phương pháp pha chế, dụng cụ và hương vị cà phê.',
+                word_count: 30,
+                remembered_count: 12,
+                review_status: 'ai_generated_unreviewed',
+                source: 'custom',
+                created_at: '2026-11-20T08:00:00+00:00',
+              },
+            ],
+            active_jobs:
+              params.get('job') === 'running'
+                ? [
+                    {
+                      request_id: 'request-sample',
+                      status: 'running',
+                      target_count: 30,
+                      validated_count: 18,
+                      batch_size: 6,
+                      poll_after_ms: 2000,
+                      topic_id: null,
+                      error_code: null,
+                      retry_after: null,
+                    },
+                  ]
+                : [],
+            usage: {
+              date: '2026-11-20',
+              jobs_started: 1,
+              jobs_limit: 3,
+              calls_reserved: 10,
+              calls_used: 5,
+              calls_limit: 30,
+              resets_at: '2026-11-21T00:00:00+00:00',
+            },
+          });
+    if (path === '/api/vocabulary/generations/request-sample')
+      return json({
+        request_id: 'request-sample',
+        status: 'running',
+        target_count: 30,
+        validated_count: 18,
+        batch_size: 6,
+        poll_after_ms: 2000,
+        topic_id: null,
+        error_code: null,
+        retry_after: null,
+      });
+    if (path === '/api/vocabulary/me/topics/custom-sample-1')
+      return json({
+        topic_id: 'custom-sample-1',
+        title_vi: 'Pha cà phê & thức uống',
+        title_en: 'Coffee Brewing & Drinks',
+        description: 'Từ vựng các phương pháp pha chế, dụng cụ và hương vị cà phê.',
+        word_count: 30,
+        review_status: 'ai_generated_unreviewed',
+        source: 'custom',
+        created_at: '2026-11-20T08:00:00+00:00',
+        words: (vocabulary.topics[0]?.words || []).slice(0, 30).map((word, index) => ({
+          ...word,
+          remembered: index < 12,
+          version: 1,
+        })),
+      });
     if (path === '/api/vocabulary/topics')
       return json({
         ...vocabulary,

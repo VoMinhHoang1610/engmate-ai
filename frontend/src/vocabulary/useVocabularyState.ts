@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { getVocabularyStates, VocabularyError, writeVocabulary } from './api';
 import type { VocabularyAction, VocabularyStates } from './types';
+import { useVocabularyGeneration } from './useVocabularyGeneration';
 
 export function useVocabularyState(username: string) {
+  const generation = useVocabularyGeneration(username);
   const [snapshot, setSnapshot] = useState<{
     owner: string;
     data: VocabularyStates | null;
@@ -123,6 +125,7 @@ export function useVocabularyState(username: string) {
     busy: current && busy,
     notice: current ? notice : '',
     pending: current ? pending : null,
+    generation,
     reload,
     save,
     retry: () => {

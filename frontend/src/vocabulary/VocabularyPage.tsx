@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Briefcase, Check, Coffee, Plus, Square, Volume2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, Check, Coffee, Plus, Square, Trash2, Volume2 } from 'lucide-react';
 import { docVanBan, dungDoc } from '../speech/audio';
-import { getVocabularyCatalog, getVocabularyTopic } from './api';
+import { getCustomTopic, getVocabularyCatalog, getVocabularyTopic } from './api';
 import { Flashcards, QuickQuiz } from './StudyViews';
 import { VocabularyStatus } from './VocabularyStatus';
-import type { VocabularyCatalog, VocabularyTopic, VocabularyWord } from './types';
+import type { CustomTopicDetail, VocabularyCatalog, VocabularyWord } from './types';
 import type { VocabularyStateController } from './useVocabularyState';
+import type { VocabularyGenerationController } from './useVocabularyGeneration';
 import './vocabulary.css';
 
 const normalizeVocabulary = (value: string) =>
@@ -37,6 +38,7 @@ export function VocabularyPage({ state, speech, legacyKeys, onPractice, children
   const [query, setQuery] = useState('');
   const [level, setLevel] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedCustom, setSelectedCustom] = useState<string | null>(null);
   const [confirmImport, setConfirmImport] = useState(false);
   const region = useRef<HTMLElement>(null);
   const topicButtons = useRef(new Map<string, HTMLButtonElement>());
@@ -90,13 +92,25 @@ export function VocabularyPage({ state, speech, legacyKeys, onPractice, children
         <TopicDetail
           key={selected}
           id={selected}
+          source="authored"
           state={state}
           speech={speech}
           onBack={() => setSelected(null)}
           onPractice={onPractice}
         />
+      ) : selectedCustom ? (
+        <TopicDetail
+          key={selectedCustom}
+          id={selectedCustom}
+          source="custom"
+          state={state}
+          speech={speech}
+          onBack={() => setSelectedCustom(null)}
+          onPractice={onPractice}
+        />
       ) : (
         <>
+          <CustomTopics generation={state.generation} onOpen={setSelectedCustom} />
           <section className="vocabulary-filters" aria-label="Tìm và lọc chủ đề">
             <label>
               Tìm chủ đề
@@ -242,20 +256,299 @@ export function VocabularyPage({ state, speech, legacyKeys, onPractice, children
   );
 }
 
+function resetLabel(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'không xác định';
+  return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(date);
+}
+
+function CustomTopics({
+  generation,
+  onOpen,
+}: {
+  generation: VocabularyGenerationController;
+  onOpen: (topicId: string) => void;
+}) {
+  const [topic, setTopic] = useState('');
+  const [target, setTarget] = useState<30 | 60>(30);
+  const [formError, setFormError] = useState('');
+  const [query, setQuery] = useState('');
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const usage = generation.usage;
+  const job = generation.job;
+  const running = job?.status === 'pending' || job?.status === 'running';
+  const jobsLeft = usage ? Math.max(0, usage.jobs_limit - usage.jobs_started) : 0;
+  const callsLeft = usage ? Math.max(0, usage.calls_limit - usage.calls_reserved) : 0;
+  const resetAt = usage ? resetLabel(usage.resets_at) : '';
+  const exhausted = usage !== null && (jobsLeft <= 0 || callsLeft < 10);
+  const canSubmit =
+    !generation.unavailable && !generation.busy && !running && usage !== null && !exhausted;
+  const visible = generation.topics.filter((item) =>
+    normalizeVocabulary(`${item.title_vi} ${item.title_en}`).includes(normalizeVocabulary(query)),
+  );
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const value = topic.trim();
+    if (value.length < 2) {
+      setFormError('Chủ đề cần ít nhất 2 ký tự.');
+      return;
+    }
+    if (value.length > 80) {
+      setFormError('Chủ đề tối đa 80 ký tự.');
+      return;
+    }
+    setFormError('');
+    if (await generation.create(value, target)) setTopic('');
+  }
+
+  if (generation.unavailable) {
+    return (
+      <section className="vocabulary-custom" aria-label="Chủ đề AI của tôi">
+        <h2>Chủ đề của tôi</h2>
+        <p role="alert">
+          {generation.error ||
+            'Tạo chủ đề AI chưa được cài đặt trên máy chủ này. Bạn vẫn đọc và ôn các chủ đề có sẵn.'}
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="vocabulary-custom" aria-label="Chủ đề AI của tôi">
+      <h2>Chủ đề của tôi</h2>
+      <p className="vocabulary-source">
+        Tạo chủ đề riêng bằng AI. Nội dung mới luôn được gắn nhãn “AI tạo, chưa thẩm định”.
+      </p>
+      {usage ? (
+        <p className="vocabulary-quota">
+          Còn{' '}
+          <strong>
+            {jobsLeft}/{usage.jobs_limit}
+          </strong>{' '}
+          lượt tạo ·{' '}
+          <strong>
+            {callsLeft}/{usage.calls_limit}
+          </strong>{' '}
+          lượt gọi AI dự phòng hôm nay · Lượt làm mới lúc{' '}
+          <time dateTime={usage.resets_at}>{resetAt} (giờ địa phương)</time>
+        </p>
+      ) : generation.loading ? (
+        <p role="status">Đang tải hạn mức tạo chủ đề…</p>
+      ) : null}
+      {exhausted && (
+        <p role="alert">
+          Bạn đã dùng hết lượt tạo chủ đề hôm nay. Lượt mới mở lúc {resetAt} (giờ địa phương).
+        </p>
+      )}
+      <form
+        className="vocabulary-generate"
+        onSubmit={(event) => {
+          void submit(event);
+        }}
+      >
+        <label>
+          Chủ đề muốn học
+          <input
+            type="text"
+            value={topic}
+            maxLength={80}
+            disabled={generation.busy || running}
+            placeholder="Ví dụ: pha cà phê tại quán"
+            onChange={(event) => setTopic(event.target.value)}
+          />
+        </label>
+        <label>
+          Số từ
+          <select
+            value={target}
+            disabled={generation.busy || running}
+            onChange={(event) => setTarget(Number(event.target.value) as 30 | 60)}
+          >
+            <option value={30}>30 từ</option>
+            <option value={60}>60 từ</option>
+          </select>
+        </label>
+        <span className="vocabulary-char-count">{topic.length}/80</span>
+        <button className="tutor-button primary" type="submit" disabled={!canSubmit}>
+          Tạo chủ đề bằng AI
+        </button>
+      </form>
+      {formError && <p role="alert">{formError}</p>}
+      {generation.error && generation.errorCode !== '' && (
+        <div role="alert">
+          <p>{generation.error}</p>
+          {generation.errorCode === 'quota' && usage && (
+            <p>Lượt làm mới lúc {resetAt} (giờ địa phương).</p>
+          )}
+          {(generation.errorCode === 'unavailable' ||
+            generation.errorCode === 'session' ||
+            generation.errorCode === 'token_cap') && (
+            <button className="tutor-button" onClick={generation.reload}>
+              Thử tải lại chủ đề của tôi
+            </button>
+          )}
+        </div>
+      )}
+      {generation.notice && <p role="status">{generation.notice}</p>}
+      {job && (running || job.status === 'completed' || job.status === 'failed') && (
+        <section className="vocabulary-job" aria-label="Tiến trình tạo chủ đề">
+          {running ? (
+            <>
+              <h3>Đang tạo chủ đề</h3>
+              <p>
+                Đã xác thực {job.validated_count}/{job.target_count} từ · {job.batch_size} từ mỗi
+                lần gọi AI.
+              </p>
+              <div
+                className="vocabulary-progress"
+                role="progressbar"
+                aria-label="Tiến trình tạo chủ đề"
+                aria-valuemin={0}
+                aria-valuemax={job.target_count}
+                aria-valuenow={job.validated_count}
+              >
+                <span
+                  style={{
+                    width: `${Math.min(100, Math.round((job.validated_count / job.target_count) * 100))}%`,
+                  }}
+                />
+              </div>
+              <button
+                className="tutor-button"
+                disabled={generation.busy}
+                onClick={() => void generation.cancel(job.request_id)}
+              >
+                Hủy job
+              </button>
+            </>
+          ) : job.status === 'completed' && job.topic_id ? (
+            <>
+              <h3>Đã tạo chủ đề</h3>
+              <p>Nội dung do AI tạo, chưa được chuyên gia thẩm định.</p>
+              <button
+                className="tutor-button primary"
+                onClick={() => {
+                  generation.acknowledgeCompleted();
+                  onOpen(job.topic_id!);
+                }}
+              >
+                Mở chủ đề mới
+              </button>
+            </>
+          ) : job.status === 'failed' ? (
+            <>
+              <h3>Chưa tạo được chủ đề</h3>
+              <p>{generation.error || 'Hãy thử lại với chủ đề khác.'}</p>
+            </>
+          ) : null}
+        </section>
+      )}
+      {generation.topics.length > 0 && (
+        <label className="vocabulary-custom-search">
+          Tìm trong chủ đề của tôi
+          <input
+            type="search"
+            value={query}
+            placeholder="Tên tiếng Việt hoặc tiếng Anh"
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+      )}
+      {visible.length > 0 && (
+        <div className="vocabulary-topic-grid" aria-label="Danh sách chủ đề AI của tôi">
+          {visible.map((item) => (
+            <article className="vocabulary-custom-card" key={item.topic_id}>
+              <button className="vocabulary-custom-open" onClick={() => onOpen(item.topic_id)}>
+                <strong>{item.title_vi}</strong>
+                <span lang="en">{item.title_en}</span>
+                <p>{item.description}</p>
+                <span>
+                  {item.word_count} từ · Đã nhớ {item.remembered_count}/{item.word_count}
+                </span>
+                <small className="vocabulary-ai-label">AI tạo, chưa thẩm định</small>
+              </button>
+              <div className="vocabulary-custom-actions">
+                {confirm === item.topic_id ? (
+                  <>
+                    <button
+                      className="tutor-button"
+                      onClick={() => {
+                        setConfirm(null);
+                        void generation.remove(item.topic_id);
+                      }}
+                    >
+                      Xác nhận xóa
+                    </button>
+                    <button className="text-button" onClick={() => setConfirm(null)}>
+                      Hủy
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="text-button"
+                    aria-label={`Xóa chủ đề ${item.title_vi}`}
+                    onClick={() => setConfirm(item.topic_id)}
+                  >
+                    <Trash2 size={16} aria-hidden="true" /> Xóa chủ đề
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {generation.topics.length === 0 && !generation.loading && !generation.error && (
+        <p>Chưa có chủ đề AI nào. Hãy nhập chủ đề ở trên để bắt đầu.</p>
+      )}
+      {generation.topics.length > 0 && visible.length === 0 && (
+        <p>Không có chủ đề AI nào khớp từ khóa.</p>
+      )}
+    </section>
+  );
+}
+
+interface DetailTopic {
+  id: string;
+  title_vi: string;
+  title_en: string;
+  words: VocabularyWord[];
+}
+
+function customDetail(data: CustomTopicDetail): DetailTopic {
+  return {
+    id: data.topic_id,
+    title_vi: data.title_vi,
+    title_en: data.title_en,
+    words: data.words.map((word) => ({
+      id: word.id,
+      term: word.term,
+      part_of_speech: word.part_of_speech,
+      ipa: word.ipa,
+      meaning_vi: word.meaning_vi,
+      example_en: word.example_en,
+      example_vi: word.example_vi,
+      cefr: word.cefr,
+    })),
+  };
+}
+
 function TopicDetail({
   id,
+  source,
   state,
   speech,
   onBack,
   onPractice,
 }: {
   id: string;
+  source: 'authored' | 'custom';
   state: VocabularyStateController;
   speech: boolean;
   onBack: () => void;
   onPractice: (words: VocabularyWord[]) => void;
 }) {
-  const [topic, setTopic] = useState<VocabularyTopic | null>(null);
+  const [topic, setTopic] = useState<DetailTopic | null>(null);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);
   const [slow, setSlow] = useState(false);
@@ -273,7 +566,11 @@ function TopicDetail({
     heading.current?.focus();
     const controller = new AbortController();
     const timer = window.setTimeout(() => setSlow(true), 8000);
-    void getVocabularyTopic(id, controller.signal)
+    const request =
+      source === 'custom'
+        ? getCustomTopic(id, controller.signal).then(customDetail)
+        : getVocabularyTopic(id, controller.signal);
+    void request
       .then((data) => {
         if (!controller.signal.aborted) {
           setTopic(data);
@@ -289,7 +586,7 @@ function TopicDetail({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [id, revision]);
+  }, [id, revision, source]);
   useEffect(() => {
     if (!speech) {
       playback.current?.abort();
@@ -366,6 +663,9 @@ function TopicDetail({
               ? `Đã nhớ ${topic.words.filter(remembered).length}/${topic.words.length}`
               : 'Chưa có số liệu đã nhớ'}
           </p>
+        )}
+        {source === 'custom' && (
+          <p className="vocabulary-ai-label">AI tạo, chưa thẩm định · IPA Anh–Anh · CEFR gợi ý</p>
         )}
         {!topic && !error && (
           <p role="status">
