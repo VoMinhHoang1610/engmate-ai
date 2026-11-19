@@ -847,3 +847,32 @@ Theo yêu cầu nối key TTS/STT, dùng httpx async (đã có pin 0.28.1 trong 
 2026-10-08: lấy danh sách giọng qua endpoint backend thay vì hard-code 27 giọng vào UI. Giọng người dùng chọn là cài đặt trình duyệt, dùng cùng vòng đời localStorage hiện có; không mở rộng SQL ngoài phạm vi. Preview dùng TTS cùng giọng/tốc độ để phản ánh cách đọc trong bài học.
 
 2026-10-08: giảm độ trễ bằng preload có chọn lọc và cache RAM theo text/voice/speed. Dùng chung generation giữa preload/click, mỗi caller hủy độc lập; cache bị chặn bởi số clip/bytes/TTL và xóa khi logout. Chưa thêm streaming, lưu audio lâu dài hoặc thay giọng người dùng bằng browser synthesis. Lần tạo đầu vẫn phụ thuộc Blaze; preload có thể tốn credit, nên danh sách nhiều nút không tải hàng loạt.
+
+
+## Agent P / 2026-11-20 — Text assistant và TTS, giữ giới hạn kiểm chứng
+
+Persona v8 là phiên bản mới để nới danh sách từ vựng, không sửa byte v7 hay
+đầu vào eval v7. Không sửa .gitattributes; các dòng khóa prompt mới vẫn chỉ
+là đề xuất ở báo cáo Pha 2. V8 chưa eval/smoke thật; kết quả v7 không áp dụng
+cho v8 và chưa merge.
+
+Chọn hàm thuần `chat/formatAssistantText.ts` và component `AssistantText.tsx`
+với một span/text node, CSS pre-wrap/overflow-wrap riêng. Không dùng parser
+Markdown, HTML injection hoặc thêm dependency: nội dung v7/v8 và stream dở
+đều đi qua React escaping, giữ xuống dòng và số mục mà không đổi cây DOM.
+Tên utility tách rõ component để tránh Windows phân giải nhầm .ts/.tsx khác
+hoa/thường. Quét toàn frontend không còn cặp tên cơ sở cùng thư mục khác case.
+
+Text TTS dùng cùng hàm làm sạch trước khi tạo payload/key cache; các trường
+giọng/tốc độ và raw Unicode receipt không đổi. Hai câu nghe thử Settings và
+reply mock đang xét không bị hàm làm sạch thay nội dung. Fixture test mới
+mock `blob()` trả trực tiếp audio/mpeg Blob có dữ liệu, theo contract hiện có;
+không nới điều kiện âm thanh production hoặc assertion payload/cache.
+
+Timeout App 5.000 ms đã tái hiện bằng verbose. App test mock toàn bộ audio
+và Blaze nên không chạy nhánh speechBody/cache/TTS production mới trong ca
+này; thêm span hiển thị vẫn là một khác biệt không thể loại trừ chỉ bằng
+mock. HEAD baseline ba lượt đều đạt nên chưa chứng minh lỗi có sẵn. Giữ nguyên
+test/mã cũ, không tự gán flaky và ghi nguyên nhân gốc chưa xác định. Hai lượt
+full không bail sau đó đều 506/506; các kết quả này không chứng minh nguyên
+nhân timeout đã được sửa. Merge/smoke vẫn do người dùng quyết định.

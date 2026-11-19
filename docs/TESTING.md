@@ -1,5 +1,39 @@
 # Kiểm thử bản hội thoại
 
+## Agent P / 2026-11-20 — Cổng formatter và điều tra Settings
+
+- `npm.cmd run format:check`: PASS; `npm.cmd run lint`: ESLint không warning
+  và `tsc --noEmit` PASS; `npm.cmd run build`: PASS (Vite 8,54 s).
+- `npm.cmd run test -- --reporter=verbose`, không bail: **506/506**, 44 file,
+  148,40 s. Lượt cổng cuối cùng cùng lệnh: **506/506**, 44 file, 153,98 s.
+  Không thay assertion/timeout/cấu hình/worker; không gọi API tính phí.
+- Test riêng `App.test.tsx -t "shares saved Settings voices and speed with chat
+  and restores them after signing in again"`: lượt đầu đạt; ba lượt chạy lại
+  lần lượt timeout 5.000 ms/đạt/đạt. Cả file App sau đó **44/44**.
+- Baseline worktree detached `9c8d43e`: đúng test trên **3/3**, giữ cùng dependency
+  và test/config, không cài gói; đã gỡ junction và worktree. Không chứng minh
+  timeout có sẵn; nguyên nhân gốc chưa xác định. Không sửa test cũ hay production
+  để làm test qua. Lỗi đầy đủ và diễn giải tại [báo cáo](CHAT_FORMATTING_2026-11-20.md).
+- Kiểm heavy.lock trước từng lệnh nặng; không có khóa, không xóa khóa. Không
+  chạy test/build/browser đồng thời. Không đo coverage ở lượt frontend này;
+  không dùng số coverage cũ làm coverage của formatter mới.
+
+| Yêu cầu | Test mới |
+| --- | --- |
+| `**`, `*`, `#`, backtick, số mục, dòng trống, tiếng Việt | chat/AssistantText.test.tsx |
+| Stream từng ký tự, marker chưa đóng, DOM/text node ổn định | chat/AssistantText.test.tsx |
+| Script/HTML hiện literal, không tạo thẻ thực thi | chat/AssistantText.test.tsx |
+| Giữ đủ 30 mục gọn, bỏ marker trong speech | chat/AssistantText.test.tsx |
+| Payload TTS đã sạch, ngôn ngữ và dùng chung cache | speech/audio.formatting.test.ts |
+| TTS stream sạch marker, giữ offset Unicode receipt | voice/spokenText.formatting.test.ts |
+
+Ảnh tại docs/assets chụp component thật bằng Edge headless/file HTML cục bộ,
+không mở cổng: desktop 1440×1080; mobile dùng khung CSS 390 px trong ảnh
+390×844 do Edge headless giới hạn viewport nhỏ. Đã xem lại sáng/tối; không
+cắt ngang chữ. Đây là demo component tĩnh, chưa phải E2E app/stream/provider.
+V8 chưa eval/smoke thật, kết quả v7 không áp dụng v8; chưa merge.
+
+
 ## Từ vựng — trạng thái hiện tại tại worktree 16/11/2026
 
 - Baseline sạch đã chạy đúng một lần: frontend **472/472**. Các mục

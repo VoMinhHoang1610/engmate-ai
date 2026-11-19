@@ -1,5 +1,27 @@
 # Changelog
 
+## Agent P / 2026-11-20 — Persona v8 và định dạng tin nhắn
+
+- Persona v8 đã commit ở `9c8d43e`; danh sách mặc định 10, tối đa 30 từ,
+  ví dụ ngắn đến 10 từ để dự phòng thinking; voice xem trước tối đa 3 từ.
+  V8 chưa eval/smoke thật, kết quả eval v7 không áp dụng cho v8; chưa merge.
+- Commit formatter `5676c7e`: component text an toàn dùng cho assistant/caption,
+  giữ dòng trống/danh sách đánh số, bỏ dấu định dạng cũ và dấu chưa đóng khi stream;
+  dùng chung bộ làm sạch cho TTS/cache, giữ raw Unicode playback receipt.
+- Thêm `chat/AssistantText.tsx`, `formatAssistantText.ts`, CSS scope và ba file test;
+  tích hợp tối thiểu Chat, VoiceChat, speech/audio, voice/blaze, voice/spokenText.
+  Không đổi TutorWorkspace, vùng V hoặc test cũ/assertion/timeout.
+- Kiểm ngày 20/11/2026: Prettier, ESLint, tsc, build đạt; hai lượt Vitest đầy đủ
+  không bail đều **506/506**, 44 file. Không đo lại coverage frontend trong lượt này.
+  Hook commit tính năng backend/frontend đã chạy hết và đạt.
+- Điều tra timeout App: lấy được lỗi thật 5.000 ms; bốn lượt riêng 3 đạt/1 lỗi,
+  App cả file 44/44, baseline worktree HEAD 3/3 đạt rồi đã gỡ. Nguyên nhân gốc
+  chưa xác định; không gọi là lỗi baseline/flaky, không sửa hoặc nới test cũ.
+- Có bốn ảnh component thật độc lập sáng/tối, desktop và khung CSS 390 px.
+  Chưa kiểm ứng dụng đăng nhập/provider thật; smoke và merge chờ duyệt riêng.
+  [Bằng chứng, giới hạn và ảnh](CHAT_FORMATTING_2026-11-20.md).
+
+
 **scope/voice**
 
 ## 2026-11-16 — Bảo toàn byte C1/C2 và kiểm thử judge độc lập raw
