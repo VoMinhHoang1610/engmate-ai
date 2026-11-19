@@ -438,3 +438,11 @@ Phạm vi này thay thế sản phẩm học tập nhiều trang trước đây,
 Bản hội thoại ngày 16/10 từng loại các trang học tập phụ; yêu cầu mới đã đưa lại hồ sơ/avatar, lớp học và lộ trình TOEIC. Hệ thống thi/chấm đầy đủ bốn kỹ năng, flashcard, OAuth giả, reset SMTP và trang demo vẫn ngoài phạm vi hiện tại. Kiểm tra auth/ownership/retry/speech tiếp tục được thực thi, không hạ coverage threshold.
 
 Không cam kết hệ thống tuyệt đối không có lỗi. Chat Gemini đã được kiểm chứng provider thật; definition of done cho thoại còn cần kiểm tra cuộc thoại/interrupt bằng trình duyệt + microphone/loa thật. Tests dùng doubles không thay thế kiểm chứng thiết bị. Một backend worker là giới hạn triển khai hiện tại; Gemini không phụ thuộc quota OpenAI.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- User can create private AI topics with 30 or 60 words (default 30), cancel jobs, delete topics with confirmation.
+- UI shows topic input, batch progress, quota exhaustion/reset time in local time, and Vietnamese messages for `vocabulary_not_installed` and `vocabulary_token_cap_unsupported`.
+- Custom detail reuses authored layout: search/filter/cards/quiz/click-only TTS and word-state saving.
+- Content is labeled “AI tạo, chưa thẩm định”.
+- Cross-account leaks are prevented; polling stops at terminal state/unmount/account switch.

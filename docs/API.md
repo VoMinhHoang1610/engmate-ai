@@ -287,3 +287,15 @@ flashcards, dashboard, media/avatar, profile/settings mở rộng, evaluations �
 lập, forgot/reset/change password và account edit không được khôi phục dưới URL
 cũ. Hồ sơ `/api/me/profile`, avatar và nhóm `/api/learning/*` được bổ sung theo
 các hợp đồng mới ở đầu tài liệu; client legacy phải cập nhật.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+New endpoints (all owner-scoped, FastAPI router `/api/vocabulary`):
+- `POST /generations` — `{client_request_id, topic, target_count: 30|60}`; returns job with `poll_after_ms`.
+- `GET /generations/{request_id}` — poll job status/progress.
+- `POST /generations/{request_id}/cancel` — cancel running job.
+- `GET /me/topics` — `{topics, active_jobs, usage}` including `resets_at` (UTC midnight +00:00).
+- `GET /me/topics/{topic_id}` — custom topic detail with words and remembered/version state.
+- `DELETE /me/topics/{topic_id}` — confirmed delete (204).
+
+Error codes mapped in UI: `vocabulary_not_installed`, `vocabulary_mysql_required`, `vocabulary_quota_exhausted`, `vocabulary_too_many_jobs`, `vocabulary_start_rate_limited`, `vocabulary_provider_not_configured`, `vocabulary_token_cap_unsupported`, `vocabulary_refused`, `vocabulary_needs_clarification`, `vocabulary_target_unsupported`. Custom word state uses existing `PUT /topics/{topic_id}/words/{word_id}/state`.

@@ -357,3 +357,11 @@ Q3, Q4, Q5, Q7, Q15 như bảng dưới. Cổng A chỉ gồm backend + test + S
 
 **Duyệt thiết kế này không đồng nghĩa duyệt gọi provider thật, chạy installer
 trên DB ứng dụng, tạo DB/container mới, commit hay mở cổng frontend.**
+
+## Gate B implementation evidence (20/11/2026)
+
+- Frontend commit pending as `feat(vocabulary): add AI custom topic UI`.
+- Tests: Vocabulary Vitest 21/21, frontend 500/500, lint/format/build passed.
+- Backend Step 1: 332 passed, 93.03% coverage; no business-code change.
+- Screenshots: `docs/assets/vocabulary-ai-20261120/` (7 images).
+- Step 2 smoke proposal: `docs/VOCABULARY_PROVIDER_SMOKE_PROPOSAL_2026-11-20.md` (not executed).
