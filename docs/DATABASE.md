@@ -10,11 +10,32 @@
 - [DATABASE_SQLSERVER](DATABASE_SQLSERVER.md) lưu thiết kế lịch sử; không dùng
   các bảng từ vựng/flashcard của bản thiết kế cũ làm bằng chứng runtime hiện tại.
 
-## Từ vựng — đề xuất ngày 15/11/2026, chưa cài đặt
+## Từ vựng — hai bảng additive cho lát cắt 2×50 (16/11/2026)
 
-[Thiết kế §4–6](LEARNING_VOCABULARY_DESIGN_2026-11-15.md) đề xuất bốn bảng mới:
-topics, word_states, requests và usage, khóa theo owner, receipt chống lặp,
-quota transaction ngắn và nội dung chỉ publish sau xác thực toàn bộ.
-Nội dung biên soạn tĩnh ở JSON server; chỉ chủ đề riêng/state/job ở SQL.
-Không sửa bảng hiện có, không có DDL/migration nào được chạy trong bước thiết kế.
-MySQL hay SQL Server cho phần mới là quyết định D7 đang chờ duyệt.
+Phần mới chỉ hỗ trợ/kiểm chứng MySQL. `backend/app/db/vocabulary.py` định nghĩa:
+
+| Bảng | Khóa chính | Dữ liệu |
+| --- | --- | --- |
+| `engmate_vocabulary_word_states` | UserId, TopicId, WordId | Remembered, Version, UpdatedAt |
+| `engmate_vocabulary_requests` | UserId, RequestId | Kind, PayloadHash, ResultJson |
+
+Receipt UUID và state được lưu atomically, khóa account hiện có để tuần tự hóa
+ghi; import có marker riêng `legacy-import-v1`, không ghi đè lựa chọn false.
+Nội dung hai chủ đề ở JSON server, không phải bảng topics. Chưa có bảng
+topics/usage hoặc job AI của thiết kế tương lai.
+
+Installer tường minh `scripts/install_vocabulary.py` dùng metadata riêng,
+`create_all(checkfirst=True)`, không alter/drop/bootstrap lại bảng cũ. Không chạy
+installer khi startup. Chế độ `--test` nhận MYSQL_TEST_URL, chặn host không
+loopback/schema không `_test`/user root. Chế độ thường dùng cấu hình MySQL hiện
+có và **chỉ chạy sau xác nhận riêng đúng DB đích**, không tự động khi demo.
+Không đưa URL có mật khẩu vào lệnh/log/tài liệu.
+
+M1/M2 đã kiểm installer hai lần trên MySQL tạm riêng: đúng hai bảng mới, DDL
+bảng cũ giữ nguyên. **DB ứng dụng `EngMateAI` đã có hai bảng mới additive, 0 dòng
+(xác nhận lần cuối 16/11/2026); chưa kiểm save/import bằng tài khoản thật.**
+Container test
+`engmate-vocabulary-mysql-test-20261115`, label `engmate.vocabulary-test=20261115`,
+bind 127.0.0.1:33318, schema `engmate_vocabulary_test`, user `engmate_vocab_test`.
+Không xóa container/volume ứng dụng; M3 cần xác nhận mới.
+Thiếu đúng bảng mới: API state báo 503/chưa cài đặt, catalog JSON vẫn đọc được.

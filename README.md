@@ -1,11 +1,25 @@
 # EngMate-AI
 
-## Thiết kế năm mục học tập — duyệt có điều kiện 15/11/2026
+## Từ vựng — lát cắt hai chủ đề trong worktree, 16/11/2026
 
-[Thiết kế Từ vựng và điều kiện đã duyệt](docs/LEARNING_VOCABULARY_PROPOSAL.md)
-đề xuất lưới chủ đề, danh sách đủ từ và chủ đề AI riêng. **Chưa triển khai**;
-hiện Từ vựng vẫn có 4 bộ giao tiếp nhỏ lưu đã nhớ ở trình duyệt. Chưa cần cài
-bảng hoặc cấu hình mới. [Tổng quan database](docs/DATABASE.md).
+Mã feature có **Đồ ăn & thức uống + Văn phòng & công việc, mỗi chủ đề 50 từ**:
+tìm/lọc, dấu nhớ theo tài khoản, thẻ/quiz, nghe khi click và chuẩn bị draft Mate.
+Bốn bộ giao tiếp cũ giữ riêng, import có xác nhận, không xóa dữ liệu local.
+Nội dung do AI soạn/chưa chuyên gia thẩm định; CEFR là gợi ý, không điểm TOEIC.
+
+**Trạng thái 17/11/2026: mã đã commit trên nhánh feature, chưa merge/push.**
+Docker demo đang source-mount từ worktree và DB ứng dụng `EngMateAI` đã có hai
+bảng additive 0 dòng (xác nhận lần cuối 16/11/2026); chưa build/deploy image và
+chưa nghiệm thu chuyên môn. Browser fixture không phải tài khoản thật. Chưa kiểm
+save/import tài khoản thật, TTS/provider thật; coverage frontend 487/490, 2
+timeout ngoài ngoại lệ (lượt gần nhất 16/11/2026). Thiếu hai bảng mới vẫn đọc
+catalog/ôn được nhưng không lưu dấu nhớ. Installer idempotent, không cần chạy lại.
+[Database/installer](docs/DATABASE.md), [API](docs/API.md),
+[trạng thái kiểm chứng](docs/TESTING.md),
+[ảnh UI và phiếu rà chờ duyệt](docs/VOCABULARY_REVIEW_2026-11-16.md),
+[bàn giao demo](docs/VOCABULARY_DEMO_HANDOFF_2026-11-16.md).
+16 chủ đề và sinh AI, cùng bốn mục Phát âm/Bài học/Lộ trình/Tiến độ, vẫn theo
+[các cổng đã duyệt](docs/LEARNING_VOCABULARY_PROPOSAL.md), không phải đã hoàn tất.
 Sidebar thật ghim mặc định; mô tả mở bằng hover trong mục lịch sử bên dưới đã cũ.
 
 ## Đăng nhập Google/Facebook

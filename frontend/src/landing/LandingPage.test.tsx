@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LandingPage } from './LandingPage';
 
@@ -47,31 +47,42 @@ describe('LandingPage', () => {
     expect(screen.getAllByText(/Tình huống gợi ý/)).toHaveLength(4);
     expect(screen.queryByText(/98%|99\.9%|50ms|320ms/)).not.toBeInTheDocument();
 
+    const heroSection = screen
+      .getByText(/Chinh phục tiếng Anh giao tiếp tự tin cùng Gia sư AI Mate/i, { selector: 'h1' })
+      .closest('section');
+    expect(heroSection).toBeInTheDocument();
+    const hero = within(heroSection!);
     expect(
-      screen.getByRole('heading', {
+      hero.getByRole('heading', {
         name: /Chinh phục tiếng Anh giao tiếp tự tin cùng Gia sư AI Mate/i,
       }),
     ).toBeInTheDocument();
 
     // Interactive step selector
-    const step2Tab = screen.getByRole('tab', {
+    const steps = within(screen.getByRole('tablist', { name: 'Các bước học tập' }));
+    const step2Tab = steps.getByRole('tab', {
       name: /Đối thoại giọng nói 2 chiều cùng Thầy Mate/i,
     });
     fireEvent.click(step2Tab);
     expect(screen.getByText('Phòng học hội thoại trực tiếp')).toBeInTheDocument();
 
     // FAQ accordion toggle
-    const faqButton = screen.getByRole('button', {
+    const faqSection = screen
+      .getByText('Câu hỏi thường gặp', { selector: 'h2' })
+      .closest('section');
+    expect(faqSection).toBeInTheDocument();
+    const faqButton = within(faqSection!).getByRole('button', {
       name: /Tôi mới bắt đầu \(A1–A2\) hoặc mất gốc thì có theo kịp không\?/i,
     });
     fireEvent.click(faqButton);
     expect(screen.getByText(/Hoàn toàn phù hợp!/i)).toBeInTheDocument();
 
     // CTA triggers
-    fireEvent.click(screen.getByRole('button', { name: 'Đăng nhập' }));
+    const header = within(screen.getByRole('banner'));
+    fireEvent.click(header.getByRole('button', { name: 'Đăng nhập' }));
     expect(onStartLogin).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole('button', { name: /Bắt đầu học miễn phí ngay/i }));
+    fireEvent.click(hero.getByRole('button', { name: /Bắt đầu học miễn phí ngay/i }));
     expect(onStartRegister).toHaveBeenCalledTimes(1);
   });
 

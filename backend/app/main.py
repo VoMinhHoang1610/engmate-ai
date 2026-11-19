@@ -16,6 +16,7 @@ from app.api.learning_routes import router as learning_router
 from app.api.oauth_routes import router as oauth_router
 from app.api.routes import router
 from app.api.speech_routes import router as speech_router
+from app.api.vocabulary_routes import router as vocabulary_router
 from app.api.voice_routes import router as voice_router
 from app.core.admission import Admission
 from app.core.config import Settings, get_settings
@@ -126,6 +127,7 @@ def create_app(
     application.include_router(learning_router)
     application.include_router(speech_router)
     application.include_router(voice_router)
+    application.include_router(vocabulary_router)
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(

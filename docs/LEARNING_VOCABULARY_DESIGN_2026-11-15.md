@@ -3,13 +3,15 @@
 Đọc nhanh: [bản đề xuất duyệt](LEARNING_VOCABULARY_PROPOSAL.md).
 Tài liệu này là phụ lục chi tiết và bằng chứng kiểm kê/kiểm thử.
 
-**Cổng hiện tại: tiền triển khai, D1–D10 đã duyệt có điều kiện.** Ngày 15/11/2026.
-Nhánh: `docs/learning-vocabulary-design-20261115`. Chưa triển khai tính năng hay
-áp dụng cấu hình. Điều kiện mới tại đầu [bản đề xuất](LEARNING_VOCABULARY_PROPOSAL.md)
-ưu tiên hơn mô tả đề xuất ban đầu bên dưới. Lệnh worktree/baseline/MySQL tại
-[kế hoạch tiền triển khai](VOCABULARY_PREFLIGHT_2026-11-15.md) còn chờ duyệt.
-Không gọi Gemini/Blaze thật. Chỉ được làm lát cắt 2×50 sau các cổng chuẩn bị;
-chưa sinh AI hoặc mở rộng hàng loạt.
+**Cổng hiện tại cập nhật 16/11/2026: kiểm chứng/nghiệm thu lát cắt 2×50.**
+Mã ở nhánh `feat/vocabulary-authored-topics-20261115`; Docker demo đang source-mount, chưa build/deploy image (xác nhận lần cuối 16/11/2026).
+Worktree/baseline/M1–M2 đã thực hiện theo duyệt; không còn ở bước chỉ thiết kế.
+[Hồ sơ demo và phần chưa hoàn tất](VOCABULARY_DEMO_HANDOFF_2026-11-16.md),
+[bằng chứng mới nhất](VOCABULARY_TEST_INVESTIGATION_2026-11-15.md).
+Điều kiện ở đầu [bản đề xuất](LEARNING_VOCABULARY_PROPOSAL.md) ưu tiên hơn mô tả
+ban đầu. **Các phần kiểm kê bên dưới mô tả thời điểm trước code**, không phải
+mọi dòng “chưa có runtime” còn đúng ở worktree hiện tại.
+Không gọi Gemini/Blaze thật, chưa sinh AI hoặc mở rộng hàng loạt.
 
 ## 1. Kiểm kê và ưu tiên UX
 

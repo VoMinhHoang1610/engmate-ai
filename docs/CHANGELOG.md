@@ -1,5 +1,7 @@
 # Changelog
 
+**scope/voice**
+
 ## 2026-11-16 — Bảo toàn byte C1/C2 và kiểm thử judge độc lập raw
 
 - Commit C1 `405f030`, C2 `d67f97b` theo từng lệnh duyệt; hook backend/frontend qua.
@@ -10,6 +12,27 @@
 - C3 `4e0698f` đã commit tài liệu thoại, hook qua; C4 đang chuẩn bị.
   Không đổi runtime/cờ hoặc resume sinh. Judge chưa phải nghiệm
   thu; v7 giữ hash khóa. Các mốc chưa commit bên dưới là lịch sử trước C1/C2.
+
+**vocabulary**
+
+## 2026-11-16 — Từ vựng 2×50 trong worktree, đang hoàn tất nghiệm thu
+
+- Thêm catalog/schema Anh–Anh, năm route đăng nhập, state theo owner/version/
+  UUID và import whitelist không ghi đè dữ liệu. Hai bảng MySQL additive với
+  installer tường minh; thiếu bảng mới không chặn đọc catalog.
+- Thêm UI tìm/lọc, đủ từ, tự nhớ, thẻ/quiz, TTS click-only theo Settings và draft
+  tối đa 5 từ cho Mate; legacy riêng, summary tự đánh giá tách TOEIC.
+- Thêm test ownership/replay/import/concurrency/validation/fallback; helper test
+  async/scope theo duyệt, không sửa lifecycle runtime hoặc tăng timeout.
+- Kiểm browser sáng/tối và mobile/desktop, sửa CSS label chọn từ bị xếp column;
+  đang kiểm gate sau sửa. Thêm phiếu rà nội dung và cập nhật tài liệu theo mã.
+- 17/11/2026: mã đã commit trên nhánh nhưng chưa merge/push. Docker demo
+  source-mount từ worktree; DB ứng dụng đã có hai bảng additive 0 dòng (xác nhận
+  lần cuối 16/11/2026); chưa build/deploy image. Chưa sinh AI/16 chủ đề, nâng cấp
+  bốn mục khác, gọi provider thật hoặc nghiệm thu chuyên môn; coverage frontend
+  487/490, 2 timeout ngoài ngoại lệ (lượt gần nhất 16/11/2026).
+
+**scope/voice**
 
 ## 2026-11-15 — Bảo toàn scope/voice sau kiểm toán
 

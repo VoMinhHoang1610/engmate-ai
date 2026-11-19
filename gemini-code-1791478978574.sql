@@ -228,6 +228,26 @@ CREATE TABLE `engmate_learning_receipts` (
     PRIMARY KEY (`UserId`, `RequestId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
 
+-- Từ vựng biên soạn: chỉ trạng thái tự đánh giá và receipt, không dữ liệu AI.
+CREATE TABLE `engmate_vocabulary_word_states` (
+    `UserId` bigint NOT NULL,
+    `TopicId` varchar(64) NOT NULL,
+    `WordId` varchar(80) NOT NULL,
+    `Remembered` bool NOT NULL,
+    `Version` int NOT NULL,
+    `UpdatedAt` datetime NOT NULL,
+    PRIMARY KEY (`UserId`, `TopicId`, `WordId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+CREATE TABLE `engmate_vocabulary_requests` (
+    `UserId` bigint NOT NULL,
+    `RequestId` varchar(36) NOT NULL,
+    `Kind` varchar(24) NOT NULL,
+    `PayloadHash` varchar(64) NOT NULL,
+    `ResultJson` text NOT NULL,
+    PRIMARY KEY (`UserId`, `RequestId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
 CREATE TRIGGER TR_NguoiDung_Version BEFORE UPDATE ON `NguoiDung`
 FOR EACH ROW SET NEW.`Version` = OLD.`Version` + 1;
 
