@@ -52,3 +52,45 @@ Log/profile cục bộ không đưa vào commit:
 `.artifacts/settings-profile-result.json`, `.artifacts/settings-cpu-result.json`,
 `.artifacts/settings-test.cpuprofile`. Hook/config thử nghiệm cũng chỉ ở
 `.artifacts`, không nằm trong cấu hình Vitest mặc định.
+
+## Agent P — scope/voice — kiểm riêng sau tích hợp, 19/11/2026
+
+Nhánh `feat/scope-voice-20261115`, HEAD `7f2a4f7`, tại thư mục chính.
+Test `App.test.tsx:1183`, tên `shares saved Settings voices and speed with chat
+and restores them after signing in again`, được thực thi riêng **một lần**,
+một worker, không coverage: **qua trong 2,148 s** (2.147,82 ms); tổng thời gian Vitest
+5,48 giây. Có 43 test khác bị lọc khỏi lượt này, không phải lỗi hoặc skip vì
+thiếu MySQL. Không sửa mã, assertion, timeout 5.000 ms hay ngưỡng.
+
+Lệnh chạy từ `frontend`: `npm.cmd run test -- src/App.test.tsx
+--testNamePattern="shares saved Settings voices and speed with chat and restores them after signing in again"
+--maxWorkers=1 --reporter=default --reporter=json
+--outputFile=../.artifacts/mysql-gate-p-20261119-195033/settings-isolated.json`.
+Lệnh lọc đầu tiên có dấu neo chọn 0 test (44 test bị lọc); đã sửa riêng bộ lọc
+CLI để thực thi đúng một test, không coi lượt chọn 0 là bằng chứng qua.
+
+Container MySQL riêng đã dừng trước khi đo test UI, không chạy tác vụ nặng
+khác của Agent P song song. Timeout **không tái hiện khi chạy riêng**; kết quả
+phù hợp giả thuyết nhạy với tải/coverage, nhưng lần này không có coverage và
+không profile đúng lần lỗi. Vì vậy chưa phân biệt được tác động coverage, tải,
+thứ tự test hoặc biến động máy; chưa đủ chứng minh nguyên nhân chắc chắn hay hết
+flake. Lượt toàn suite trước trên cây tích hợp có coverage vẫn được giữ là
+489/490 qua, một timeout đã biết; không chạy lại toàn suite trong lượt này.
+
+Cổng backend MySQL trên chính HEAD này đã qua **282/282, 0 skip, coverage
+93,44%, 1 warning**, trong 81,99 giây. Đây là phép đo mới trên cây đã tích hợp,
+tách biệt với số liệu từng nhánh nguồn. Container/schema test tạm riêng đã
+được dọn; không dùng URL MySQL người dùng hoặc container/cổng của Agent V.
+
+Warning duy nhất là `StarletteDeprecationWarning`, được báo tại
+`.venv/Lib/site-packages/fastapi/testclient.py:1` khi import TestClient của
+Starlette: `Using httpx with starlette.testclient is deprecated; install httpx2
+instead.` Đây là cảnh báo thư viện, không phải file mã dự án; không sửa hoặc
+đổi dependency trong lượt này.
+
+Bằng chứng cục bộ, không commit: thư mục
+`.artifacts/mysql-gate-p-20261119-195033/`, gồm `backend-pytest.log`,
+`backend-junit.xml`, `backend-coverage.json`, `backend-coverage.xml`,
+`settings-isolated.log`, `settings-isolated.json`,
+`settings-isolated-result.json`. Các log của lần lọc chọn 0 được giữ riêng
+trong `settings-test.log`/`settings-test.json` để không che lịch sử.

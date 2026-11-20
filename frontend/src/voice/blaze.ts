@@ -4,6 +4,7 @@ import { readJSON } from '../api/readJSON';
 import { streamTurn } from '../api/chatStream';
 import type { VoiceEvents, VoiceState } from './session';
 import { SpokenText } from './spokenText';
+import { assistantSpeechText } from '../chat/formatAssistantText';
 import { SpeechQueue } from './speechQueue';
 import { VoiceLatencyTrace } from './latency';
 import { RealtimeSTT } from './realtimeSTT';
@@ -535,7 +536,7 @@ export class BlazeVoiceSession {
           headers: { 'Content-Type': 'application/json' },
           signal: AbortSignal.any([signal, timeout.signal]),
           body: JSON.stringify({
-            text,
+            text: assistantSpeechText(text),
             language: this.speechLanguage,
             speaker_id: this.speaker,
             speed: Math.min(2, Math.max(0.5, this.options.speed ?? 1)),

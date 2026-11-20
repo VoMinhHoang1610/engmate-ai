@@ -24,6 +24,7 @@ import type { VoiceState } from './voice/session';
 import { MateOrb } from './components/MateOrb';
 import { Mic } from 'lucide-react';
 import { TeacherMate } from './tutor/TutorScene';
+import { AssistantText } from './chat/AssistantText';
 
 const MessageRow = memo(function MessageRow({
   message,
@@ -44,7 +45,12 @@ const MessageRow = memo(function MessageRow({
       <div>
         <span className="message-author">{message.role === 'user' ? 'Bạn' : 'Mate'}</span>
         <p className="message-bubble">
-          {message.content ||
+          {(message.content &&
+            (message.role === 'assistant' ? (
+              <AssistantText text={message.content} />
+            ) : (
+              message.content
+            ))) ||
             (message.status === 'pending'
               ? 'Đang tạo câu trả lời…'
               : message.status === 'cancelled'
@@ -596,7 +602,7 @@ export function Chat({
             </h3>
             {voiceCaption && (
               <p className="mate-current-caption" aria-live="polite">
-                {voiceCaption}
+                <AssistantText text={voiceCaption} />
               </p>
             )}
             <p>{voiceMuted ? 'Bật micro khi bạn sẵn sàng.' : 'Cứ nói theo cách của bạn.'}</p>

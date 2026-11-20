@@ -26,11 +26,11 @@ LESSON_ID = "foundation-work-office-introductions"
 
 def test_versioned_scope_prompt_preserves_v6() -> None:
     """Require a new bounded persona while preserving the reviewed v6 baseline."""
-    assert conversations.PROMPT_VERSION == "persona.v7"
-    assert conversations.PROMPT_PATH == PROMPTS / "persona.v7.txt"
+    assert conversations.PROMPT_VERSION == "persona.v8"
+    assert conversations.PROMPT_PATH == PROMPTS / "persona.v8.txt"
     v6 = read_prompt(PROMPTS / "persona.v6.txt")
     assert hashlib.sha256(v6.replace("\r\n", "\n").encode()).hexdigest() == V6_SHA256
-    v7 = read_prompt(conversations.PROMPT_PATH)
+    v7 = read_prompt(PROMPTS / "persona.v7.txt")
     initial_v7 = read_prompt(
         PROMPTS.parents[1] / "evals/scope/revisions/v7-initial-20261111/persona.v7.txt"
     )
@@ -58,7 +58,7 @@ def test_versioned_scope_prompt_preserves_v6() -> None:
 
 def test_v7_identity_checkpoint_and_app_boundaries() -> None:
     """Require the newly approved exceptions without asserting generated behavior."""
-    prompt = read_prompt(conversations.PROMPT_PATH)
+    prompt = read_prompt(PROMPTS / "persona.v7.txt")
     for rule in (
         "Brief introductions and descriptions of your English-teaching help "
         "are in scope",
@@ -77,7 +77,7 @@ def test_v7_identity_checkpoint_and_app_boundaries() -> None:
 
 def test_out_of_scope_language_policy_uses_conversation() -> None:
     """Keep prior edits and change only the approved refusal-language clause."""
-    prompt = read_prompt(conversations.PROMPT_PATH)
+    prompt = read_prompt(PROMPTS / "persona.v7.txt")
     previous = read_prompt(
         PROMPTS.parents[1]
         / "evals/scope/revisions/v7-before-final-default-vi-20261113"
@@ -168,7 +168,7 @@ async def test_prepare_composes_private_lesson_in_order(
     for check in lesson.checks:
         assert check.id not in turn.prompt
         assert json.dumps(check.model_dump(), ensure_ascii=False) not in turn.prompt
-    assert repo.insert.call_args_list[-1].kwargs["PromptVersion"] == "persona.v7"
+    assert repo.insert.call_args_list[-1].kwargs["PromptVersion"] == "persona.v8"
     update.assert_not_called()
     assert server_progress["Phase"] == phase
     # The fake verifies the technical call surface; its text is not a quality eval.

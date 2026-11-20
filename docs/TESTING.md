@@ -1,5 +1,81 @@
 # Kiểm thử bản hội thoại
 
+## Agent P / 2026-11-20 — Đo 15+15 ca Settings
+
+**test chập chờn có sẵn, đã đo**. Phép đo chỉ chạy riêng `App.test.tsx:1183`, ca
+`shares saved Settings voices and speed with chat and restores them after signing in again`.
+Không sửa mã/test/assertion/timeout. 15 lượt trên worktree detached `9c8d43e`,
+rồi 15 lượt trên `5676c7e`; dùng lại cùng đường dẫn tạm, cùng node_modules,
+Node v25.9.0, config, helper và môi trường. Hai worktree đã gỡ.
+
+| Commit | Đạt | Timeout | Lỗi khác | TB test (s) | Max test (s) | TB lệnh (s) | Max lệnh (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `9c8d43e` | 12 | 3 | 0 | 4.156 | 5.294 | 15.452 | 23.355 |
+| `5676c7e` | 14 | 1 | 0 | 3.743 | 5.465 | 13.920 | 21.428 |
+
+TB/max test lấy từ thời gian chính ca đó trong reporter; TB/max lệnh đo từ
+lúc gọi npm đến khi lệnh kết thúc, gồm khởi động/transform/setup/cleanup,
+không gồm thời gian chờ guard hoặc lấy mẫu CPU/RAM. Trung bình tính đủ 15 lượt,
+bao gồm timeout. Reporter verbose lưu lỗi thật `Test timed out in 5000ms`;
+JSON chỉ dùng lấy số đo chính xác. Không dùng STACK_TRACE_ERROR làm chẩn đoán.
+
+- `9c8d43e`: CPU Windows trước lượt 20–100%, sau lượt 17–100%; RAM trống trước/sau 8831–10199 MiB; thấy job nặng ở mẫu sau các lượt: 3, 4, 5, 7.
+- `5676c7e`: CPU Windows trước lượt 23–79%, sau lượt 15–89%; RAM trống trước/sau 9287–9915 MiB; thấy job nặng ở mẫu sau các lượt: không có.
+
+Người dùng đã chọn **đo với tải nền hiện tại, ghi rõ CPU/RAM** sau khi thấy máy
+bận. Không thay ưu tiên tiến trình/cấu hình hoặc dừng ứng dụng. Kiểm heavy.lock
+và job build/test/eval trước mỗi lượt; chờ khi có job khác. Một số job xuất hiện
+ở mẫu sau khi lượt kết thúc (9c8d43e-03, 9c8d43e-04, 9c8d43e-05, 9c8d43e-07): không biết
+chính xác chúng có chồng trong lúc test hay không. Các lượt đó được giữ nguyên,
+không loại hoặc lặp để chọn kết quả; không thể coi đây là thí nghiệm không tải
+hoặc hoàn toàn kiểm soát máy. Lấy mẫu trước/sau, không giám sát CPU liên tục.
+Thứ tự baseline trước feature cố định theo yêu cầu, không randomize/warm-up.
+
+Timeout đã quan sát được ở bản trước Pha 3 trong điều kiện đo này; quan sát
+này không xác định nguyên nhân sâu hơn, cũng không chứng minh
+Pha 3 không có ảnh hưởng đến phân bố thời gian. Không sửa gì để chữa timeout,
+không đổi 5.000 ms. Không gọi API/smoke, build/full-suite, push/merge hoặc commit.
+
+Bằng chứng cục bộ ignored: `.artifacts/chat-format-20261120/measure-15x2-valid/`
+gồm `measurements.json`, `measurements.csv`, `machine-samples.json`, 30 log
+verbose và JSON tương ứng. Mẫu CPU cũ trước khi sửa lỗi làm tròn là preflight
+không có test, lưu ở thư mục khác và không nằm trong thống kê 30 lượt này.
+
+
+## Agent P / 2026-11-20 — Cổng formatter và điều tra Settings
+
+- `npm.cmd run format:check`: PASS; `npm.cmd run lint`: ESLint không warning
+  và `tsc --noEmit` PASS; `npm.cmd run build`: PASS (Vite 8,54 s).
+- `npm.cmd run test -- --reporter=verbose`, không bail: **506/506**, 44 file,
+  148,40 s. Lượt cổng cuối cùng cùng lệnh: **506/506**, 44 file, 153,98 s.
+  Không thay assertion/timeout/cấu hình/worker; không gọi API tính phí.
+- Test riêng `App.test.tsx -t "shares saved Settings voices and speed with chat
+  and restores them after signing in again"`: lượt đầu đạt; ba lượt chạy lại
+  lần lượt timeout 5.000 ms/đạt/đạt. Cả file App sau đó **44/44**.
+- Baseline worktree detached `9c8d43e`: đúng test trên **3/3**, giữ cùng dependency
+  và test/config, không cài gói; đã gỡ junction và worktree. Không chứng minh
+  timeout có sẵn; nguyên nhân gốc chưa xác định. Không sửa test cũ hay production
+  để làm test qua. Lỗi đầy đủ và diễn giải tại [báo cáo](CHAT_FORMATTING_2026-11-20.md).
+- Kiểm heavy.lock trước từng lệnh nặng; không có khóa, không xóa khóa. Không
+  chạy test/build/browser đồng thời. Không đo coverage ở lượt frontend này;
+  không dùng số coverage cũ làm coverage của formatter mới.
+
+| Yêu cầu | Test mới |
+| --- | --- |
+| `**`, `*`, `#`, backtick, số mục, dòng trống, tiếng Việt | chat/AssistantText.test.tsx |
+| Stream từng ký tự, marker chưa đóng, DOM/text node ổn định | chat/AssistantText.test.tsx |
+| Script/HTML hiện literal, không tạo thẻ thực thi | chat/AssistantText.test.tsx |
+| Giữ đủ 30 mục gọn, bỏ marker trong speech | chat/AssistantText.test.tsx |
+| Payload TTS đã sạch, ngôn ngữ và dùng chung cache | speech/audio.formatting.test.ts |
+| TTS stream sạch marker, giữ offset Unicode receipt | voice/spokenText.formatting.test.ts |
+
+Ảnh tại docs/assets chụp component thật bằng Edge headless/file HTML cục bộ,
+không mở cổng: desktop 1440×1080; mobile dùng khung CSS 390 px trong ảnh
+390×844 do Edge headless giới hạn viewport nhỏ. Đã xem lại sáng/tối; không
+cắt ngang chữ. Đây là demo component tĩnh, chưa phải E2E app/stream/provider.
+V8 chưa eval/smoke thật, kết quả v7 không áp dụng v8; chưa merge.
+
+
 ## Từ vựng — trạng thái hiện tại tại worktree 16/11/2026
 
 - Baseline sạch đã chạy đúng một lần: frontend **472/472**. Các mục
