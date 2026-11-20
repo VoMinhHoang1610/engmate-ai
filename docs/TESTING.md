@@ -1,5 +1,47 @@
 # Kiểm thử bản hội thoại
 
+## Agent P / 2026-11-20 — Đo 15+15 ca Settings
+
+**test chập chờn có sẵn, đã đo**. Phép đo chỉ chạy riêng `App.test.tsx:1183`, ca
+`shares saved Settings voices and speed with chat and restores them after signing in again`.
+Không sửa mã/test/assertion/timeout. 15 lượt trên worktree detached `9c8d43e`,
+rồi 15 lượt trên `5676c7e`; dùng lại cùng đường dẫn tạm, cùng node_modules,
+Node v25.9.0, config, helper và môi trường. Hai worktree đã gỡ.
+
+| Commit | Đạt | Timeout | Lỗi khác | TB test (s) | Max test (s) | TB lệnh (s) | Max lệnh (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `9c8d43e` | 12 | 3 | 0 | 4.156 | 5.294 | 15.452 | 23.355 |
+| `5676c7e` | 14 | 1 | 0 | 3.743 | 5.465 | 13.920 | 21.428 |
+
+TB/max test lấy từ thời gian chính ca đó trong reporter; TB/max lệnh đo từ
+lúc gọi npm đến khi lệnh kết thúc, gồm khởi động/transform/setup/cleanup,
+không gồm thời gian chờ guard hoặc lấy mẫu CPU/RAM. Trung bình tính đủ 15 lượt,
+bao gồm timeout. Reporter verbose lưu lỗi thật `Test timed out in 5000ms`;
+JSON chỉ dùng lấy số đo chính xác. Không dùng STACK_TRACE_ERROR làm chẩn đoán.
+
+- `9c8d43e`: CPU Windows trước lượt 20–100%, sau lượt 17–100%; RAM trống trước/sau 8831–10199 MiB; thấy job nặng ở mẫu sau các lượt: 3, 4, 5, 7.
+- `5676c7e`: CPU Windows trước lượt 23–79%, sau lượt 15–89%; RAM trống trước/sau 9287–9915 MiB; thấy job nặng ở mẫu sau các lượt: không có.
+
+Người dùng đã chọn **đo với tải nền hiện tại, ghi rõ CPU/RAM** sau khi thấy máy
+bận. Không thay ưu tiên tiến trình/cấu hình hoặc dừng ứng dụng. Kiểm heavy.lock
+và job build/test/eval trước mỗi lượt; chờ khi có job khác. Một số job xuất hiện
+ở mẫu sau khi lượt kết thúc (9c8d43e-03, 9c8d43e-04, 9c8d43e-05, 9c8d43e-07): không biết
+chính xác chúng có chồng trong lúc test hay không. Các lượt đó được giữ nguyên,
+không loại hoặc lặp để chọn kết quả; không thể coi đây là thí nghiệm không tải
+hoặc hoàn toàn kiểm soát máy. Lấy mẫu trước/sau, không giám sát CPU liên tục.
+Thứ tự baseline trước feature cố định theo yêu cầu, không randomize/warm-up.
+
+Timeout đã quan sát được ở bản trước Pha 3 trong điều kiện đo này; quan sát
+này không xác định nguyên nhân sâu hơn, cũng không chứng minh
+Pha 3 không có ảnh hưởng đến phân bố thời gian. Không sửa gì để chữa timeout,
+không đổi 5.000 ms. Không gọi API/smoke, build/full-suite, push/merge hoặc commit.
+
+Bằng chứng cục bộ ignored: `.artifacts/chat-format-20261120/measure-15x2-valid/`
+gồm `measurements.json`, `measurements.csv`, `machine-samples.json`, 30 log
+verbose và JSON tương ứng. Mẫu CPU cũ trước khi sửa lỗi làm tròn là preflight
+không có test, lưu ở thư mục khác và không nằm trong thống kê 30 lượt này.
+
+
 ## Agent P / 2026-11-20 — Cổng formatter và điều tra Settings
 
 - `npm.cmd run format:check`: PASS; `npm.cmd run lint`: ESLint không warning
