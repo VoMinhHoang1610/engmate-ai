@@ -1,7 +1,9 @@
 """Authored content and unavailable-table behavior without a paid provider."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,6 +11,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import OperationalError
 
 from app.api.chat_routes import current_user
+from app.api.dependencies import get_llm_client
 from app.core.config import Settings
 from app.db.database import Database
 from app.main import create_app
@@ -98,6 +101,10 @@ def test_state_contract_rejects_owner_injection_and_boolean_versions() -> None:
     [
         (1146, "engmate_vocabulary_word_states", "vocabulary_not_installed"),
         (1146, "engmate_vocabulary_requests", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_custom_topics", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_custom_words", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_generation_jobs", "vocabulary_not_installed"),
+        (1146, "engmate_vocabulary_usage", "vocabulary_not_installed"),
         (1146, "NguoiDung", None),
         (1146, "engmate_vocabulary_word_states_other", None),
         (1045, "engmate_vocabulary_word_states", None),
@@ -135,6 +142,80 @@ def test_missing_vocabulary_tables_do_not_break_catalog_or_other_routes(
         assert "unavailable" in detail.lower()
     assert client.get("/api/vocabulary/topics/office-and-work").status_code == 200
     assert client.get("/api/learning/catalog").status_code == 200
+
+
+def test_new_routes_report_missing_vocabulary_tables_without_changing_old_routes() -> (
+    None
+):
+    """All six new routes map a missing vocabulary table to the same 503 code."""
+    database = MagicMock(spec=Database)
+    database.mysql = True
+    database.transaction.side_effect = OperationalError(
+        "SELECT",
+        {},
+        Exception(
+            1146,
+            "Table 'isolated_test.engmate_vocabulary_custom_topics' doesn't exist",
+        ),
+    )
+    app = create_app(Settings(llm_provider="mock"), database)
+    app.dependency_overrides[current_user] = lambda: {"UserId": 1, "SessionId": 1}
+    app.dependency_overrides[get_llm_client] = lambda: object()
+    client = TestClient(app)
+    request_id = str(uuid4())
+    new_routes: list[tuple[str, str, dict[str, Any]]] = [
+        (
+            "post",
+            "/api/vocabulary/generations",
+            {
+                "json": {
+                    "client_request_id": request_id,
+                    "topic": "office routines",
+                    "target_count": 30,
+                }
+            },
+        ),
+        ("get", f"/api/vocabulary/generations/{request_id}", {}),
+        ("post", f"/api/vocabulary/generations/{request_id}/cancel", {}),
+        ("get", "/api/vocabulary/me/topics", {}),
+        ("get", f"/api/vocabulary/me/topics/{request_id}", {}),
+        ("delete", f"/api/vocabulary/me/topics/{request_id}", {}),
+    ]
+    for new_method, new_path, new_kwargs in new_routes:
+        response = getattr(client, new_method)(new_path, **new_kwargs)
+        assert response.status_code == 503, (new_method, new_path, response.text)
+        assert response.json()["detail"] == {"code": "vocabulary_not_installed"}
+
+    assert client.get("/api/vocabulary/topics").status_code == 200
+    assert client.get("/api/vocabulary/topics/food-and-drink").status_code == 200
+    old_routes: list[tuple[str, str, dict[str, Any]]] = [
+        ("get", "/api/vocabulary/me/states", {}),
+        (
+            "put",
+            "/api/vocabulary/topics/food-and-drink/words/apple/state",
+            {
+                "json": {
+                    "client_request_id": str(uuid4()),
+                    "remembered": True,
+                    "version": 0,
+                }
+            },
+        ),
+        (
+            "post",
+            "/api/vocabulary/me/import-legacy",
+            {
+                "json": {
+                    "client_request_id": str(uuid4()),
+                    "remembered_keys": [],
+                }
+            },
+        ),
+    ]
+    for old_method, old_path, old_kwargs in old_routes:
+        response = getattr(client, old_method)(old_path, **old_kwargs)
+        assert response.status_code == 503, (old_method, old_path, response.text)
+        assert response.json()["detail"] == {"code": "vocabulary_not_installed"}
 
 
 def test_catalog_requires_session_and_unknown_ids_are_not_paths() -> None:

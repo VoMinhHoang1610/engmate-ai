@@ -28,6 +28,11 @@ async def test_removed_features_are_not_exposed(client: AsyncClient) -> None:
     assert vocabulary_paths == {
         "/api/vocabulary/topics": {"get"},
         "/api/vocabulary/topics/{topic_id}": {"get"},
+        "/api/vocabulary/generations": {"post"},
+        "/api/vocabulary/generations/{request_id}": {"get"},
+        "/api/vocabulary/generations/{request_id}/cancel": {"post"},
+        "/api/vocabulary/me/topics": {"get"},
+        "/api/vocabulary/me/topics/{topic_id}": {"get", "delete"},
         "/api/vocabulary/me/states": {"get"},
         "/api/vocabulary/topics/{topic_id}/words/{word_id}/state": {"put"},
         "/api/vocabulary/me/import-legacy": {"post"},
@@ -57,5 +62,8 @@ async def test_auth_requires_a_real_session(client: AsyncClient) -> None:
         "/api/vocabulary/topics",
         "/api/vocabulary/topics/food-and-drink",
         "/api/vocabulary/me/states",
+        "/api/vocabulary/me/topics",
+        "/api/vocabulary/me/topics/00000000-0000-4000-8000-000000000000",
+        "/api/vocabulary/generations/00000000-0000-4000-8000-000000000000",
     ):
         assert (await client.get(path)).status_code == 401

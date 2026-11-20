@@ -1,4 +1,4 @@
-"""Explicitly add authored vocabulary state/receipt tables; never alter old tables."""
+"""Explicitly add authored/generated vocabulary tables; never alter old tables."""
 
 import argparse
 import os

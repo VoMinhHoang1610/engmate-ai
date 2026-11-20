@@ -860,3 +860,11 @@ Sau đó người dùng yêu cầu Gemini thay OpenAI. Probe thủ công đã x�
 Browser E2E/micro/echo/speaker thực và barge-in còn cần kiểm chứng riêng: đăng ký tài khoản trên schema test → chat câu mới → kiểm tra stream/nhớ ngữ cảnh/lưu lại sau đăng nhập → bắt đầu thoại Gemini → chen lời nhiều lần → kết thúc/mất mạng/thu hồi mic. Không tạo dữ liệu thử vào database người dùng. Không coi probe audio từ text là kiểm chứng microphone vật lý hoặc toàn bộ vòng relay trong browser.
 
 Artifact: `backend/htmlcov/index.html`, `backend/coverage.xml`, `frontend/coverage/index.html`; kết quả chạy mới nhất và giới hạn ở PROGRESS.md.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- Frontend: `vocabulary.test.tsx` 21/21; full suite 500/500; lint, format and build passed.
+- Backend Step 1: 332 passed, 0 skipped, 1 warning; overall coverage 93.03%; `vocabulary_generation.py` 88%; routes 100%.
+- Gate B scenarios covered: loading/error/quota, mid-flight account switch, cancel, delete, polling stop, labels, missing-table state.
+- Screenshots: `docs/assets/vocabulary-ai-20261120/` (7 images), light/dark desktop/mobile.
+- Ports used: 5180 for fixture audit; application ports 5174/8010 remain defaults.

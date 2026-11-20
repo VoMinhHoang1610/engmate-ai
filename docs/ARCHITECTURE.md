@@ -324,3 +324,11 @@ Gemini mặc định: `llm/gemini.py` dùng GenerateContent SSE, x-goog-api-key 
 Voice Gemini: AudioWorklet microphone→PCM16 16 kHz→WebSocket cùng origin→GeminiVoiceManager→Gemini Live; đầu ra PCM16 24 kHz→hàng đợi AudioBufferSourceNode có giới hạn 8 giây. Ticket SHA-256 chỉ dùng một lần, 10 giây, cấp qua REST bearer; kiểm tra Origin trên WS. Chỉ relay audio, không chấp nhận client transcript/config. GeminiVoiceManager tái sử dụng ownership, ConversationService và lifecycle turn của RealtimeManager; ghi transcript provider vào MySQL. interrupted xóa audio chờ và hủy/discard reply bị ngắt; thiếu input transcript khi hoàn tất thì fail closed. Cleanup đóng sockets, worklet/AudioContext/tracks/timers; reconnect tối đa ba lần, không phát lại audio cũ. OpenAI adapter/WebRTC cũ vẫn có tests riêng và chỉ được chọn qua cấu hình.
 
 Giới hạn hiện tại: một backend worker; registry/session state chưa phân tán. Một call/account, tối đa 32/process, 600 giây mặc định, heartbeat hết hạn 35 giây. Reconnect tạo transport mới từ history đã lưu. Gemini Live đã tạo audio thật từ text trong probe; chưa xác minh microphone/echo/ngắt lời bằng thiết bị thật. Trạng thái OpenAI hết credit là kết quả lịch sử, không còn chặn cấu hình Gemini.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- Generation state is composed in `useVocabularyState(username)` via `useVocabularyGeneration(username)`; `TutorWorkspace.tsx` is unchanged.
+- Custom detail reuses `TopicDetail` with `source: 'authored' | 'custom'`; `CustomTopicDetail.topic_id` maps to local `id`.
+- Polling: first 3 polls at `poll_after_ms` (2 s floor), then 5 s; stops on terminal state, hidden tab, unmount, account switch; resumes on visibility.
+- No user topic is stored in localStorage/sessionStorage; account ownership is handled by the controller and React `key={account.username}`.
+- Vocabulary CSS remains scoped to `.workspace-shell .vocabulary-*`; shared CSS was not edited.

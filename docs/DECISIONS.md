@@ -847,3 +847,11 @@ Theo yêu cầu nối key TTS/STT, dùng httpx async (đã có pin 0.28.1 trong 
 2026-10-08: lấy danh sách giọng qua endpoint backend thay vì hard-code 27 giọng vào UI. Giọng người dùng chọn là cài đặt trình duyệt, dùng cùng vòng đời localStorage hiện có; không mở rộng SQL ngoài phạm vi. Preview dùng TTS cùng giọng/tốc độ để phản ánh cách đọc trong bài học.
 
 2026-10-08: giảm độ trễ bằng preload có chọn lọc và cache RAM theo text/voice/speed. Dùng chung generation giữa preload/click, mỗi caller hủy độc lập; cache bị chặn bởi số clip/bytes/TTL và xóa khi logout. Chưa thêm streaming, lưu audio lâu dài hoặc thay giọng người dùng bằng browser synthesis. Lần tạo đầu vẫn phụ thuộc Blaze; preload có thể tốn credit, nên danh sách nhiều nút không tải hàng loạt.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- Reuse authored `VocabularyPage`/`StudyViews` layout for custom detail instead of a separate custom-topic UI.
+- Use heading “Chủ đề của tôi”; custom list search is “Tìm trong chủ đề của tôi” to avoid clashing with authored “Tìm chủ đề”.
+- Generation state is `useVocabularyGeneration(username)` composed inside `useVocabularyState`, so `TutorWorkspace.tsx` needs no changes.
+- Replay conflict remains 409 with detail “Request identity was used with different input.”; no new error code.
+- Polling stops at terminal state, on unmount and account switch; never store user topic in localStorage/sessionStorage.

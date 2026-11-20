@@ -563,3 +563,11 @@ Thêm POST /api/speech/tts (MP3) và /api/speech/stt (transcript), cấu hình s
 Cài đặt có mục Giọng nói: chọn giọng tiếng Anh theo nhóm nam/nữ, nghe thử/dừng; tự lưu và áp dụng cho toàn bộ nút Nghe.
 
 Giảm độ trễ nút Nghe: chuẩn bị clip hiện tại trước click, cache RAM có giới hạn, chia sẻ lượt tải và phát lại không gọi TTS lần nữa. Đổi giọng/tốc độ không dùng nhầm clip; logout xóa âm thanh đã lưu. Lần chưa chuẩn bị vẫn chờ provider.
+
+## 2026-11-20 - Vocabulary AI custom topics (Gate B)
+
+- Frontend: owner-scoped generation/list/poll/cancel/delete hook, custom form/list/job/detail UI, Vietnamese error mapping, scoped CSS.
+- Tests: Vocabulary Vitest 21/21; frontend 500/500; lint, format and build passed.
+- Backend Step 1: 6 tests added; 332 backend tests passed; coverage 93.03%.
+- Docs: Step 2 smoke proposal (not executed, not in defaults).
+- Screenshots: `docs/assets/vocabulary-ai-20261120/` (7 images).

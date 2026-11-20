@@ -8,13 +8,13 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 from pydantic import SecretStr
-from sqlalchemy import inspect, select
+from sqlalchemy import inspect, select, text
 from sqlalchemy.engine import make_url
 
 from app.core.config import Settings
 from app.db.database import Database
 from app.db.repository import Repository
-from app.db.vocabulary import metadata, requests, word_states
+from app.db.vocabulary import generation_jobs, metadata, requests, word_states
 from app.schemas.vocabulary import WordStateUpdate
 from app.services.vocabulary import VocabularyService
 from tests.integration.test_chat_database import chat_client, database, register
@@ -121,7 +121,21 @@ async def test_vocabulary_tables_are_additive_and_match_metadata(
                 column.name for column in table.primary_key
             ]
             assert schema.get_foreign_keys(table.name) == []
-            assert all(not column["nullable"] for column in columns.values())
+            assert {name: column["nullable"] for name, column in columns.items()} == {
+                column.name: column.nullable for column in table.columns
+            }
+        nullable_jobs = {
+            column.name for column in generation_jobs.columns if column.nullable
+        }
+        assert nullable_jobs == {"TopicId", "ErrorCode", "FinishedAt"}
+        triggers = connection.execute(
+            text(
+                "SELECT TRIGGER_NAME FROM information_schema.TRIGGERS "
+                "WHERE TRIGGER_SCHEMA = DATABASE() "
+                "AND EVENT_OBJECT_TABLE LIKE 'engmate_vocabulary_%'"
+            )
+        ).all()
+        assert triggers == []
 
 
 def test_concurrent_same_uuid_writes_once_in_mysql() -> None:

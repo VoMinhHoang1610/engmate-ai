@@ -39,3 +39,9 @@ Container test
 bind 127.0.0.1:33318, schema `engmate_vocabulary_test`, user `engmate_vocab_test`.
 Không xóa container/volume ứng dụng; M3 cần xác nhận mới.
 Thiếu đúng bảng mới: API state báo 503/chưa cài đặt, catalog JSON vẫn đọc được.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- Additive tables remain as Gate A: `engmate_vocabulary_custom_topics`, `engmate_vocabulary_custom_words`, `engmate_vocabulary_generation_jobs`, `engmate_vocabulary_usage`.
+- No application DB migration or DDL change was made in Gate B.
+- MySQL test container `engmate-vocabulary-mysql-test-20261115` remains on loopback 33318, schema `_test`; cleanup proposed, awaiting approval.

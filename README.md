@@ -282,3 +282,12 @@ và phục vụ bundle mới (dev: khởi động lại Vite). Không sửa `.en
 [CSV thử thiết bị](docs/VOICE_DEVICE_CHECKLIST.csv),
 [MySQL test tạm chờ duyệt](docs/MYSQL_TEST_PROPOSAL.md),
 [kế hoạch chia commit](docs/CHANGESET_PLAN.md). Pha thoại C/D/E vẫn hoãn.
+
+## Vocabulary AI custom topics (Gate B, 20/11/2026)
+
+- Private AI-generated vocabulary topics are available in the workspace under “Chủ đề của tôi”.
+- Authored layout, search/filter, cards, quiz, click-only TTS and word-state saving are reused for custom topics.
+- Generation supports 30 or 60 words (default 30), shows batch progress, quota exhaustion and local reset time, and labels content “AI tạo, chưa thẩm định”.
+- Frontend: Vitest 500/500, vocabulary 21/21, lint/build passed; 7 screenshots in `docs/assets/vocabulary-ai-20261120/`.
+- Backend Step 1: 332 tests passed, 93.03% coverage; no business-code change.
+- Docker cleanup is proposed separately and awaits approval; MySQL test container on 33318 is untouched.

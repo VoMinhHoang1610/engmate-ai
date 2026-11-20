@@ -228,7 +228,7 @@ CREATE TABLE `engmate_learning_receipts` (
     PRIMARY KEY (`UserId`, `RequestId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
 
--- Từ vựng biên soạn: chỉ trạng thái tự đánh giá và receipt, không dữ liệu AI.
+-- Từ vựng biên soạn + chủ đề AI riêng: state, receipt, job và usage theo tài khoản.
 CREATE TABLE `engmate_vocabulary_word_states` (
     `UserId` bigint NOT NULL,
     `TopicId` varchar(64) NOT NULL,
@@ -246,6 +246,74 @@ CREATE TABLE `engmate_vocabulary_requests` (
     `PayloadHash` varchar(64) NOT NULL,
     `ResultJson` text NOT NULL,
     PRIMARY KEY (`UserId`, `RequestId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+CREATE TABLE `engmate_vocabulary_custom_topics` (
+    `UserId` bigint NOT NULL,
+    `TopicId` varchar(36) NOT NULL,
+    `TitleVi` varchar(60) NOT NULL,
+    `TitleEn` varchar(60) NOT NULL,
+    `Description` varchar(240) NOT NULL,
+    `WordCount` smallint NOT NULL,
+    `ReviewStatus` varchar(32) NOT NULL,
+    `PromptVersion` varchar(16) NOT NULL,
+    `ContentHash` varchar(64) NOT NULL,
+    `CreatedAt` datetime NOT NULL,
+    PRIMARY KEY (`UserId`, `TopicId`),
+    KEY `IX_VocabCustomTopics_OwnerCreated` (`UserId`, `CreatedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+CREATE TABLE `engmate_vocabulary_custom_words` (
+    `UserId` bigint NOT NULL,
+    `TopicId` varchar(36) NOT NULL,
+    `WordId` varchar(80) NOT NULL,
+    `Position` smallint NOT NULL,
+    `Term` varchar(80) NOT NULL,
+    `PartOfSpeech` varchar(16) NOT NULL,
+    `Ipa` varchar(120) NOT NULL,
+    `MeaningVi` varchar(180) NOT NULL,
+    `ExampleEn` varchar(220) NOT NULL,
+    `ExampleVi` varchar(260) NOT NULL,
+    `Cefr` varchar(2) NOT NULL,
+    `CreatedAt` datetime NOT NULL,
+    PRIMARY KEY (`UserId`, `TopicId`, `WordId`),
+    UNIQUE KEY `UQ_VocabCustomWords_Position` (`UserId`, `TopicId`, `Position`),
+    KEY `IX_VocabCustomWords_OwnerTopic` (`UserId`, `TopicId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+CREATE TABLE `engmate_vocabulary_generation_jobs` (
+    `UserId` bigint NOT NULL,
+    `RequestId` varchar(36) NOT NULL,
+    `AuthSessionId` bigint NOT NULL,
+    `Kind` varchar(24) NOT NULL,
+    `PayloadHash` varchar(64) NOT NULL,
+    `TargetCount` smallint NOT NULL,
+    `BatchSize` smallint NOT NULL,
+    `CefrLevel` varchar(8) NOT NULL,
+    `Status` varchar(16) NOT NULL,
+    `ValidatedCount` smallint NOT NULL,
+    `CallsReserved` smallint NOT NULL,
+    `CallsUsed` smallint NOT NULL,
+    `TopicId` varchar(36) NULL,
+    `ErrorCode` varchar(40) NULL,
+    `CreatedAt` datetime NOT NULL,
+    `UpdatedAt` datetime NOT NULL,
+    `ExpiresAt` datetime NOT NULL,
+    `FinishedAt` datetime NULL,
+    PRIMARY KEY (`UserId`, `RequestId`),
+    KEY `IX_VocabJobs_OwnerStatus` (`UserId`, `Status`),
+    KEY `IX_VocabJobs_StatusExpiry` (`Status`, `ExpiresAt`),
+    KEY `IX_VocabJobs_OwnerCreated` (`UserId`, `CreatedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
+
+CREATE TABLE `engmate_vocabulary_usage` (
+    `UserId` bigint NOT NULL,
+    `UsageDate` date NOT NULL,
+    `JobsStarted` smallint NOT NULL,
+    `CallsReserved` smallint NOT NULL,
+    `CallsUsed` smallint NOT NULL,
+    `UpdatedAt` datetime NOT NULL,
+    PRIMARY KEY (`UserId`, `UsageDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_as_ci;
 
 CREATE TRIGGER TR_NguoiDung_Version BEFORE UPDATE ON `NguoiDung`
